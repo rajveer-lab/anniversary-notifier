@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>StaffPing</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── THEMES ── */
+    [data-theme="dark"] {
+      --bg: #0d0f12; --surface: #13161b; --border: #1f2530;
+      --accent: #f0b429; --accent2: #3ecfcf; --danger: #f75f5f;
+      --text: #e8eaf0; --muted: #5a6278;
+    }
+    [data-theme="light"] {
+      --bg: #f4f5f7; --surface: #ffffff; --border: #e0e3ea;
+      --accent: #e09b00; --accent2: #0ea5a5; --danger: #e03e3e;
+      --text: #1a1d23; --muted: #8a93a8;
+    }
+    [data-theme="blue"] {
+      --bg: #0a0e1a; --surface: #0f1628; --border: #1a2540;
+      --accent: #4f9eff; --accent2: #a78bfa; --danger: #f75f5f;
+      --text: #cdd6f4; --muted: #45506e;
+    }
+    [data-theme="green"] {
+      --bg: #0a120e; --surface: #0d1a12; --border: #163020;
+      --accent: #4ade80; --accent2: #34d399; --danger: #f87171;
+      --text: #dcfce7; --muted: #3a6650;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background .3s, color .3s;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      -webkit-app-region: drag;
+      gap: 12px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--accent); }
+
+    .header-right {
+      display: flex; align-items: center; gap: 12px;
+      -webkit-app-region: no-drag;
+    }
+
+    .today-badge-pill {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      background: var(--accent);
+      color: #000;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* ── THEME SWITCHER ── */
+    .theme-switcher {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .theme-dot {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color .2s, transform .15s;
+    }
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--text); }
+    .theme-dot[data-t="dark"]  { background: linear-gradient(135deg, #0d0f12, #f0b429); }
+    .theme-dot[data-t="light"] { background: linear-gradient(135deg, #f4f5f7, #e09b00); }
+    .theme-dot[data-t="blue"]  { background: linear-gradient(135deg, #0a0e1a, #4f9eff); }
+    .theme-dot[data-t="green"] { background: linear-gradient(135deg, #0a120e, #4ade80); }
+
+    /* ── TEST NOTIF BUTTON ── */
+    .btn-test-notif {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      background: transparent;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-test-notif:hover { background: rgba(62,207,207,.1); }
+
+    /* ── LAYOUT ── */
+    .main {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 24px 20px;
+      overflow-y: auto;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .sidebar h2 {
+      font-size: 0.7rem; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .field input {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.88rem;
+      padding: 9px 13px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+    }
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(240,180,41,.1);
+    }
+    .field input::placeholder { color: var(--muted); }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 11px 0;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; border: none;
+      transition: opacity .2s, transform .1s;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--accent); color: #000; width: 100%; }
+    .btn-primary:hover { opacity: .85; }
+    .btn-danger {
+      background: transparent; color: var(--danger);
+      border: 1.5px solid var(--danger);
+      padding: 5px 12px; font-size: 0.75rem;
+    }
+    .btn-danger:hover { background: rgba(247,95,95,.1); }
+    .btn-edit {
+      background: transparent; color: var(--accent2);
+      border: 1.5px solid var(--accent2);
+      padding: 5px 12px; font-size: 0.75rem;
+    }
+    .btn-edit:hover { background: rgba(62,207,207,.1); }
+
+    .msg {
+      font-size: 0.78rem; padding: 9px 13px;
+      border-radius: 8px;
+      font-family: 'DM Mono', monospace;
+      display: none;
+    }
+    .msg.success { background: rgba(62,207,207,.1); color: var(--accent2); border: 1px solid rgba(62,207,207,.2); display: block; }
+    .msg.error   { background: rgba(247,95,95,.1);  color: var(--danger);  border: 1px solid rgba(247,95,95,.2);  display: block; }
+
+    /* ── CONTENT ── */
+    .content { display: flex; flex-direction: column; overflow: hidden; }
+
+    .toolbar {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px; flex-wrap: wrap;
+    }
+    .count {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem; color: var(--muted);
+    }
+    .count span { color: var(--accent); font-weight: 600; }
+
+    .search-wrap input {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.82rem; padding: 7px 13px;
+      outline: none; width: 210px;
+      transition: border-color .2s;
+    }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap input::placeholder { color: var(--muted); }
+
+    .table-wrap { flex: 1; overflow-y: auto; padding: 18px 24px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      font-size: 0.65rem; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      padding: 0 10px 10px; text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+    tbody tr {
+      transition: background .15s;
+      border-bottom: 1px solid rgba(128,128,128,.06);
+    }
+    tbody tr:hover { background: rgba(128,128,128,.05); }
+    tbody td { padding: 13px 10px; font-size: 0.86rem; vertical-align: middle; }
+
+    .emp-id {
+      font-family: 'DM Mono', monospace; font-size: 0.73rem;
+      color: var(--accent);
+      background: rgba(240,180,41,.08);
+      padding: 2px 7px; border-radius: 4px;
+    }
+    .name-cell { font-weight: 600; }
+    .date-cell { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); }
+
+    .today-badge {
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 2px 7px; border-radius: 20px; margin-left: 5px;
+    }
+    .bday-badge { background: rgba(240,180,41,.15); color: var(--accent); }
+    .join-badge { background: rgba(62,207,207,.15);  color: var(--accent2); }
+
+    .actions { display: flex; gap: 6px; }
+
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 280px; color: var(--muted);
+      gap: 10px; font-size: 0.88rem;
+    }
+    .empty-state .icon { font-size: 2.2rem; opacity: .3; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100; backdrop-filter: blur(4px);
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px;
+      width: 340px; display: flex;
+      flex-direction: column; gap: 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .modal h3 { font-size: 0.95rem; font-weight: 700; }
+    .modal-actions { display: flex; gap: 8px; }
+    .modal-actions .btn { flex: 1; }
+    .btn-cancel { background: var(--bg); color: var(--muted); border: 1.5px solid var(--border); }
+    .btn-cancel:hover { color: var(--text); }
+    .btn-save { background: var(--accent2); color: #000; }
+    .btn-save:hover { opacity: .88; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px; padding: 12px 18px;
+      font-size: 0.82rem; font-family: 'DM Mono', monospace;
+      color: var(--text);
+      box-shadow: 0 8px 30px rgba(0,0,0,.3);
+      transform: translateY(80px); opacity: 0;
+      transition: transform .3s, opacity .3s;
+      z-index: 200; max-width: 300px;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="3" width="7" height="7" rx="2" fill="#f0b429"/>
+        <rect x="14" y="3" width="7" height="7" rx="2" fill="#3ecfcf" opacity=".7"/>
+        <rect x="3" y="14" width="7" height="7" rx="2" fill="#3ecfcf" opacity=".7"/>
+        <rect x="14" y="14" width="7" height="7" rx="2" fill="#f0b429" opacity=".5"/>
+      </svg>
+      Staff<span>Ping</span>
+    </div>
+    <div class="header-right">
+      <div class="theme-switcher">
+        <div class="theme-dot active" data-t="dark"  title="Dark"></div>
+        <div class="theme-dot"        data-t="light" title="Light"></div>
+        <div class="theme-dot"        data-t="blue"  title="Blue"></div>
+        <div class="theme-dot"        data-t="green" title="Green"></div>
+      </div>
+      <button class="btn-test-notif" id="testNotifBtn">🔔 Test Ping</button>
+      <div class="today-badge-pill" id="todayBadge">Today: —</div>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <h2>Add Employee</h2>
+      <div class="field">
+        <label>Employee ID</label>
+        <input type="text" id="empId" placeholder="e.g. EMP-001"/>
+      </div>
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="name" placeholder="e.g. Rajveer Singh"/>
+      </div>
+      <div class="field">
+        <label>Date of Birth</label>
+        <input type="date" id="dob"/>
+      </div>
+      <div class="field">
+        <label>Joining Date</label>
+        <input type="date" id="joiningDate"/>
+      </div>
+      <button class="btn btn-primary" id="addBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Employee
+      </button>
+      <div id="formMsg" class="msg"></div>
+    </aside>
+
+    <div class="content">
+      <div class="toolbar">
+        <div class="count">Total: <span id="totalCount">0</span> employees</div>
+        <div class="search-wrap">
+          <input type="text" id="searchInput" placeholder="Search name or ID…"/>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="empTable">
+          <thead>
+            <tr>
+              <th>Emp ID</th><th>Name</th>
+              <th>Date of Birth</th><th>Joining Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="empBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState">
+          <div class="icon">🗂️</div>
+          <div>No employees yet. Add one to get started.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div class="overlay" id="editOverlay">
+    <div class="modal">
+      <h3>Edit Employee</h3>
+      <input type="hidden" id="editId"/>
+      <div class="field"><label>Employee ID</label><input type="text" id="editEmpId"/></div>
+      <div class="field"><label>Full Name</label><input type="text" id="editName"/></div>
+      <div class="field"><label>Date of Birth</label><input type="date" id="editDob"/></div>
+      <div class="field"><label>Joining Date</label><input type="date" id="editJoining"/></div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="cancelEdit">Cancel</button>
+        <button class="btn btn-save"   id="saveEdit">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const api = window.electronAPI;
+
+    // ── Elements ──
+    const empIdInput   = document.getElementById('empId');
+    const nameInput    = document.getElementById('name');
+    const dobInput     = document.getElementById('dob');
+    const joiningInput = document.getElementById('joiningDate');
+    const addBtn       = document.getElementById('addBtn');
+    const formMsg      = document.getElementById('formMsg');
+    const empBody      = document.getElementById('empBody');
+    const emptyState   = document.getElementById('emptyState');
+    const totalCount   = document.getElementById('totalCount');
+    const searchInput  = document.getElementById('searchInput');
+    const todayBadge   = document.getElementById('todayBadge');
+    const editOverlay  = document.getElementById('editOverlay');
+    const editIdField  = document.getElementById('editId');
+    const editEmpId    = document.getElementById('editEmpId');
+    const editName     = document.getElementById('editName');
+    const editDob      = document.getElementById('editDob');
+    const editJoining  = document.getElementById('editJoining');
+    const cancelEdit   = document.getElementById('cancelEdit');
+    const saveEdit     = document.getElementById('saveEdit');
+    const toastEl      = document.getElementById('toast');
+    const testNotifBtn = document.getElementById('testNotifBtn');
+
+    let allEmployees = [];
+    const now = new Date();
+
+    // ── Today badge ──
+    todayBadge.textContent = `Today: ${now.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+
+    // ── Theme switcher ──
+    const savedTheme = localStorage.getItem('sp-theme') || 'dark';
+    applyTheme(savedTheme);
+
+    document.querySelectorAll('.theme-dot').forEach(dot => {
+      dot.addEventListener('click', () => applyTheme(dot.dataset.t));
+    });
+
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('sp-theme', t);
+      document.querySelectorAll('.theme-dot').forEach(d => {
+        d.classList.toggle('active', d.dataset.t === t);
+      });
+    }
+
+    // ── Toast ──
+    let toastTimer;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 4000);
+    }
+
+    // ── Form message ──
+    function showMsg(text, type) {
+      formMsg.textContent = text;
+      formMsg.className = `msg ${type}`;
+      setTimeout(() => formMsg.className = 'msg', 3000);
+    }
+
+    function sameMonthDay(dateStr) {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      return d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // ── Render ──
+    function renderTable(employees) {
+      empBody.innerHTML = '';
+      const query = searchInput.value.trim().toLowerCase();
+      const filtered = employees.filter(e =>
+        e.name.toLowerCase().includes(query) ||
+        e.emp_id.toLowerCase().includes(query)
+      );
+      totalCount.textContent = employees.length;
+      emptyState.style.display = filtered.length === 0 ? 'flex' : 'none';
+      document.getElementById('empTable').style.display = filtered.length === 0 ? 'none' : 'table';
+
+      filtered.forEach(emp => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="emp-id">${emp.emp_id}</span></td>
+          <td class="name-cell">${emp.name}</td>
+          <td class="date-cell">
+            ${formatDate(emp.dob)}
+            ${sameMonthDay(emp.dob) ? '<span class="today-badge bday-badge">🎂 Birthday</span>' : ''}
+          </td>
+          <td class="date-cell">
+            ${formatDate(emp.joining_date)}
+            ${sameMonthDay(emp.joining_date) ? '<span class="today-badge join-badge">🏅 Anniversary</span>' : ''}
+          </td>
+          <td><div class="actions">
+            <button class="btn btn-edit"   onclick="openEdit(${emp.id})">Edit</button>
+            <button class="btn btn-danger" onclick="deleteEmp(${emp.id})">Delete</button>
+          </div></td>
+        `;
+        empBody.appendChild(tr);
+      });
+    }
+
+    async function loadEmployees() {
+      allEmployees = await api.getEmployees() || [];
+      renderTable(allEmployees);
+    }
+
+    // ── Add ──
+    addBtn.addEventListener('click', async () => {
+      const emp_id       = empIdInput.value.trim();
+      const name         = nameInput.value.trim();
+      const dob          = dobInput.value;
+      const joining_date = joiningInput.value;
+      if (!emp_id || !name) return showMsg('Employee ID and Name are required.', 'error');
+      const result = await api.addEmployee({ emp_id, name, dob, joining_date });
+      if (result.success) {
+        showMsg('Employee added!', 'success');
+        empIdInput.value = nameInput.value = dobInput.value = joiningInput.value = '';
+        loadEmployees();
+      } else {
+        showMsg(result.error || 'Failed to add.', 'error');
+      }
+    });
+
+    // ── Delete ──
+    async function deleteEmp(id) {
+      if (!confirm('Delete this employee?')) return;
+      await api.deleteEmployee(id);
+      loadEmployees();
+    }
+
+    // ── Edit ──
+    function openEdit(id) {
+      const emp = allEmployees.find(e => e.id === id);
+      if (!emp) return;
+      editIdField.value = emp.id;
+      editEmpId.value   = emp.emp_id;
+      editName.value    = emp.name;
+      editDob.value     = emp.dob || '';
+      editJoining.value = emp.joining_date || '';
+      editOverlay.classList.add('open');
+    }
+    cancelEdit.addEventListener('click', () => editOverlay.classList.remove('open'));
+    saveEdit.addEventListener('click', async () => {
+      const result = await api.updateEmployee({
+        id: parseInt(editIdField.value),
+        emp_id: editEmpId.value.trim(),
+        name: editName.value.trim(),
+        dob: editDob.value,
+        joining_date: editJoining.value,
+      });
+      if (result.success) { editOverlay.classList.remove('open'); loadEmployees(); }
+    });
+
+    // ── Search ──
+    searchInput.addEventListener('input', () => renderTable(allEmployees));
+
+    // ── Test notification button ──
+    testNotifBtn.addEventListener('click', () => api.testNotification());
+
+    // ── Receive ping from main process → show in-app toast ──
+    api.onPing((msg) => showToast(msg));
+
+    loadEmployees();
+  </script>
+</body>
+</html>

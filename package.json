@@ -1,0 +1,27 @@
+{
+  "name": "anniversary-notifier",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/smrati/anniversary-notifier#readme",
+  "bugs": {
+    "url": "https://github.com/smrati/anniversary-notifier/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smrati/anniversary-notifier.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.10.0",
+    "electron": "^42.2.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.4"
+  }
+}
