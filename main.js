@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Notification } = require('electron');
 const path = require('path');
-
+// Required for Windows notifications
+app.setAppUserModelId('com.staffping.app');
 let win;
 let db;
 
@@ -44,16 +45,20 @@ function checkTodayReminders() {
     const mm = today.getMonth();
     const dd = today.getDate();
 
+    console.log(`Checking reminders for ${dd}/${mm + 1} — ${employees.length} employees`);
+
     employees.forEach(emp => {
       if (emp.dob) {
         const d = new Date(emp.dob);
         if (d.getMonth() === mm && d.getDate() === dd) {
+          console.log(`Birthday match: ${emp.name}`);
           sendPing(`🎂 Birthday — ${emp.name}`, `${emp.name} (${emp.emp_id}) has a birthday today! Wish them well.`);
         }
       }
       if (emp.joining_date) {
         const d = new Date(emp.joining_date);
         if (d.getMonth() === mm && d.getDate() === dd) {
+          console.log(`Anniversary match: ${emp.name}`);
           sendPing(`🏅 Work Anniversary — ${emp.name}`, `${emp.name} (${emp.emp_id}) joined on this day. Celebrate their journey!`);
         }
       }
@@ -62,7 +67,6 @@ function checkTodayReminders() {
     console.error('Reminder check failed:', e);
   }
 }
-
 function sendPing(title, body) {
   // Desktop notification
   new Notification({ title, body }).show();
