@@ -73,22 +73,24 @@
     }
 
     /* ── THEME SWITCHER ── */
-    .theme-switcher {
-      display: flex; align-items: center; gap: 6px;
-    }
-    .theme-dot {
-      width: 20px; height: 20px;
-      border-radius: 50%;
+    .btn-theme-toggle {
+      background: transparent;
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 6px;
       cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color .2s, transform .15s;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .2s, border-color .2s;
     }
-    .theme-dot:hover { transform: scale(1.2); }
-    .theme-dot.active { border-color: var(--text); }
-    .theme-dot[data-t="dark"]  { background: linear-gradient(135deg, #0d0f12, #f0b429); }
-    .theme-dot[data-t="light"] { background: linear-gradient(135deg, #f4f5f7, #e09b00); }
-    .theme-dot[data-t="blue"]  { background: linear-gradient(135deg, #0a0e1a, #4f9eff); }
-    .theme-dot[data-t="green"] { background: linear-gradient(135deg, #0a120e, #4ade80); }
+    .btn-theme-toggle:hover { 
+      background: rgba(128,128,128,.05); 
+      border-color: var(--muted);
+    }
 
     /* ── TEST NOTIF BUTTON ── */
     .btn-test-notif {
@@ -318,12 +320,7 @@
       Staff<span>Ping</span>
     </div>
     <div class="header-right">
-      <div class="theme-switcher">
-        <div class="theme-dot active" data-t="dark"  title="Dark"></div>
-        <div class="theme-dot"        data-t="light" title="Light"></div>
-        <div class="theme-dot"        data-t="blue"  title="Blue"></div>
-        <div class="theme-dot"        data-t="green" title="Green"></div>
-      </div>
+      <button class="btn-theme-toggle" id="themeToggleBtn">☀️ Light Mode</button>
       <button class="btn-test-notif" id="testNotifBtn">🔔 Test Ping</button>
       <div class="today-badge-pill" id="todayBadge">Today: —</div>
     </div>
@@ -383,7 +380,6 @@
     </div>
   </div>
 
-  <!-- EDIT MODAL -->
   <div class="overlay" id="editOverlay">
     <div class="modal">
       <h3>Edit Employee</h3>
@@ -399,7 +395,6 @@
     </div>
   </div>
 
-  <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
   <script>
@@ -427,7 +422,26 @@
     const saveEdit     = document.getElementById('saveEdit');
     const toastEl      = document.getElementById('toast');
     const testNotifBtn = document.getElementById('testNotifBtn');
-
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    // ── Enter Key Navigation ──
+    const formInputs = [empIdInput, nameInput, dobInput, joiningInput];
+    
+    formInputs.forEach((input, index) => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault(); // Prevents any weird default form behavior
+          
+          // If not the last input, jump to the next one
+          if (index < formInputs.length - 1) {
+            formInputs[index + 1].focus();
+          } else {
+            // If it is the last input (Joining Date), click the Add button
+            addBtn.click();
+          }
+        }
+      });
+    });
+    
     let allEmployees = [];
     const now = new Date();
 
@@ -435,19 +449,28 @@
     todayBadge.textContent = `Today: ${now.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
 
     // ── Theme switcher ──
-    const savedTheme = localStorage.getItem('sp-theme') || 'dark';
-    applyTheme(savedTheme);
+    let currentTheme = localStorage.getItem('sp-theme') || 'dark';
+    
+    // Safely default to dark if a user previously saved 'blue' or 'green'
+    if(currentTheme !== 'dark' && currentTheme !== 'light') {
+        currentTheme = 'dark';
+    }
+    
+    applyTheme(currentTheme);
 
-    document.querySelectorAll('.theme-dot').forEach(dot => {
-      dot.addEventListener('click', () => applyTheme(dot.dataset.t));
+    themeToggleBtn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(currentTheme);
     });
 
     function applyTheme(t) {
       document.documentElement.setAttribute('data-theme', t);
       localStorage.setItem('sp-theme', t);
-      document.querySelectorAll('.theme-dot').forEach(d => {
-        d.classList.toggle('active', d.dataset.t === t);
-      });
+      if (t === 'dark') {
+        themeToggleBtn.innerHTML = '☀️ Light Mode';
+      } else {
+        themeToggleBtn.innerHTML = '🌙 Dark Mode';
+      }
     }
 
     // ── Toast ──
