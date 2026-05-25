@@ -15,7 +15,7 @@
   "type": "commonjs",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "set ELECTRON_RUN_AS_NODE=& electron ."
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",

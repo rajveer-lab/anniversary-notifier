@@ -1,7 +1,14 @@
-const { app, BrowserWindow, ipcMain, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, shell } = require('electron');
 const path = require('path');
-// Required for Windows notifications
-app.setAppUserModelId('com.staffping.app');
+
+const APP_USER_MODEL_ID = 'com.staffping.app';
+const ICON_PATH = path.join(__dirname, 'fusion-logo.png');
+
+// Required for Windows toast notifications.
+if (process.platform === 'win32') {
+  app.setAppUserModelId(APP_USER_MODEL_ID);
+}
+
 let win;
 let db;
 
@@ -20,6 +27,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   db = require('./database');
+  ensureWindowsNotificationShortcut();
   createWindow();
   checkTodayReminders();
   // Check every hour
@@ -28,8 +36,24 @@ app.whenReady().then(() => {
 
 // ── IPC Handlers ──
 ipcMain.handle('get-employees',    () => { try { return db.getAll(); } catch(e) { return []; } });
-ipcMain.handle('add-employee',    (_, emp) => { try { db.add(emp); return { success: true }; } catch(e) { return { success: false, error: e.message }; } });
-ipcMain.handle('update-employee', (_, emp) => { try { db.update(emp); return { success: true }; } catch(e) { return { success: false, error: e.message }; } });
+ipcMain.handle('add-employee',    (_, emp) => {
+  try {
+    db.add(emp);
+    checkTodayReminders();
+    return { success: true };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+});
+ipcMain.handle('update-employee', (_, emp) => {
+  try {
+    db.update(emp);
+    checkTodayReminders();
+    return { success: true };
+  } catch(e) {
+    return { success: false, error: e.message };
+  }
+});
 ipcMain.handle('delete-employee', (_, id)  => { try { db.delete(id); return { success: true }; } catch(e) { return { success: false, error: e.message }; } });
 
 // ── Test notification ──
@@ -68,11 +92,65 @@ function checkTodayReminders() {
   }
 }
 function sendPing(title, body) {
-  // Desktop notification
-  new Notification({ title, body }).show();
-  // Also send to in-app toast
+  const message = `${title}: ${body}`;
+
+  try {
+    if (!Notification.isSupported()) {
+      throw new Error('Desktop notifications are not supported on this system.');
+    }
+
+    const notification = new Notification({
+      title,
+      body,
+      icon: ICON_PATH,
+      silent: false,
+    });
+
+    notification.on('failed', (_, error) => {
+      console.error('Notification failed:', error);
+      sendToast(`Notification failed: ${error || 'Windows blocked the toast.'}`);
+    });
+
+    notification.show();
+  } catch (e) {
+    console.error('Notification failed:', e);
+    sendToast(`Notification failed: ${e.message}`);
+  }
+
+  sendToast(message);
+}
+
+function sendToast(message) {
   if (win && !win.isDestroyed()) {
-    win.webContents.send('ping', `${title}: ${body}`);
+    win.webContents.send('ping', message);
+  }
+}
+
+function ensureWindowsNotificationShortcut() {
+  if (process.platform !== 'win32') return;
+
+  try {
+    const startMenuRoot = path.join(
+      process.env.APPDATA || app.getPath('appData'),
+      'Microsoft',
+      'Windows',
+      'Start Menu',
+      'Programs'
+    );
+    const shortcutPath = path.join(startMenuRoot, 'StaffPing.lnk');
+    const args = app.isPackaged ? '' : `"${app.getAppPath()}"`;
+
+    shell.writeShortcutLink(shortcutPath, 'create', {
+      target: process.execPath,
+      args,
+      cwd: app.getAppPath(),
+      appUserModelId: APP_USER_MODEL_ID,
+      description: 'StaffPing anniversary reminders',
+      icon: ICON_PATH,
+      iconIndex: 0,
+    });
+  } catch (e) {
+    console.error('Unable to create Windows notification shortcut:', e);
   }
 }
 
