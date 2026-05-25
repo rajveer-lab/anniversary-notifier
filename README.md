@@ -63,12 +63,14 @@ The desktop application will launch automatically.
 ---
 
 ## 📁 Project Structure
-anniversary-notifier/
-├── index.html       # Main UI
-├── main.js          # Electron main process + notification logic
-├── preload.js       # IPC bridge between main and renderer
-├── database.js      # SQLite database operations
-└── package.json     # Project config and dependencies
+
+| File | Purpose |
+|------|---------|
+| `index.html` | Main UI — form, table, theme switcher |
+| `main.js` | Electron main process + notification logic |
+| `preload.js` | IPC bridge between main and renderer |
+| `database.js` | SQLite database operations |
+| `package.json` | Project config and dependencies |
 
 ---
 
