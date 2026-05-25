@@ -81,6 +81,22 @@ The desktop application will launch automatically.
 - Notifications appear even if the app window is minimized
 
 ---
+## 🖥️ Themes
+
+| Theme | Description |
+|-------|-------------|
+| Dark  | Default dark industrial look |
+| Light | Clean white interface |
+| Blue  | Deep navy with blue accents |
+| Green | Dark green terminal style |
+
+---
+
+## ⚠️ Known Limitations
+
+- Notifications only fire when the app is open/running
+- Currently no export to Excel/CSV feature
+- No login or password protection
 
 ## 👤 Author
 
