@@ -116,32 +116,93 @@ function checkTodayReminders() {
     const employees = db.getAll();
     const today = new Date();
     const todayStr = today.toDateString();
+
     const mm = today.getMonth();
     const dd = today.getDate();
 
-    if (lastCheckedDate !== todayStr) {
-      notifiedToday.clear();
-      lastCheckedDate = todayStr;
+    // Read notification history from renderer localStorage-compatible file
+    const notifPath = path.join(app.getPath('userData'), 'notif-state.json');
+
+    let notifState = {};
+
+    if (fs.existsSync(notifPath)) {
+      try {
+        notifState = JSON.parse(fs.readFileSync(notifPath, 'utf8'));
+      } catch {
+        notifState = {};
+      }
+    }
+
+    // Reset every new day
+    if (notifState.date !== todayStr) {
+      notifState = {
+        date: todayStr,
+        notifications: {}
+      };
     }
 
     employees.forEach(emp => {
+
+      // ── BIRTHDAY ──
       if (emp.dob) {
         const d = new Date(emp.dob);
-        const key = `bday-${emp.emp_id}`;
-        if (d.getMonth() === mm && d.getDate() === dd && !notifiedToday.has(key)) {
-          sendPing(`🎂 Birthday — ${emp.name}`, `${emp.name} (${emp.emp_id}) has a birthday today!`);
-          notifiedToday.add(key);
+
+        if (d.getMonth() === mm && d.getDate() === dd) {
+
+          const key = `bday-${emp.emp_id}`;
+
+          const existing = notifState.notifications[key];
+
+          // Skip if already seen/dismissed/notified today
+          if (existing && existing.handled) {
+            return;
+          }
+
+          sendPing(
+            `🎂 Birthday — ${emp.name}`,
+            `${emp.name} (${emp.emp_id}) has a birthday today!`
+          );
+
+          notifState.notifications[key] = {
+            handled: true,
+            timestamp: Date.now()
+          };
         }
       }
+
+      // ── ANNIVERSARY ──
       if (emp.joining_date) {
         const d = new Date(emp.joining_date);
-        const key = `anniv-${emp.emp_id}`;
-        if (d.getMonth() === mm && d.getDate() === dd && !notifiedToday.has(key)) {
-          sendPing(`🏅 Work Anniversary — ${emp.name}`, `${emp.name} (${emp.emp_id}) joined on this day!`);
-          notifiedToday.add(key);
+
+        if (d.getMonth() === mm && d.getDate() === dd) {
+
+          const key = `anniv-${emp.emp_id}`;
+
+          const existing = notifState.notifications[key];
+
+          if (existing && existing.handled) {
+            return;
+          }
+
+          sendPing(
+            `🏅 Work Anniversary — ${emp.name}`,
+            `${emp.name} (${emp.emp_id}) joined on this day!`
+          );
+
+          notifState.notifications[key] = {
+            handled: true,
+            timestamp: Date.now()
+          };
         }
       }
+
     });
+
+    fs.writeFileSync(
+      notifPath,
+      JSON.stringify(notifState, null, 2)
+    );
+
   } catch (e) {
     console.error('Reminder check failed:', e);
   }
