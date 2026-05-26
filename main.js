@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain, Notification, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, shell, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 const APP_USER_MODEL_ID = 'com.staffping.app';
 const ICON_PATH = path.join(__dirname, 'fusion-logo.png');
@@ -64,6 +65,49 @@ ipcMain.handle('update-employee', (_, emp) => {
 ipcMain.handle('delete-employee', (_, emp_id) => {
   try { db.delete(emp_id); return { success: true }; }
   catch (e) { return { success: false, error: e.message }; }
+});
+
+// ── Data Export Handler ──
+ipcMain.handle('export-data', async () => {
+  try {
+    const employees = db.getAll();
+    if (employees.length === 0) {
+      return { success: false, error: 'No employee data available to export.' };
+    }
+
+    // 1. Construct the CSV Header
+    let csvContent = 'Employee ID,Full Name,Date of Birth,Joining Date\n';
+
+    // 2. Map the SQLite database rows into CSV format
+    employees.forEach(emp => {
+      // Wrapping values in quotes prevents issues if names contain commas
+      const id = `"${emp.emp_id}"`;
+      const name = `"${emp.name}"`;
+      const dob = `"${emp.dob_display}"`;
+      const joining = `"${emp.joining_date_display}"`;
+      
+      csvContent += `${id},${name},${dob},${joining}\n`;
+    });
+
+    // 3. Open the native OS "Save As" window
+    const { filePath } = await dialog.showSaveDialog(win, {
+      title: 'Export Employee Data',
+      defaultPath: 'Staff_Directory.csv',
+      filters: [{ name: 'CSV Data Files', extensions: ['csv'] }]
+    });
+
+    // 4. If the user didn't cancel, write the file to their chosen path
+    if (filePath) {
+      fs.writeFileSync(filePath, csvContent, 'utf8');
+      return { success: true, path: filePath };
+    } else {
+      return { success: false, error: 'CANCELLED' }; 
+    }
+
+  } catch (error) {
+    console.error('Export failed:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // ── Reminder logic ──

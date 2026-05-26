@@ -426,10 +426,8 @@
 </head>
 <body>
 
-  <!-- Notification panel overlay -->
   <div class="notif-overlay" id="notif-overlay"></div>
 
-  <!-- Notification slide-in panel -->
   <div class="notif-panel" id="notif-panel">
     <div class="notif-panel-header">
       <div class="notif-panel-title">
@@ -460,7 +458,6 @@
     <div class="header-actions">
       <button class="btn-control" id="theme-toggle">🌙 Dark Mode</button>
 
-      <!-- Bell button -->
       <button class="notif-bell-btn" id="notif-bell-btn" title="Notifications">
         🔔
         <span class="notif-badge" id="notif-badge">0</span>
@@ -498,8 +495,11 @@
     <main class="main-content">
       <div class="view-header">
         <div class="counter-text" id="total-count-text">Total: <strong>0</strong> employees</div>
-        <div class="search-container">
-          <input type="text" id="search-input" placeholder="Search name or ID...">
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-control" id="btn-export"> Export CSV</button>
+          <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search name or ID...">
+          </div>
         </div>
       </div>
       <div class="table-container">
@@ -544,6 +544,7 @@
     const toastBodyEl    = document.getElementById('toast-body-text');
     const toastIconEl    = document.getElementById('toast-icon-el');
     const todayBadge     = document.getElementById('today-badge');
+    const btnExport      = document.getElementById('btn-export'); // New Export Button
 
     // Notification panel refs
     const notifBellBtn   = document.getElementById('notif-bell-btn');
@@ -560,6 +561,25 @@
     todayBadge.textContent = 'Today: ' + now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
     let toastTimer;
+
+    // ── DATA EXPORT LOGIC ──
+    btnExport.addEventListener('click', async () => {
+      const originalText = btnExport.innerText;
+      btnExport.innerText = '⏳ Exporting...';
+      btnExport.disabled = true;
+
+      const result = await window.electronAPI.exportData();
+
+      if (result.success) {
+        showToast(`Export Complete: Saved to ${result.path}`);
+      } else if (result.error !== 'CANCELLED') {
+        showToast(`Export Failed: ${result.error}`, true);
+      }
+
+      // Restore button state
+      btnExport.innerText = originalText;
+      btnExport.disabled = false;
+    });
 
     // ── THEME ──
     const themeToggleBtn = document.getElementById('theme-toggle');
