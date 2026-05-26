@@ -18,10 +18,10 @@
     "start": "set ELECTRON_RUN_AS_NODE=& electron ."
   },
   "dependencies": {
-    "better-sqlite3": "^12.10.0",
-    "electron": "^42.2.0"
+    "better-sqlite3": "^12.10.0"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.0.4"
+    "@electron/rebuild": "^4.0.4",
+    "electron": "^41.7.0"
   }
 }
