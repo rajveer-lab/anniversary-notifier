@@ -11,7 +11,8 @@ if (process.platform === 'win32') {
 
 let win;
 let db;
-
+let lastCheckedDate = null;
+let notifiedToday = new Set();
 function createWindow() {
   win = new BrowserWindow({
     width: 1100, height: 700,
@@ -66,24 +67,40 @@ function checkTodayReminders() {
   try {
     const employees = db.getAll();
     const today = new Date();
+    const todayStr = today.toDateString(); // e.g., "Tue May 26 2026"
     const mm = today.getMonth();
     const dd = today.getDate();
+
+    // If the day has changed (e.g., midnight passed), clear the tracking Set
+    if (lastCheckedDate !== todayStr) {
+      notifiedToday.clear();
+      lastCheckedDate = todayStr;
+    }
 
     console.log(`Checking reminders for ${dd}/${mm + 1} — ${employees.length} employees`);
 
     employees.forEach(emp => {
+      // --- Birthday Check ---
       if (emp.dob) {
         const d = new Date(emp.dob);
-        if (d.getMonth() === mm && d.getDate() === dd) {
+        const bdayKey = `bday-${emp.emp_id}`; // Create a unique key for this event
+
+        if (d.getMonth() === mm && d.getDate() === dd && !notifiedToday.has(bdayKey)) {
           console.log(`Birthday match: ${emp.name}`);
           sendPing(`🎂 Birthday — ${emp.name}`, `${emp.name} (${emp.emp_id}) has a birthday today! Wish them well.`);
+          notifiedToday.add(bdayKey); // Mark as notified so it doesn't fire again today
         }
       }
+
+      // --- Work Anniversary Check ---
       if (emp.joining_date) {
         const d = new Date(emp.joining_date);
-        if (d.getMonth() === mm && d.getDate() === dd) {
+        const annivKey = `anniv-${emp.emp_id}`;
+
+        if (d.getMonth() === mm && d.getDate() === dd && !notifiedToday.has(annivKey)) {
           console.log(`Anniversary match: ${emp.name}`);
           sendPing(`🏅 Work Anniversary — ${emp.name}`, `${emp.name} (${emp.emp_id}) joined on this day. Celebrate their journey!`);
+          notifiedToday.add(annivKey); // Mark as notified
         }
       }
     });
