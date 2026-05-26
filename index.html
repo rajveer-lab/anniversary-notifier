@@ -1,602 +1,890 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>StaffPing</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StaffPing — Fusion Global Business Solutions</title>
   <style>
-    /* ── THEMES ── */
-    [data-theme="dark"] {
-      --bg: #0d0f12; --surface: #13161b; --border: #1f2530;
-      --accent: #f0b429; --accent2: #3ecfcf; --danger: #f75f5f;
-      --text: #e8eaf0; --muted: #5a6278;
+    :root {
+      --background: #090a0c;
+      --surface: #111317;
+      --surface-hover: #1b1e24;
+      --text: #f3f4f6;
+      --muted: #8a92a6;
+      --border: rgba(255, 255, 255, 0.06);
+      --accent: #d6001c;
+      --accent-hover: #ff1a37;
+      --accent-glow: rgba(214, 0, 28, 0.12);
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    [data-theme="light"] {
-      --bg: #f4f5f7; --surface: #ffffff; --border: #e0e3ea;
-      --accent: #e09b00; --accent2: #0ea5a5; --danger: #e03e3e;
-      --text: #1a1d23; --muted: #8a93a8;
+    body.light-theme {
+      --background: #f4f5f7;
+      --surface: #ffffff;
+      --surface-hover: #eef0f3;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: rgba(0, 0, 0, 0.08);
+      --accent-glow: rgba(214, 0, 28, 0.06);
     }
-    [data-theme="blue"] {
-      --bg: #0a0e1a; --surface: #0f1628; --border: #1a2540;
-      --accent: #4f9eff; --accent2: #a78bfa; --danger: #f75f5f;
-      --text: #cdd6f4; --muted: #45506e;
-    }
-    [data-theme="green"] {
-      --bg: #0a120e; --surface: #0d1a12; --border: #163020;
-      --accent: #4ade80; --accent2: #34d399; --danger: #f87171;
-      --text: #dcfce7; --muted: #3a6650;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: var(--bg);
+      font-family: var(--font-stack);
+      background-color: var(--background);
       color: var(--text);
-      font-family: 'Syne', sans-serif;
-      min-height: 100vh;
+      letter-spacing: -0.01em;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      transition: background .3s, color .3s;
+      overflow: hidden;
+      transition: background-color 0.2s, color 0.2s;
     }
 
     /* ── HEADER ── */
     header {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 28px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      -webkit-app-region: drag;
-      gap: 12px;
+      height: 60px;
+      position: relative;
+      z-index: 100;
     }
-    .logo {
-      display: flex; align-items: center; gap: 10px;
-      font-size: 1.1rem; font-weight: 800; letter-spacing: -0.5px;
+    .brand-container { display: flex; align-items: center; gap: 14px; }
+    .brand-logo {
+      height: 36px; width: auto; object-fit: contain;
+      filter: invert(1);
     }
-    .logo span { color: var(--accent); }
-
-    .header-right {
-      display: flex; align-items: center; gap: 12px;
-      -webkit-app-region: no-drag;
+    body.light-theme .brand-logo { filter: invert(0); }
+    .brand-title { font-size: 1.25rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .brand-title span { color: var(--accent); }
+    .header-actions { display: flex; align-items: center; gap: 12px; }
+    .btn-control {
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-stack);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
     }
-
-    .today-badge-pill {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      background: var(--accent);
-      color: #000;
-      padding: 3px 10px;
-      border-radius: 20px;
+    .btn-control:hover { background: var(--border); }
+    .date-badge {
+      background: var(--surface-hover);
+      color: var(--text);
+      border: 1px solid rgba(214, 0, 28, 0.25);
+      font-size: 0.8rem;
       font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
     }
 
-    /* ── THEME SWITCHER ── */
-    .btn-theme-toggle {
-      background: transparent;
+    /* ── NOTIFICATION BELL BUTTON ── */
+    .notif-bell-btn {
+      position: relative;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
       color: var(--text);
-      border: 1.5px solid var(--border);
-      padding: 5px 12px;
+      font-size: 1.05rem;
+      width: 36px; height: 36px;
       border-radius: 6px;
       cursor: pointer;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background .2s, border-color .2s;
-    }
-    .btn-theme-toggle:hover { 
-      background: rgba(128,128,128,.05); 
-      border-color: var(--muted);
-    }
-
-    /* ── TEST NOTIF BUTTON ── */
-    .btn-test-notif {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.68rem;
-      background: transparent;
-      color: var(--accent2);
-      border: 1px solid var(--accent2);
-      padding: 4px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .btn-test-notif:hover { background: rgba(62,207,207,.1); }
-
-    /* ── LAYOUT ── */
-    .main {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    /* ── SIDEBAR ── */
-    .sidebar {
-      border-right: 1px solid var(--border);
-      padding: 24px 20px;
-      overflow-y: auto;
-      background: var(--surface);
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-    .sidebar h2 {
-      font-size: 0.7rem; font-weight: 600;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--muted);
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    .field label {
-      font-size: 0.68rem; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase;
-      color: var(--muted);
-    }
-    .field input {
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.88rem;
-      padding: 9px 13px;
-      outline: none;
-      transition: border-color .2s, box-shadow .2s;
-      width: 100%;
-    }
-    .field input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(240,180,41,.1);
-    }
-    .field input::placeholder { color: var(--muted); }
-
-    .btn {
       display: flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 11px 0;
+      transition: background 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .notif-bell-btn:hover { background: var(--border); border-color: rgba(214,0,28,0.3); }
+    .notif-bell-btn.has-unread { border-color: rgba(214,0,28,0.5); }
+    .notif-badge {
+      position: absolute;
+      top: -5px; right: -5px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      min-width: 16px; height: 16px;
       border-radius: 8px;
-      font-family: 'Syne', sans-serif;
-      font-size: 0.88rem; font-weight: 700;
-      cursor: pointer; border: none;
-      transition: opacity .2s, transform .1s;
-    }
-    .btn:active { transform: scale(.98); }
-    .btn-primary { background: var(--accent); color: #000; width: 100%; }
-    .btn-primary:hover { opacity: .85; }
-    .btn-danger {
-      background: transparent; color: var(--danger);
-      border: 1.5px solid var(--danger);
-      padding: 5px 12px; font-size: 0.75rem;
-    }
-    .btn-danger:hover { background: rgba(247,95,95,.1); }
-    .btn-edit {
-      background: transparent; color: var(--accent2);
-      border: 1.5px solid var(--accent2);
-      padding: 5px 12px; font-size: 0.75rem;
-    }
-    .btn-edit:hover { background: rgba(62,207,207,.1); }
-
-    .msg {
-      font-size: 0.78rem; padding: 9px 13px;
-      border-radius: 8px;
-      font-family: 'DM Mono', monospace;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px;
+      border: 2px solid var(--surface);
       display: none;
     }
-    .msg.success { background: rgba(62,207,207,.1); color: var(--accent2); border: 1px solid rgba(62,207,207,.2); display: block; }
-    .msg.error   { background: rgba(247,95,95,.1);  color: var(--danger);  border: 1px solid rgba(247,95,95,.2);  display: block; }
+    .notif-badge.visible { display: flex; }
 
-    /* ── CONTENT ── */
-    .content { display: flex; flex-direction: column; overflow: hidden; }
-
-    .toolbar {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      padding: 14px 24px;
-      border-bottom: 1px solid var(--border);
-      gap: 12px; flex-wrap: wrap;
+    /* ── NOTIFICATION PANEL (slide-in drawer) ── */
+    .notif-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 900;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
     }
-    .count {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.75rem; color: var(--muted);
-    }
-    .count span { color: var(--accent); font-weight: 600; }
+    .notif-overlay.open { opacity: 1; pointer-events: all; }
 
-    .search-wrap input {
+    .notif-panel {
+      position: fixed;
+      top: 0; right: 0;
+      width: 380px; height: 100vh;
       background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 8px; color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.82rem; padding: 7px 13px;
-      outline: none; width: 210px;
-      transition: border-color .2s;
+      border-left: 1px solid var(--border);
+      z-index: 950;
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -12px 0 40px rgba(0,0,0,0.5);
     }
-    .search-wrap input:focus { border-color: var(--accent); }
-    .search-wrap input::placeholder { color: var(--muted); }
+    .notif-panel.open { transform: translateX(0); }
 
-    .table-wrap { flex: 1; overflow-y: auto; padding: 18px 24px; }
-
-    table { width: 100%; border-collapse: collapse; }
-    thead th {
-      font-size: 0.65rem; letter-spacing: 2px;
-      text-transform: uppercase; color: var(--muted);
-      padding: 0 10px 10px; text-align: left;
+    .notif-panel-header {
+      padding: 18px 20px;
       border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .notif-panel-title {
+      font-size: 0.9rem; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .notif-panel-title span { font-size: 1rem; }
+    .notif-panel-actions { display: flex; align-items: center; gap: 8px; }
+
+    .btn-notif-action {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--font-stack);
+      font-size: 0.72rem;
       font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    tbody tr {
-      transition: background .15s;
-      border-bottom: 1px solid rgba(128,128,128,.06);
+    .btn-notif-action:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+    .btn-notif-action.danger:hover { color: #f87171; border-color: rgba(214,0,28,0.4); }
+
+    .btn-close-panel {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      border-radius: 4px;
+      transition: color 0.15s;
     }
-    tbody tr:hover { background: rgba(128,128,128,.05); }
-    tbody td { padding: 13px 10px; font-size: 0.86rem; vertical-align: middle; }
+    .btn-close-panel:hover { color: var(--text); }
 
-    .emp-id {
-      font-family: 'DM Mono', monospace; font-size: 0.73rem;
-      color: var(--accent);
-      background: rgba(240,180,41,.08);
-      padding: 2px 7px; border-radius: 4px;
+    /* Filter tabs */
+    .notif-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      flex-shrink: 0;
     }
-    .name-cell { font-weight: 600; }
-    .date-cell { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--muted); }
-
-    .today-badge {
-      font-size: 0.62rem; font-weight: 700;
-      letter-spacing: 1px; text-transform: uppercase;
-      padding: 2px 7px; border-radius: 20px; margin-left: 5px;
+    .notif-tab {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: var(--font-stack);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
-    .bday-badge { background: rgba(240,180,41,.15); color: var(--accent); }
-    .join-badge { background: rgba(62,207,207,.15);  color: var(--accent2); }
+    .notif-tab:hover { color: var(--text); }
+    .notif-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-    .actions { display: flex; gap: 6px; }
+    /* Notification list */
+    .notif-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .notif-list::-webkit-scrollbar { width: 4px; }
+    .notif-list::-webkit-scrollbar-track { background: transparent; }
+    .notif-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-    .empty-state {
+    .notif-empty {
+      flex: 1;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      height: 280px; color: var(--muted);
-      gap: 10px; font-size: 0.88rem;
+      gap: 10px;
+      color: var(--muted);
+      padding: 40px 20px;
+      text-align: center;
     }
-    .empty-state .icon { font-size: 2.2rem; opacity: .3; }
+    .notif-empty-icon { font-size: 2.5rem; opacity: 0.4; }
+    .notif-empty-text { font-size: 0.82rem; line-height: 1.5; }
 
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-
-    /* ── MODAL ── */
-    .overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.6);
-      display: none; align-items: center; justify-content: center;
-      z-index: 100; backdrop-filter: blur(4px);
+    /* Individual notification card */
+    .notif-card {
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.15s;
+      animation: slideIn 0.2s ease;
     }
-    .overlay.open { display: flex; }
-    .modal {
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .notif-card.unread { border-color: rgba(214, 0, 28, 0.2); }
+    .notif-card-top { display: flex; align-items: flex-start; gap: 10px; }
+    .notif-card-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .notif-card-body { flex: 1; min-width: 0; }
+    .notif-card-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 3px;
+    }
+    .notif-card-msg {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.45;
+      word-break: break-word;
+    }
+    .notif-card-unread-dot {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .notif-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .notif-card-time {
+      font-size: 0.7rem;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+    .notif-card-actions { display: flex; gap: 6px; }
+    .btn-seen {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--font-stack);
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .btn-seen:hover { color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
+    .btn-dismiss {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: var(--font-stack);
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .btn-dismiss:hover { color: #f87171; border-color: rgba(214,0,28,0.4); }
+
+    /* Type pills */
+    .notif-type-pill {
+      display: inline-flex; align-items: center;
+      font-size: 0.62rem; font-weight: 700;
+      padding: 2px 6px; border-radius: 3px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+    .pill-birthday  { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
+    .pill-anniversary { background: var(--accent-glow); color: #ff4d61; border: 1px solid rgba(214,0,28,0.2); }
+    .pill-system    { background: rgba(234,179,8,0.1); color: #fbbf24; border: 1px solid rgba(234,179,8,0.2); }
+    body.light-theme .pill-birthday { color: #1d4ed8; }
+    body.light-theme .pill-anniversary { color: #b91c1c; }
+    body.light-theme .pill-system { color: #92400e; }
+
+    /* ── LAYOUT ── */
+    .app-viewport { display: flex; flex: 1; height: calc(100vh - 60px); overflow: hidden; }
+    .sidebar-panel {
+      width: 290px;
+      background-color: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px;
+      display: flex; flex-direction: column;
+      gap: 20px;
+    }
+    .panel-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .view-header { display: flex; align-items: center; justify-content: space-between; }
+    .counter-text { font-size: 0.9rem; color: var(--muted); }
+    .counter-text strong { color: var(--text); }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .form-group label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--muted); }
+    input[type="text"], input[type="date"] {
+      background-color: #171a21;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-stack);
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      border-radius: 6px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus, input[type="date"]:focus { border-color: var(--accent); }
+    body.light-theme input[type="text"], body.light-theme input[type="date"] { background-color: #f9fafb; color: #111827; }
+    .btn-primary {
+      background-color: var(--accent);
+      color: #fff;
+      font-family: var(--font-stack);
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 11px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .btn-primary:hover { background-color: var(--accent-hover); }
+    .search-container { width: 260px; }
+    .table-container {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 12px; padding: 24px;
-      width: 340px; display: flex;
-      flex-direction: column; gap: 14px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
     }
-    .modal h3 { font-size: 0.95rem; font-weight: 700; }
-    .modal-actions { display: flex; gap: 8px; }
-    .modal-actions .btn { flex: 1; }
-    .btn-cancel { background: var(--bg); color: var(--muted); border: 1.5px solid var(--border); }
-    .btn-cancel:hover { color: var(--text); }
-    .btn-save { background: var(--accent2); color: #000; }
-    .btn-save:hover { opacity: .88; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #15181e; color: var(--muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+    body.light-theme th { background: #f9fafb; }
+    td { padding: 14px 18px; font-size: 0.85rem; border-bottom: 1px solid var(--border); color: var(--text); }
+    .emp-id-cell { font-family: monospace; color: var(--muted); font-weight: 600; }
+    .emp-name-cell { font-weight: 600; }
+    body:not(.light-theme) .emp-name-cell { color: #ffffff; }
+    body.light-theme .emp-name-cell { color: #111827; }
+    .actions-cell { display: flex; gap: 8px; }
+    .btn-table { padding: 4px 10px; font-size: 0.75rem; font-weight: 600; border-radius: 4px; cursor: pointer; font-family: var(--font-stack); background: transparent; }
+    .btn-edit { border: 1px solid rgba(140,140,140,0.3); color: var(--text); }
+    .btn-delete { border: 1px solid rgba(214,0,28,0.3); color: #f87171; }
+    body.light-theme .btn-delete { color: #dc2626; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+    .badge-anniversary { background: var(--accent-glow); color: #ff4d61; border: 1px solid rgba(214,0,28,0.2); }
+    body.light-theme .badge-anniversary { color: #b91c1c; background: rgba(214,0,28,0.08); }
+    .badge-birthday { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
+    body.light-theme .badge-birthday { color: #1d4ed8; background: rgba(59,130,246,0.08); }
 
     /* ── TOAST ── */
     .toast {
       position: fixed; bottom: 24px; right: 24px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: 10px; padding: 12px 18px;
-      font-size: 0.82rem; font-family: 'DM Mono', monospace;
-      color: var(--text);
-      box-shadow: 0 8px 30px rgba(0,0,0,.3);
-      transform: translateY(80px); opacity: 0;
-      transition: transform .3s, opacity .3s;
-      z-index: 200; max-width: 300px;
+      background: rgba(17,19,23,0.9); backdrop-filter: blur(12px);
+      border: 1px solid rgba(214,0,28,0.25); border-radius: 8px;
+      padding: 14px 20px; color: var(--text); box-shadow: 0 16px 32px rgba(0,0,0,0.6);
+      transform: translateX(120%); opacity: 0; transition: transform 0.4s ease, opacity 0.4s ease;
+      z-index: 9999; display: flex; align-items: center; gap: 12px;
+      max-width: 340px;
     }
-    .toast.show { transform: translateY(0); opacity: 1; }
+    body.light-theme .toast { background: rgba(255,255,255,0.95); box-shadow: 0 16px 32px rgba(0,0,0,0.15); }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast-icon { background: var(--accent-glow); color: #fc8181; padding: 6px; border-radius: 6px; display: inline-flex; font-size: 1rem; flex-shrink: 0; }
+    body.light-theme .toast-icon { color: #d6001c; }
+    .toast-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .toast-title { font-weight: 600; font-size: 0.85rem; }
+    body:not(.light-theme) .toast-title { color: #ffffff; }
+    body.light-theme .toast-title { color: #111827; }
+    .toast-body { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
   </style>
 </head>
 <body>
 
-  <header>
-   <div class="logo">
-      <img src="fusion-logo.png" alt="Fusion Logo" style="height: 28px; margin-right: 6px;">
-      
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="3" width="7" height="7" rx="2" fill="#f0b429"/>
-        <rect x="14" y="3" width="7" height="7" rx="2" fill="#3ecfcf" opacity=".7"/>
-        <rect x="3" y="14" width="7" height="7" rx="2" fill="#3ecfcf" opacity=".7"/>
-        <rect x="14" y="14" width="7" height="7" rx="2" fill="#f0b429" opacity=".5"/>
-      </svg>
-      Staff<span>Ping</span>
+  <!-- Notification panel overlay -->
+  <div class="notif-overlay" id="notif-overlay"></div>
+
+  <!-- Notification slide-in panel -->
+  <div class="notif-panel" id="notif-panel">
+    <div class="notif-panel-header">
+      <div class="notif-panel-title">
+        <span>🔔</span> Notifications
+      </div>
+      <div class="notif-panel-actions">
+        <button class="btn-notif-action" id="btn-mark-all-seen">Mark all seen</button>
+        <button class="btn-notif-action danger" id="btn-clear-all">Clear all</button>
+        <button class="btn-close-panel" id="btn-close-panel">✕</button>
+      </div>
     </div>
-    <div class="header-right">
-      <button class="btn-theme-toggle" id="themeToggleBtn">☀️ Light Mode</button>
-      <button class="btn-test-notif" id="testNotifBtn">🔔 Test Ping</button>
-      <div class="today-badge-pill" id="todayBadge">Today: —</div>
+
+    <div class="notif-tabs">
+      <button class="notif-tab active" data-tab="all">All</button>
+      <button class="notif-tab" data-tab="unread">Unread</button>
+      <button class="notif-tab" data-tab="birthday">🎂 Birthdays</button>
+      <button class="notif-tab" data-tab="anniversary">🏅 Anniversaries</button>
+    </div>
+
+    <div class="notif-list" id="notif-list"></div>
+  </div>
+
+  <header>
+    <div class="brand-container">
+      <img class="brand-logo" src="./fusion-logo.png" alt="Fusion Logo">
+      <div class="brand-title">Staff<span>Ping</span></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-control" id="theme-toggle">🌙 Dark Mode</button>
+
+      <!-- Bell button -->
+      <button class="notif-bell-btn" id="notif-bell-btn" title="Notifications">
+        🔔
+        <span class="notif-badge" id="notif-badge">0</span>
+      </button>
+
+      <div class="date-badge" id="today-badge"></div>
     </div>
   </header>
 
-  <div class="main">
-    <aside class="sidebar">
-      <h2>Add Employee</h2>
-      <div class="field">
-        <label>Employee ID</label>
-        <input type="text" id="empId" placeholder="e.g. EMP-001"/>
+  <div class="app-viewport">
+    <aside class="sidebar-panel">
+      <div class="panel-title" id="form-panel-title">Add Employee</div>
+      <div id="employee-form">
+        <input type="hidden" id="edit-original-emp-id">
+        <div class="form-group">
+          <label for="emp-id">Employee ID</label>
+          <input type="text" id="emp-id" placeholder="e.g. EMP-001" tabindex="1">
+        </div>
+        <div class="form-group">
+          <label for="full-name">Full Name</label>
+          <input type="text" id="full-name" placeholder="e.g. Rajveer Singh" tabindex="2">
+        </div>
+        <div class="form-group">
+          <label for="dob">Date of Birth</label>
+          <input type="date" id="dob" tabindex="3">
+        </div>
+        <div class="form-group">
+          <label for="joining-date">Joining Date</label>
+          <input type="date" id="joining-date" tabindex="4">
+        </div>
+        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="5">Add Employee</button>
       </div>
-      <div class="field">
-        <label>Full Name</label>
-        <input type="text" id="name" placeholder="e.g. Rajveer Singh"/>
-      </div>
-      <div class="field">
-        <label>Date of Birth</label>
-        <input type="date" id="dob"/>
-      </div>
-      <div class="field">
-        <label>Joining Date</label>
-        <input type="date" id="joiningDate"/>
-      </div>
-      <button class="btn btn-primary" id="addBtn">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Add Employee
-      </button>
-      <div id="formMsg" class="msg"></div>
     </aside>
 
-    <div class="content">
-      <div class="toolbar">
-        <div class="count">Total: <span id="totalCount">0</span> employees</div>
-        <div class="search-wrap">
-          <input type="text" id="searchInput" placeholder="Search name or ID…"/>
+    <main class="main-content">
+      <div class="view-header">
+        <div class="counter-text" id="total-count-text">Total: <strong>0</strong> employees</div>
+        <div class="search-container">
+          <input type="text" id="search-input" placeholder="Search name or ID...">
         </div>
       </div>
-      <div class="table-wrap">
-        <table id="empTable">
+      <div class="table-container">
+        <table>
           <thead>
             <tr>
-              <th>Emp ID</th><th>Name</th>
-              <th>Date of Birth</th><th>Joining Date</th>
+              <th>Emp ID</th>
+              <th>Name</th>
+              <th>Date of Birth</th>
+              <th>Joining Date</th>
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="empBody"></tbody>
+          <tbody id="employee-table-body"></tbody>
         </table>
-        <div class="empty-state" id="emptyState">
-          <div class="icon">🗂️</div>
-          <div>No employees yet. Add one to get started.</div>
-        </div>
       </div>
-    </div>
+    </main>
   </div>
 
-  <div class="overlay" id="editOverlay">
-    <div class="modal">
-      <h3>Edit Employee</h3>
-      <input type="hidden" id="editId"/>
-      <div class="field"><label>Employee ID</label><input type="text" id="editEmpId"/></div>
-      <div class="field"><label>Full Name</label><input type="text" id="editName"/></div>
-      <div class="field"><label>Date of Birth</label><input type="date" id="editDob"/></div>
-      <div class="field"><label>Joining Date</label><input type="date" id="editJoining"/></div>
-      <div class="modal-actions">
-        <button class="btn btn-cancel" id="cancelEdit">Cancel</button>
-        <button class="btn btn-save"   id="saveEdit">Save</button>
-      </div>
+  <div class="toast" id="toast-notification">
+    <div class="toast-icon" id="toast-icon-el">🔔</div>
+    <div class="toast-content">
+      <div class="toast-title" id="toast-title-text">Notification</div>
+      <div class="toast-body" id="toast-body-text"></div>
     </div>
   </div>
-
-  <div class="toast" id="toast"></div>
 
   <script>
-    const api = window.electronAPI;
+    // ── ELEMENT REFS ──
+    const tableBody      = document.getElementById('employee-table-body');
+    const searchInput    = document.getElementById('search-input');
+    const totalCountText = document.getElementById('total-count-text');
+    const submitBtn      = document.getElementById('add-employee-btn');
+    const formPanelTitle = document.getElementById('form-panel-title');
+    const editOrigEmpId  = document.getElementById('edit-original-emp-id');
+    const idInput        = document.getElementById('emp-id');
+    const nameInput      = document.getElementById('full-name');
+    const dobInput       = document.getElementById('dob');
+    const joiningInput   = document.getElementById('joining-date');
+    const toastEl        = document.getElementById('toast-notification');
+    const toastTitleEl   = document.getElementById('toast-title-text');
+    const toastBodyEl    = document.getElementById('toast-body-text');
+    const toastIconEl    = document.getElementById('toast-icon-el');
+    const todayBadge     = document.getElementById('today-badge');
 
-    // ── Elements ──
-    const empIdInput   = document.getElementById('empId');
-    const nameInput    = document.getElementById('name');
-    const dobInput     = document.getElementById('dob');
-    const joiningInput = document.getElementById('joiningDate');
-    const addBtn       = document.getElementById('addBtn');
-    const formMsg      = document.getElementById('formMsg');
-    const empBody      = document.getElementById('empBody');
-    const emptyState   = document.getElementById('emptyState');
-    const totalCount   = document.getElementById('totalCount');
-    const searchInput  = document.getElementById('searchInput');
-    const todayBadge   = document.getElementById('todayBadge');
-    const editOverlay  = document.getElementById('editOverlay');
-    const editIdField  = document.getElementById('editId');
-    const editEmpId    = document.getElementById('editEmpId');
-    const editName     = document.getElementById('editName');
-    const editDob      = document.getElementById('editDob');
-    const editJoining  = document.getElementById('editJoining');
-    const cancelEdit   = document.getElementById('cancelEdit');
-    const saveEdit     = document.getElementById('saveEdit');
-    const toastEl      = document.getElementById('toast');
-    const testNotifBtn = document.getElementById('testNotifBtn');
-    const themeToggleBtn = document.getElementById('themeToggleBtn');
-    // ── Enter Key Navigation ──
-    const formInputs = [empIdInput, nameInput, dobInput, joiningInput];
-    
-    formInputs.forEach((input, index) => {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault(); // Prevents any weird default form behavior
-          
-          // If not the last input, jump to the next one
-          if (index < formInputs.length - 1) {
-            formInputs[index + 1].focus();
-          } else {
-            // If it is the last input (Joining Date), click the Add button
-            addBtn.click();
-          }
-        }
-      });
-    });
-    
-    let allEmployees = [];
+    // Notification panel refs
+    const notifBellBtn   = document.getElementById('notif-bell-btn');
+    const notifBadge     = document.getElementById('notif-badge');
+    const notifPanel     = document.getElementById('notif-panel');
+    const notifOverlay   = document.getElementById('notif-overlay');
+    const notifList      = document.getElementById('notif-list');
+    const btnClosePanel  = document.getElementById('btn-close-panel');
+    const btnMarkAllSeen = document.getElementById('btn-mark-all-seen');
+    const btnClearAll    = document.getElementById('btn-clear-all');
+
+    // Live date
     const now = new Date();
+    todayBadge.textContent = 'Today: ' + now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
-    // ── Today badge ──
-    todayBadge.textContent = `Today: ${now.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    let toastTimer;
 
-    // ── Theme switcher ──
-    let currentTheme = localStorage.getItem('sp-theme') || 'dark';
-    
-    // Safely default to dark if a user previously saved 'blue' or 'green'
-    if(currentTheme !== 'dark' && currentTheme !== 'light') {
-        currentTheme = 'dark';
+    // ── THEME ──
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light-theme');
+      themeToggleBtn.innerText = '☀️ Light Mode';
     }
-    
-    applyTheme(currentTheme);
-
     themeToggleBtn.addEventListener('click', () => {
-      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      applyTheme(currentTheme);
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      themeToggleBtn.innerText = isLight ? '☀️ Light Mode' : '🌙 Dark Mode';
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
     });
 
-    function applyTheme(t) {
-      document.documentElement.setAttribute('data-theme', t);
-      localStorage.setItem('sp-theme', t);
-      if (t === 'dark') {
-        themeToggleBtn.innerHTML = '☀️ Light Mode';
-      } else {
-        themeToggleBtn.innerHTML = '🌙 Dark Mode';
-      }
-    }
-
-    // ── Toast ──
-    let toastTimer;
-    function showToast(msg) {
-      toastEl.textContent = msg;
+    // ── TOAST ──
+    function showToast(msg, isError = false) {
+      const colonIdx = msg.indexOf(': ');
+      toastTitleEl.innerText = colonIdx !== -1 ? msg.slice(0, colonIdx) : (isError ? 'Error' : 'Info');
+      toastBodyEl.innerText  = colonIdx !== -1 ? msg.slice(colonIdx + 2) : msg;
+      toastIconEl.innerText  = isError ? '🚨' : '✅';
       toastEl.classList.add('show');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 4000);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 4500);
     }
 
-    // ── Form message ──
-    function showMsg(text, type) {
-      formMsg.textContent = text;
-      formMsg.className = `msg ${type}`;
-      setTimeout(() => formMsg.className = 'msg', 3000);
+    // ════════════════════════════════════════
+    // ── NOTIFICATION STORE (localStorage) ──
+    // ════════════════════════════════════════
+    const NOTIF_KEY = 'staffping_notifications';
+    let activeTab = 'all';
+
+    function loadNotifStore() {
+      try { return JSON.parse(localStorage.getItem(NOTIF_KEY)) || []; }
+      catch { return []; }
     }
 
-    function sameMonthDay(dateStr) {
-      if (!dateStr) return false;
-      const d = new Date(dateStr);
-      return d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    function saveNotifStore(list) {
+      localStorage.setItem(NOTIF_KEY, JSON.stringify(list));
     }
 
-    function formatDate(dateStr) {
-      if (!dateStr) return '—';
-      return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    // Detect type from message string
+    function detectType(msg) {
+      const m = msg.toLowerCase();
+      if (m.includes('birthday') || m.includes('🎂')) return 'birthday';
+      if (m.includes('anniversary') || m.includes('🏅')) return 'anniversary';
+      return 'system';
     }
 
-    // ── Render ──
-    function renderTable(employees) {
-      empBody.innerHTML = '';
-      const query = searchInput.value.trim().toLowerCase();
-      const filtered = employees.filter(e =>
-        e.name.toLowerCase().includes(query) ||
-        e.emp_id.toLowerCase().includes(query)
+    // Add a new notification to the store
+    function pushNotification(msg) {
+      const list = loadNotifStore();
+      const type = detectType(msg);
+
+      // Deduplicate: same message on the same calendar date → skip
+      const today = new Date().toDateString();
+      const alreadyExists = list.some(n => n.msg === msg && n.date === today);
+      if (alreadyExists) return;
+
+      const notif = {
+        id:   Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        msg,
+        type,
+        date: today,
+        ts:   Date.now(),
+        seen: false,
+      };
+      list.unshift(notif); // newest first
+
+      // Keep max 100 entries
+      if (list.length > 100) list.splice(100);
+      saveNotifStore(list);
+      renderNotifPanel();
+    }
+
+    // Mark one as seen
+    function markSeen(id) {
+      const list = loadNotifStore();
+      const n = list.find(x => x.id === id);
+      if (n) { n.seen = true; saveNotifStore(list); renderNotifPanel(); }
+    }
+
+    // Mark all as seen
+    function markAllSeen() {
+      const list = loadNotifStore().map(n => ({ ...n, seen: true }));
+      saveNotifStore(list);
+      renderNotifPanel();
+    }
+
+    // Delete one
+    function dismissNotif(id) {
+      const list = loadNotifStore().filter(n => n.id !== id);
+      saveNotifStore(list);
+      renderNotifPanel();
+    }
+
+    // Clear all
+    function clearAllNotifs() {
+      if (!confirm('Clear all notification history?')) return;
+      saveNotifStore([]);
+      renderNotifPanel();
+    }
+
+    // Update the badge count (unseen only)
+    function updateBadge() {
+      const unseen = loadNotifStore().filter(n => !n.seen).length;
+      notifBadge.textContent = unseen > 99 ? '99+' : unseen;
+      notifBadge.classList.toggle('visible', unseen > 0);
+      notifBellBtn.classList.toggle('has-unread', unseen > 0);
+    }
+
+    // Relative time label
+    function relTime(ts) {
+      const diff = Date.now() - ts;
+      const m = Math.floor(diff / 60000);
+      const h = Math.floor(diff / 3600000);
+      const d = Math.floor(diff / 86400000);
+      if (m < 1)  return 'just now';
+      if (m < 60) return `${m}m ago`;
+      if (h < 24) return `${h}h ago`;
+      if (d < 7)  return `${d}d ago`;
+      return new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    }
+
+    // Render the panel list
+    function renderNotifPanel() {
+      updateBadge();
+      let list = loadNotifStore();
+
+      // Filter by active tab
+      if (activeTab === 'unread')      list = list.filter(n => !n.seen);
+      if (activeTab === 'birthday')    list = list.filter(n => n.type === 'birthday');
+      if (activeTab === 'anniversary') list = list.filter(n => n.type === 'anniversary');
+
+      if (list.length === 0) {
+        notifList.innerHTML = `
+          <div class="notif-empty">
+            <div class="notif-empty-icon">🔕</div>
+            <div class="notif-empty-text">
+              ${activeTab === 'unread' ? 'All caught up! No unread notifications.' : 'No notifications yet.'}
+            </div>
+          </div>`;
+        return;
+      }
+
+      notifList.innerHTML = '';
+      list.forEach(n => {
+        const pillClass = n.type === 'birthday' ? 'pill-birthday' : n.type === 'anniversary' ? 'pill-anniversary' : 'pill-system';
+        const pillLabel = n.type === 'birthday' ? '🎂 Birthday' : n.type === 'anniversary' ? '🏅 Anniversary' : '⚙ System';
+
+        // Split msg into title / body at first ": "
+        const colonIdx = n.msg.indexOf(': ');
+        const cardTitle = colonIdx !== -1 ? n.msg.slice(0, colonIdx) : n.msg;
+        const cardBody  = colonIdx !== -1 ? n.msg.slice(colonIdx + 2) : '';
+
+        const card = document.createElement('div');
+        card.className = 'notif-card' + (n.seen ? '' : ' unread');
+        card.innerHTML = `
+          <div class="notif-card-top">
+            <div class="notif-card-icon">${n.type === 'birthday' ? '🎂' : n.type === 'anniversary' ? '🏅' : '🔔'}</div>
+            <div class="notif-card-body">
+              <div><span class="notif-type-pill ${pillClass}">${pillLabel}</span></div>
+              <div class="notif-card-title">${cardTitle}</div>
+              ${cardBody ? `<div class="notif-card-msg">${cardBody}</div>` : ''}
+            </div>
+            ${!n.seen ? '<div class="notif-card-unread-dot"></div>' : ''}
+          </div>
+          <div class="notif-card-footer">
+            <span class="notif-card-time">${relTime(n.ts)}</span>
+            <div class="notif-card-actions">
+              ${!n.seen ? `<button class="btn-seen" onclick="markSeen('${n.id}')">✓ Mark seen</button>` : ''}
+              <button class="btn-dismiss" onclick="dismissNotif('${n.id}')">✕ Remove</button>
+            </div>
+          </div>`;
+        notifList.appendChild(card);
+      });
+    }
+
+    // ── PANEL OPEN / CLOSE ──
+    function openPanel() {
+      notifPanel.classList.add('open');
+      notifOverlay.classList.add('open');
+      renderNotifPanel();
+    }
+    function closePanel() {
+      notifPanel.classList.remove('open');
+      notifOverlay.classList.remove('open');
+    }
+
+    notifBellBtn.addEventListener('click', openPanel);
+    notifOverlay.addEventListener('click', closePanel);
+    btnClosePanel.addEventListener('click', closePanel);
+    btnMarkAllSeen.addEventListener('click', markAllSeen);
+    btnClearAll.addEventListener('click', clearAllNotifs);
+
+    // Tab switching
+    document.querySelectorAll('.notif-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.notif-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeTab = tab.dataset.tab;
+        renderNotifPanel();
+      });
+    });
+
+    // ── PING from main process → store + toast ──
+    window.electronAPI.onPing((msg) => {
+      pushNotification(msg);   // save to history
+      showToast(msg);          // also show toast
+    });
+
+    // On startup: show toast for any unseen notifications so user isn't surprised
+    window.addEventListener('DOMContentLoaded', () => {
+      const unseen = loadNotifStore().filter(n => !n.seen);
+      if (unseen.length > 0) {
+        showToast(`You have ${unseen.length} unread notification${unseen.length > 1 ? 's' : ''}. Click 🔔 to view.`);
+      }
+      updateBadge();
+    });
+
+    // ── LOAD EMPLOYEES ──
+    async function loadEmployees() {
+      const result = await window.electronAPI.getEmployees();
+      if (!result.success) { showToast('Failed to load: ' + result.error, true); return; }
+
+      const employees = result.data;
+      const query = searchInput.value.toLowerCase();
+      const filtered = employees.filter(emp =>
+        emp.emp_id.toLowerCase().includes(query) ||
+        emp.name.toLowerCase().includes(query)
       );
-      totalCount.textContent = employees.length;
-      emptyState.style.display = filtered.length === 0 ? 'flex' : 'none';
-      document.getElementById('empTable').style.display = filtered.length === 0 ? 'none' : 'table';
+
+      tableBody.innerHTML = '';
+      totalCountText.innerHTML = `Total: <strong>${employees.length}</strong> employees`;
 
       filtered.forEach(emp => {
         const tr = document.createElement('tr');
+        let badgesHTML = '';
+        if (emp.isBirthday)    badgesHTML += ` <span class="badge badge-birthday">🎂 Birthday</span>`;
+        if (emp.isAnniversary) badgesHTML += ` <span class="badge badge-anniversary">🏅 Anniversary</span>`;
+        const safeName = emp.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         tr.innerHTML = `
-          <td><span class="emp-id">${emp.emp_id}</span></td>
-          <td class="name-cell">${emp.name}</td>
-          <td class="date-cell">
-            ${formatDate(emp.dob)}
-            ${sameMonthDay(emp.dob) ? '<span class="today-badge bday-badge">🎂 Birthday</span>' : ''}
-          </td>
-          <td class="date-cell">
-            ${formatDate(emp.joining_date)}
-            ${sameMonthDay(emp.joining_date) ? '<span class="today-badge join-badge">🏅 Anniversary</span>' : ''}
-          </td>
-          <td><div class="actions">
-            <button class="btn btn-edit"   onclick="openEdit(${emp.id})">Edit</button>
-            <button class="btn btn-danger" onclick="deleteEmp(${emp.id})">Delete</button>
-          </div></td>
-        `;
-        empBody.appendChild(tr);
+          <td class="emp-id-cell">${emp.emp_id}</td>
+          <td class="emp-name-cell">${emp.name}</td>
+          <td>${emp.dob_display}</td>
+          <td>${emp.joining_date_display}${badgesHTML}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-table btn-edit"
+                onclick="startEdit('${emp.emp_id}','${safeName}','${emp.dob||''}','${emp.joining_date||''}')">Edit</button>
+              <button class="btn-table btn-delete"
+                onclick="deleteEmployee('${emp.emp_id}')">Delete</button>
+            </div>
+          </td>`;
+        tableBody.appendChild(tr);
       });
     }
 
-    async function loadEmployees() {
-      allEmployees = await api.getEmployees() || [];
-      renderTable(allEmployees);
-    }
-
-    // ── Add ──
-    addBtn.addEventListener('click', async () => {
-      const emp_id       = empIdInput.value.trim();
+    // ── VALIDATE & SUBMIT ──
+    async function validateAndSubmit() {
+      const emp_id       = idInput.value.trim();
       const name         = nameInput.value.trim();
       const dob          = dobInput.value;
       const joining_date = joiningInput.value;
-      if (!emp_id || !name) return showMsg('Employee ID and Name are required.', 'error');
-      const result = await api.addEmployee({ emp_id, name, dob, joining_date });
+
+      if (!emp_id || !name || !dob || !joining_date) {
+        showToast('Form Incomplete: Please fill in all fields.', true); return;
+      }
+      if (/^\d+$/.test(name)) {
+        showToast('Validation Error: Full Name cannot be only numbers.', true);
+        nameInput.focus(); return;
+      }
+
+      let result;
+      if (editOrigEmpId.value) {
+        result = await window.electronAPI.updateEmployee({
+          original_emp_id: editOrigEmpId.value, emp_id, name, dob, joining_date
+        });
+      } else {
+        result = await window.electronAPI.addEmployee({ emp_id, name, dob, joining_date });
+      }
+
       if (result.success) {
-        showMsg('Employee added!', 'success');
-        empIdInput.value = nameInput.value = dobInput.value = joiningInput.value = '';
+        showToast(editOrigEmpId.value ? 'Updated: Employee record saved.' : 'Added: Employee added successfully.');
+        resetForm();
         loadEmployees();
       } else {
-        showMsg(result.error || 'Failed to add.', 'error');
+        showToast('Error: ' + result.error, true);
       }
-    });
-
-    // ── Delete ──
-    async function deleteEmp(id) {
-      if (!confirm('Delete this employee?')) return;
-      await api.deleteEmployee(id);
-      loadEmployees();
     }
 
-    // ── Edit ──
-    function openEdit(id) {
-      const emp = allEmployees.find(e => e.id === id);
-      if (!emp) return;
-      editIdField.value = emp.id;
-      editEmpId.value   = emp.emp_id;
-      editName.value    = emp.name;
-      editDob.value     = emp.dob || '';
-      editJoining.value = emp.joining_date || '';
-      editOverlay.classList.add('open');
-    }
-    cancelEdit.addEventListener('click', () => editOverlay.classList.remove('open'));
-    saveEdit.addEventListener('click', async () => {
-      const result = await api.updateEmployee({
-        id: parseInt(editIdField.value),
-        emp_id: editEmpId.value.trim(),
-        name: editName.value.trim(),
-        dob: editDob.value,
-        joining_date: editJoining.value,
-      });
-      if (result.success) { editOverlay.classList.remove('open'); loadEmployees(); }
+    // ── BUTTON + ENTER NAV ──
+    submitBtn.addEventListener('click', validateAndSubmit);
+    idInput.addEventListener('keydown',      (e) => { if (e.key !== 'Enter') return; e.preventDefault(); nameInput.focus(); });
+    nameInput.addEventListener('keydown',    (e) => {
+      if (e.key !== 'Enter') return; e.preventDefault();
+      if (/^\d+$/.test(nameInput.value.trim())) { showToast('Validation Error: Full Name cannot be only numbers.', true); return; }
+      dobInput.focus();
     });
+    dobInput.addEventListener('keydown',     (e) => { if (e.key !== 'Enter') return; e.preventDefault(); joiningInput.focus(); });
+    joiningInput.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); validateAndSubmit(); });
 
-    // ── Search ──
-    searchInput.addEventListener('input', () => renderTable(allEmployees));
+    // ── EDIT / RESET / DELETE ──
+    function startEdit(emp_id, name, dob, joiningDate) {
+      formPanelTitle.innerText = 'Edit Employee';
+      submitBtn.innerText      = 'Save Changes';
+      editOrigEmpId.value      = emp_id;
+      idInput.value            = emp_id;
+      nameInput.value          = name;
+      dobInput.value           = dob;
+      joiningInput.value       = joiningDate;
+      idInput.focus();
+    }
+    function resetForm() {
+      formPanelTitle.innerText = 'Add Employee';
+      submitBtn.innerText      = 'Add Employee';
+      editOrigEmpId.value = idInput.value = nameInput.value = dobInput.value = joiningInput.value = '';
+    }
+    async function deleteEmployee(emp_id) {
+      if (!confirm(`Remove employee ${emp_id}?`)) return;
+      const result = await window.electronAPI.deleteEmployee(emp_id);
+      if (result.success) { showToast('Deleted: Employee removed.'); loadEmployees(); }
+      else showToast('Error: ' + result.error, true);
+    }
 
-    // ── Test notification button ──
-    testNotifBtn.addEventListener('click', () => api.testNotification());
-
-    // ── Receive ping from main process → show in-app toast ──
-    api.onPing((msg) => showToast(msg));
-
+    searchInput.addEventListener('input', loadEmployees);
     loadEmployees();
   </script>
 </body>

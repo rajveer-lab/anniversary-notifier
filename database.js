@@ -2,74 +2,76 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const { app } = require('electron');
 
-// 1. Define the database path
 const dbPath = path.join(app.getPath('userData'), 'employees.db');
-
-// 2. Initialize the database connection
 const db = new Database(dbPath);
 
-// 3. Performance Tuning: Enable Write-Ahead Logging (WAL)
-// This makes reads and writes significantly faster and safer during crashes.
 db.pragma('journal_mode = WAL');
 
-// 4. Initialize Schema
-// id is now managed natively by SQLite via AUTOINCREMENT
 db.exec(`
   CREATE TABLE IF NOT EXISTS employees (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     emp_id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
-    email TEXT,
     dob TEXT,
     joining_date TEXT
   )
 `);
 
 module.exports = {
-  // ── READ ──
+
   getAll: () => {
-    const stmt = db.prepare('SELECT * FROM employees');
-    return stmt.all(); // Returns an array of objects
+    const rows = db.prepare('SELECT * FROM employees').all();
+    const today = new Date();
+    const mm = today.getMonth();
+    const dd = today.getDate();
+
+    return rows.map(emp => {
+      const isBirthday   = emp.dob          && (() => { const d = new Date(emp.dob);          return d.getMonth() === mm && d.getDate() === dd; })();
+      const isAnniversary = emp.joining_date && (() => { const d = new Date(emp.joining_date); return d.getMonth() === mm && d.getDate() === dd; })();
+
+      // Format dates for display: YYYY-MM-DD → DD Mon YYYY
+      const fmtDate = (raw) => {
+        if (!raw) return '—';
+        const d = new Date(raw);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      };
+
+      return {
+        ...emp,
+        dob_display:          fmtDate(emp.dob),
+        joining_date_display: fmtDate(emp.joining_date),
+        isBirthday:    !!isBirthday,
+        isAnniversary: !!isAnniversary,
+      };
+    });
   },
 
-  // ── CREATE ──
-  add: ({ emp_id, name, email, dob, joining_date }) => {
+  add: ({ emp_id, name, dob, joining_date }) => {
     try {
-      // @ variables are securely mapped to the object keys passed to stmt.run()
-      const stmt = db.prepare(`
-        INSERT INTO employees (emp_id, name, email, dob, joining_date) 
-        VALUES (@emp_id, @name, @email, @dob, @joining_date)
-      `);
-      stmt.run({ emp_id, name, email, dob, joining_date });
+      db.prepare(`
+        INSERT INTO employees (emp_id, name, dob, joining_date)
+        VALUES (@emp_id, @name, @dob, @joining_date)
+      `).run({ emp_id, name, dob, joining_date });
     } catch (error) {
-      // If a user tries to add an ID that already exists, SQLite throws a unique constraint error
       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-        throw new Error('Employee ID already exists');
+        throw new Error(`Employee ID "${emp_id}" already exists`);
       }
-      throw error; 
+      throw error;
     }
   },
 
-  // ── UPDATE ──
-  update: ({ id, emp_id, name, email, dob, joining_date }) => {
+  // Update by emp_id (the text ID the user controls), not the auto-increment integer
+  update: ({ emp_id, original_emp_id, name, dob, joining_date }) => {
     const stmt = db.prepare(`
-      UPDATE employees 
-      SET emp_id = @emp_id, name = @name, email = @email, dob = @dob, joining_date = @joining_date 
-      WHERE id = @id
+      UPDATE employees
+      SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date
+      WHERE emp_id = @original_emp_id
     `);
-    
-    const info = stmt.run({ id, emp_id, name, email, dob, joining_date });
-    
-    // info.changes tells us how many rows were affected. If 0, the ID didn't exist.
-    if (info.changes === 0) {
-      throw new Error('Employee not found');
-    }
+    const info = stmt.run({ emp_id, original_emp_id, name, dob, joining_date });
+    if (info.changes === 0) throw new Error('Employee not found');
   },
 
-  // ── DELETE ──
-  delete: (id) => {
-    // ? allows us to pass a single direct variable safely
-    const stmt = db.prepare('DELETE FROM employees WHERE id = ?');
-    stmt.run(id);
+  delete: (emp_id) => {
+    db.prepare('DELETE FROM employees WHERE emp_id = ?').run(emp_id);
   },
 };
