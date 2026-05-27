@@ -524,7 +524,10 @@
 
   <div class="app-viewport">
     <aside class="sidebar-panel">
-      <div class="panel-title" id="form-panel-title">Add Employee</div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="panel-title" id="form-panel-title">Add Employee</div>
+        <button type="button" class="btn-control" id="btn-clear-form" style="font-size: 0.7rem; padding: 4px 8px;">Clear Form</button>
+      </div>
       <div id="employee-form">
         <input type="hidden" id="edit-original-emp-id">
         <div class="form-group">
@@ -604,6 +607,7 @@
     const btnExport      = document.getElementById('btn-export'); 
     const btnImport      = document.getElementById('btn-import');
     const btnClearData   = document.getElementById('btn-clear-data');
+    const btnClearForm   = document.getElementById('btn-clear-form');
 
     // Notification panel refs
     const notifBellBtn   = document.getElementById('notif-bell-btn');
@@ -673,6 +677,7 @@
 
       if (result.success) {
         showToast('Clear Complete: All employee records have been removed.');
+        resetForm();
         loadEmployees(); // Instantly refresh the data table
       } else {
         showToast(`Clear Failed: ${result.error}`, true);
@@ -682,6 +687,9 @@
       btnClearData.innerText = originalText;
       btnClearData.disabled = false;
     });
+
+    // ── FORM CLEAR LOGIC ──
+    btnClearForm.addEventListener('click', resetForm);
 
     // ── THEME ──
     const themeToggleBtn = document.getElementById('theme-toggle');

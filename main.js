@@ -25,7 +25,6 @@ function createWindow() {
     backgroundColor: '#0d0f12',
   });
   win.loadFile('index.html');
-  win.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
