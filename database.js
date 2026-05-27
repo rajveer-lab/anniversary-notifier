@@ -111,4 +111,8 @@ module.exports = {
   delete: (emp_id) => {
     db.prepare('DELETE FROM employees WHERE emp_id = ?').run(emp_id);
   },
+
+  clearAll: () => {
+    db.prepare('DELETE FROM employees').run();
+  },
 };

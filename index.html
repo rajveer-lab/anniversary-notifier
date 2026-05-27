@@ -73,6 +73,22 @@
       transition: background 0.15s;
     }
     .btn-control:hover { background: var(--border); }
+    .btn-danger-control {
+      border-color: rgba(214, 0, 28, 0.3) !important;
+      color: #f87171 !important;
+    }
+    .btn-danger-control:hover {
+      background: rgba(214, 0, 28, 0.15) !important;
+      border-color: rgba(214, 0, 28, 0.6) !important;
+    }
+    body.light-theme .btn-danger-control {
+      color: #dc2626 !important;
+      border-color: rgba(220, 38, 38, 0.3) !important;
+    }
+    body.light-theme .btn-danger-control:hover {
+      background: rgba(220, 38, 38, 0.08) !important;
+      border-color: rgba(220, 38, 38, 0.6) !important;
+    }
     .date-badge {
       background: var(--surface-hover);
       color: var(--text);
@@ -537,6 +553,7 @@
         <div style="display: flex; gap: 10px; align-items: center;">
           <button class="btn-control" id="btn-import"> Import CSV</button>
           <button class="btn-control" id="btn-export"> Export CSV</button>
+          <button class="btn-control btn-danger-control" id="btn-clear-data">Clear Data</button>
           <div class="search-container">
             <input type="text" id="search-input" placeholder="Search name or ID...">
           </div>
@@ -586,6 +603,7 @@
     const todayBadge     = document.getElementById('today-badge');
     const btnExport      = document.getElementById('btn-export'); 
     const btnImport      = document.getElementById('btn-import');
+    const btnClearData   = document.getElementById('btn-clear-data');
 
     // Notification panel refs
     const notifBellBtn   = document.getElementById('notif-bell-btn');
@@ -640,6 +658,29 @@
       // Restore button state
       btnImport.innerText = originalText;
       btnImport.disabled = false;
+    });
+
+    // ── DATA CLEAR LOGIC ──
+    btnClearData.addEventListener('click', async () => {
+      const confirmClear = confirm('Are you sure you want to clear all employee data? This action cannot be undone.');
+      if (!confirmClear) return;
+
+      const originalText = btnClearData.innerText;
+      btnClearData.innerText = '⏳ Clearing...';
+      btnClearData.disabled = true;
+
+      const result = await window.electronAPI.clearEmployees();
+
+      if (result.success) {
+        showToast('Clear Complete: All employee records have been removed.');
+        loadEmployees(); // Instantly refresh the data table
+      } else {
+        showToast(`Clear Failed: ${result.error}`, true);
+      }
+
+      // Restore button state
+      btnClearData.innerText = originalText;
+      btnClearData.disabled = false;
     });
 
     // ── THEME ──
@@ -899,7 +940,6 @@
     }
 
     // ── VALIDATE & SUBMIT ──
-   // ── VALIDATE & SUBMIT ──
     async function validateAndSubmit() {
       let emp_id         = idInput.value.trim(); // Changed to 'let' so we can update it
       const name         = nameInput.value.trim();

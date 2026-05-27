@@ -25,6 +25,7 @@ function createWindow() {
     backgroundColor: '#0d0f12',
   });
   win.loadFile('index.html');
+  win.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
@@ -65,6 +66,16 @@ ipcMain.handle('update-employee', (_, emp) => {
 ipcMain.handle('delete-employee', (_, emp_id) => {
   try { db.delete(emp_id); return { success: true }; }
   catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('clear-employees', () => {
+  try {
+    db.clearAll();
+    checkTodayReminders();
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
 });
 
 // ── Data Export Handler ──
