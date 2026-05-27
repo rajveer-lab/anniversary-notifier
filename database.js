@@ -20,7 +20,7 @@ db.exec(`
 module.exports = {
 
   getAll: () => {
-    const rows = db.prepare('SELECT * FROM employees').all();
+    const rows = db.prepare('SELECT * FROM employees ORDER BY emp_id ASC').all();
     const today = new Date();
     const mm = today.getMonth();
     const dd = today.getDate();
