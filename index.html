@@ -447,6 +447,21 @@
     .emp-name-cell { font-weight: 600; }
     body:not(.light-theme) .emp-name-cell { color: #ffffff; }
     body.light-theme .emp-name-cell { color: #111827; }
+    .email-link {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .email-link:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+    body.light-theme .email-link:hover {
+      color: var(--accent);
+    }
     .actions-cell { display: flex; gap: 8px; }
     .btn-table { padding: 4px 10px; font-size: 0.75rem; font-weight: 600; border-radius: 4px; cursor: pointer; font-family: var(--font-stack); background: transparent; }
     .btn-edit { border: 1px solid rgba(140,140,140,0.3); color: var(--text); }
@@ -539,14 +554,18 @@
           <input type="text" id="full-name" placeholder="e.g. Rajveer Singh" tabindex="2">
         </div>
         <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="text" id="email" placeholder="e.g. employee@company.com" tabindex="3">
+        </div>
+        <div class="form-group">
           <label for="dob">Date of Birth</label>
-          <input type="date" id="dob" tabindex="3">
+          <input type="date" id="dob" tabindex="4">
         </div>
         <div class="form-group">
           <label for="joining-date">Joining Date</label>
-          <input type="date" id="joining-date" tabindex="4">
+          <input type="date" id="joining-date" tabindex="5">
         </div>
-        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="5">Add Employee</button>
+        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="6">Add Employee</button>
       </div>
     </aside>
 
@@ -568,6 +587,7 @@
             <tr>
               <th>Emp ID</th>
               <th>Name</th>
+              <th>Email</th>
               <th>Date of Birth</th>
               <th>Joining Date</th>
               <th>Actions</th>
@@ -597,6 +617,7 @@
     const editOrigEmpId  = document.getElementById('edit-original-emp-id');
     const idInput        = document.getElementById('emp-id');
     const nameInput      = document.getElementById('full-name');
+    const emailInput     = document.getElementById('email');
     const dobInput       = document.getElementById('dob');
     const joiningInput   = document.getElementById('joining-date');
     const toastEl        = document.getElementById('toast-notification');
@@ -909,6 +930,23 @@
       updateBadge();
     });
 
+    // ── GET MAILTO URL ──
+    function getMailtoUrl(emp) {
+      if (!emp.email) return '';
+      let subject = 'StaffPing Connect';
+      let body = `Hi ${emp.name},\n\n`;
+      
+      if (emp.isBirthday) {
+        subject = `Happy Birthday, ${emp.name}! 🎂`;
+        body = `Hi ${emp.name},\n\nWishing you a very Happy Birthday! Hope you have a wonderful day ahead.\n\nBest regards,\n`;
+      } else if (emp.isAnniversary) {
+        subject = `Happy Work Anniversary, ${emp.name}! 🏅`;
+        body = `Hi ${emp.name},\n\nCongratulations on your work anniversary! Thank you for all your hard work and dedication.\n\nBest regards,\n`;
+      }
+      
+      return `mailto:${emp.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
     // ── LOAD EMPLOYEES ──
     async function loadEmployees() {
       const result = await window.electronAPI.getEmployees();
@@ -930,15 +968,20 @@
         if (emp.isBirthday)    badgesHTML += ` <span class="badge badge-birthday">🎂 Birthday</span>`;
         if (emp.isAnniversary) badgesHTML += ` <span class="badge badge-anniversary">🏅 Anniversary</span>`;
         const safeName = emp.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeEmail = (emp.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const mailtoUrl = getMailtoUrl(emp);
         tr.innerHTML = `
           <td class="emp-id-cell">${emp.emp_id}</td>
           <td class="emp-name-cell">${emp.name}</td>
+          <td>
+            ${emp.email ? `<a href="${mailtoUrl}" class="email-link" title="Open in Windows Mail">✉️ ${emp.email}</a>` : '—'}
+          </td>
           <td>${emp.dob_display}</td>
           <td>${emp.joining_date_display}${badgesHTML}</td>
           <td>
             <div class="actions-cell">
               <button class="btn-table btn-edit"
-                onclick="startEdit('${emp.emp_id}','${safeName}','${emp.dob||''}','${emp.joining_date||''}')">Edit</button>
+                onclick="startEdit('${emp.emp_id}','${safeName}','${safeEmail}','${emp.dob||''}','${emp.joining_date||''}')">Edit</button>
               <button class="btn-table btn-delete"
                 onclick="deleteEmployee('${emp.emp_id}')">Delete</button>
             </div>
@@ -951,6 +994,7 @@
     async function validateAndSubmit() {
       let emp_id         = idInput.value.trim(); // Changed to 'let' so we can update it
       const name         = nameInput.value.trim();
+      const email        = emailInput.value.trim();
       const dob          = dobInput.value;
       const joining_date = joiningInput.value;
 
@@ -970,10 +1014,10 @@
       let result;
       if (editOrigEmpId.value) {
         result = await window.electronAPI.updateEmployee({
-          original_emp_id: editOrigEmpId.value, emp_id, name, dob, joining_date
+          original_emp_id: editOrigEmpId.value, emp_id, name, email, dob, joining_date
         });
       } else {
-        result = await window.electronAPI.addEmployee({ emp_id, name, dob, joining_date });
+        result = await window.electronAPI.addEmployee({ emp_id, name, email, dob, joining_date });
       }
 
       if (result.success) {
@@ -991,18 +1035,20 @@
     nameInput.addEventListener('keydown',    (e) => {
       if (e.key !== 'Enter') return; e.preventDefault();
       if (/^\d+$/.test(nameInput.value.trim())) { showToast('Validation Error: Full Name cannot be only numbers.', true); return; }
-      dobInput.focus();
+      emailInput.focus();
     });
+    emailInput.addEventListener('keydown',   (e) => { if (e.key !== 'Enter') return; e.preventDefault(); dobInput.focus(); });
     dobInput.addEventListener('keydown',     (e) => { if (e.key !== 'Enter') return; e.preventDefault(); joiningInput.focus(); });
     joiningInput.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); validateAndSubmit(); });
 
     // ── EDIT / RESET / DELETE ──
-    function startEdit(emp_id, name, dob, joiningDate) {
+    function startEdit(emp_id, name, email, dob, joiningDate) {
       formPanelTitle.innerText = 'Edit Employee';
       submitBtn.innerText      = 'Save Changes';
       editOrigEmpId.value      = emp_id;
       idInput.value            = emp_id;
       nameInput.value          = name;
+      emailInput.value         = email;
       dobInput.value           = dob;
       joiningInput.value       = joiningDate;
       idInput.focus();
@@ -1010,7 +1056,7 @@
     function resetForm() {
       formPanelTitle.innerText = 'Add Employee';
       submitBtn.innerText      = 'Add Employee';
-      editOrigEmpId.value = idInput.value = nameInput.value = dobInput.value = joiningInput.value = '';
+      editOrigEmpId.value = idInput.value = nameInput.value = emailInput.value = dobInput.value = joiningInput.value = '';
     }
     async function deleteEmployee(emp_id) {
       if (!confirm(`Remove employee ${emp_id}?`)) return;

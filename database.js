@@ -13,9 +13,16 @@ db.exec(`
     emp_id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     dob TEXT,
-    joining_date TEXT
+    joining_date TEXT,
+    email TEXT
   )
 `);
+
+try {
+  db.exec(`ALTER TABLE employees ADD COLUMN email TEXT;`);
+} catch (e) {
+  // Ignored if column already exists or table was just created with it
+}
 
 module.exports = {
 
@@ -65,12 +72,13 @@ module.exports = {
   importData: (employees) => {
     // Uses UPSERT to overwrite existing records with the same emp_id to prevent crashes
     const insert = db.prepare(`
-      INSERT INTO employees (emp_id, name, dob, joining_date)
-      VALUES (@emp_id, @name, @dob, @joining_date)
+      INSERT INTO employees (emp_id, name, dob, joining_date, email)
+      VALUES (@emp_id, @name, @dob, @joining_date, @email)
       ON CONFLICT(emp_id) DO UPDATE SET
         name = excluded.name,
         dob = excluded.dob,
-        joining_date = excluded.joining_date
+        joining_date = excluded.joining_date,
+        email = excluded.email
     `);
     
     // Execute all insertions inside a single transaction for safety and performance
@@ -83,12 +91,12 @@ module.exports = {
     transaction(employees);
   },
 
-  add: ({ emp_id, name, dob, joining_date }) => {
+  add: ({ emp_id, name, dob, joining_date, email }) => {
     try {
       db.prepare(`
-        INSERT INTO employees (emp_id, name, dob, joining_date)
-        VALUES (@emp_id, @name, @dob, @joining_date)
-      `).run({ emp_id, name, dob, joining_date });
+        INSERT INTO employees (emp_id, name, dob, joining_date, email)
+        VALUES (@emp_id, @name, @dob, @joining_date, @email)
+      `).run({ emp_id, name, dob, joining_date, email });
     } catch (error) {
       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
         throw new Error(`Employee ID "${emp_id}" already exists`);
@@ -98,13 +106,13 @@ module.exports = {
   },
 
   // Update by emp_id (the text ID the user controls), not the auto-increment integer
-  update: ({ emp_id, original_emp_id, name, dob, joining_date }) => {
+  update: ({ emp_id, original_emp_id, name, dob, joining_date, email }) => {
     const stmt = db.prepare(`
       UPDATE employees
-      SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date
+      SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date, email = @email
       WHERE emp_id = @original_emp_id
     `);
-    const info = stmt.run({ emp_id, original_emp_id, name, dob, joining_date });
+    const info = stmt.run({ emp_id, original_emp_id, name, dob, joining_date, email });
     if (info.changes === 0) throw new Error('Employee not found');
   },
 

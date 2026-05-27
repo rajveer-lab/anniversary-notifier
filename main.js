@@ -25,6 +25,22 @@ function createWindow() {
     backgroundColor: '#0d0f12',
   });
   win.loadFile('index.html');
+
+  // Handle native mailto: and web link navigations
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('mailto:') || url.startsWith('http:') || url.startsWith('https:')) {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    }
+    return { action: 'accept' };
+  });
+
+  win.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('mailto:')) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
 }
 
 app.whenReady().then(() => {
@@ -86,17 +102,18 @@ ipcMain.handle('export-data', async () => {
     }
 
     // 1. Construct the CSV Header
-    let csvContent = 'Employee ID,Full Name,Date of Birth,Joining Date\n';
+    let csvContent = 'Employee ID,Full Name,Email,Date of Birth,Joining Date\n';
 
     // 2. Map the SQLite database rows into CSV format
     employees.forEach(emp => {
       // Wrapping values in quotes prevents issues if names contain commas
       const id = `"${emp.emp_id}"`;
       const name = `"${emp.name}"`;
+      const email = `"${emp.email || ''}"`;
       const dob = `"${emp.dob_display}"`;
       const joining = `"${emp.joining_date_display}"`;
       
-      csvContent += `${id},${name},${dob},${joining}\n`;
+      csvContent += `${id},${name},${email},${dob},${joining}\n`;
     });
 
     // 3. Open the native OS "Save As" window
@@ -153,6 +170,18 @@ ipcMain.handle('import-data', async () => {
       return `${year}-${month}-${day}`;
     };
 
+    // Dynamically parse CSV headers to determine index mappings
+    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+    const idIdx = headers.indexOf('employee id') !== -1 ? headers.indexOf('employee id') : 0;
+    const nameIdx = headers.indexOf('full-name') !== -1 ? headers.indexOf('full-name') : (headers.indexOf('full name') !== -1 ? headers.indexOf('full name') : 1);
+    const emailIdx = headers.indexOf('email');
+    
+    let dobIdx = headers.indexOf('date of birth') !== -1 ? headers.indexOf('date of birth') : -1;
+    if (dobIdx === -1) dobIdx = (emailIdx !== -1) ? 3 : 2;
+    
+    let joinIdx = headers.indexOf('joining date') !== -1 ? headers.indexOf('joining date') : -1;
+    if (joinIdx === -1) joinIdx = (emailIdx !== -1) ? 4 : 3;
+
     // Custom CSV parser to handle quotes accurately
     for (let i = 1; i < lines.length; i++) {
       const result = [];
@@ -177,8 +206,8 @@ ipcMain.handle('import-data', async () => {
       result.push(current.trim());
 
       // Ensure at least ID and Name exist before pushing
-      if (result.length >= 2 && result[0]) { 
-        let rawId = result[0].trim();
+      if (result.length > Math.max(idIdx, nameIdx) && result[idIdx]) { 
+        let rawId = result[idIdx].trim();
 
         // Auto-pad numeric IDs with leading zeros (e.g., "2" becomes "002")
         // This ignores alphanumeric IDs like "EMP-001" to keep them safe.
@@ -188,9 +217,10 @@ ipcMain.handle('import-data', async () => {
 
         employeesToImport.push({
           emp_id: rawId,
-          name: result[1],
-          dob: result[2] ? parseDateForDB(result[2]) : '',
-          joining_date: result[3] ? parseDateForDB(result[3]) : ''
+          name: result[nameIdx] || '',
+          email: emailIdx !== -1 ? (result[emailIdx] || '') : '',
+          dob: result[dobIdx] ? parseDateForDB(result[dobIdx]) : '',
+          joining_date: result[joinIdx] ? parseDateForDB(result[joinIdx]) : ''
         });
       }
     }
