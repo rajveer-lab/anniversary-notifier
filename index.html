@@ -496,6 +496,7 @@
       <div class="view-header">
         <div class="counter-text" id="total-count-text">Total: <strong>0</strong> employees</div>
         <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-control" id="btn-import"> Import CSV</button>
           <button class="btn-control" id="btn-export"> Export CSV</button>
           <div class="search-container">
             <input type="text" id="search-input" placeholder="Search name or ID...">
@@ -544,7 +545,8 @@
     const toastBodyEl    = document.getElementById('toast-body-text');
     const toastIconEl    = document.getElementById('toast-icon-el');
     const todayBadge     = document.getElementById('today-badge');
-    const btnExport      = document.getElementById('btn-export'); // New Export Button
+    const btnExport      = document.getElementById('btn-export'); 
+    const btnImport      = document.getElementById('btn-import');
 
     // Notification panel refs
     const notifBellBtn   = document.getElementById('notif-bell-btn');
@@ -579,6 +581,26 @@
       // Restore button state
       btnExport.innerText = originalText;
       btnExport.disabled = false;
+    });
+
+    // ── DATA IMPORT LOGIC ──
+    btnImport.addEventListener('click', async () => {
+      const originalText = btnImport.innerText;
+      btnImport.innerText = '⏳ Importing...';
+      btnImport.disabled = true;
+
+      const result = await window.electronAPI.importData();
+
+      if (result.success) {
+        showToast(`Import Complete: Successfully updated ${result.count} records.`);
+        loadEmployees(); // Instantly refresh the data table
+      } else if (result.error !== 'CANCELLED') {
+        showToast(`Import Failed: ${result.error}`, true);
+      }
+
+      // Restore button state
+      btnImport.innerText = originalText;
+      btnImport.disabled = false;
     });
 
     // ── THEME ──
@@ -838,11 +860,17 @@
     }
 
     // ── VALIDATE & SUBMIT ──
+   // ── VALIDATE & SUBMIT ──
     async function validateAndSubmit() {
-      const emp_id       = idInput.value.trim();
+      let emp_id         = idInput.value.trim(); // Changed to 'let' so we can update it
       const name         = nameInput.value.trim();
       const dob          = dobInput.value;
       const joining_date = joiningInput.value;
+
+      // Auto-pad manual numeric IDs with leading zeros (e.g., "8" becomes "008")
+      if (emp_id && !isNaN(emp_id)) {
+        emp_id = emp_id.padStart(3, '0');
+      }
 
       if (!emp_id || !name || !dob || !joining_date) {
         showToast('Form Incomplete: Please fill in all fields.', true); return;

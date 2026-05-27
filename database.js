@@ -25,25 +25,62 @@ module.exports = {
     const mm = today.getMonth();
     const dd = today.getDate();
 
-    return rows.map(emp => {
-      const isBirthday   = emp.dob          && (() => { const d = new Date(emp.dob);          return d.getMonth() === mm && d.getDate() === dd; })();
-      const isAnniversary = emp.joining_date && (() => { const d = new Date(emp.joining_date); return d.getMonth() === mm && d.getDate() === dd; })();
+    // Helper to safely parse YYYY-MM-DD to a local date object
+    // This prevents the JS UTC timezone bug that shifts dates back by 1 day
+    const parseLocalDate = (raw) => {
+      if (!raw) return null;
+      const [year, month, day] = raw.split('-');
+      return new Date(year, month - 1, day);
+    };
 
-      // Format dates for display: YYYY-MM-DD → DD Mon YYYY
-      const fmtDate = (raw) => {
-        if (!raw) return '—';
-        const d = new Date(raw);
+    return rows.map(emp => {
+      let isBirthday = false;
+      let isAnniversary = false;
+
+      const dobDate = parseLocalDate(emp.dob);
+      if (dobDate && dobDate.getMonth() === mm && dobDate.getDate() === dd) {
+        isBirthday = true;
+      }
+
+      const joinDate = parseLocalDate(emp.joining_date);
+      if (joinDate && joinDate.getMonth() === mm && joinDate.getDate() === dd) {
+        isAnniversary = true;
+      }
+
+      const fmtDate = (d) => {
+        if (!d) return '—';
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
       };
 
       return {
         ...emp,
-        dob_display:          fmtDate(emp.dob),
-        joining_date_display: fmtDate(emp.joining_date),
-        isBirthday:    !!isBirthday,
-        isAnniversary: !!isAnniversary,
+        dob_display: fmtDate(dobDate),
+        joining_date_display: fmtDate(joinDate),
+        isBirthday,
+        isAnniversary,
       };
     });
+  },
+
+  importData: (employees) => {
+    // Uses UPSERT to overwrite existing records with the same emp_id to prevent crashes
+    const insert = db.prepare(`
+      INSERT INTO employees (emp_id, name, dob, joining_date)
+      VALUES (@emp_id, @name, @dob, @joining_date)
+      ON CONFLICT(emp_id) DO UPDATE SET
+        name = excluded.name,
+        dob = excluded.dob,
+        joining_date = excluded.joining_date
+    `);
+    
+    // Execute all insertions inside a single transaction for safety and performance
+    const transaction = db.transaction((emps) => {
+      for (const emp of emps) {
+        insert.run(emp);
+      }
+    });
+    
+    transaction(employees);
   },
 
   add: ({ emp_id, name, dob, joining_date }) => {

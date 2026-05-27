@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   addEmployee:    (emp) => ipcRenderer.invoke('add-employee', emp),
   updateEmployee: (emp) => ipcRenderer.invoke('update-employee', emp),
   deleteEmployee: (id)  => ipcRenderer.invoke('delete-employee', id),
-  exportData:     ()    => ipcRenderer.invoke('export-data'), // New export channel
+  exportData:     ()    => ipcRenderer.invoke('export-data'),
+  importData:     ()    => ipcRenderer.invoke('import-data'),
   onPing: (cb) => ipcRenderer.on('ping', (_, msg) => cb(msg)),
 });

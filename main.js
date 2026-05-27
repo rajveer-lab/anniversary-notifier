@@ -110,15 +110,97 @@ ipcMain.handle('export-data', async () => {
   }
 });
 
+// ── Data Import Handler ──
+ipcMain.handle('import-data', async () => {
+  try {
+    const { filePaths } = await dialog.showOpenDialog(win, {
+      title: 'Import Employee Data',
+      properties: ['openFile'],
+      filters: [{ name: 'CSV Data Files', extensions: ['csv'] }]
+    });
+
+    if (!filePaths || filePaths.length === 0) {
+      return { success: false, error: 'CANCELLED' };
+    }
+
+    const rawData = fs.readFileSync(filePaths[0], 'utf8');
+    const lines = rawData.split(/\r?\n/).filter(line => line.trim());
+
+    if (lines.length <= 1) {
+      return { success: false, error: 'File is empty or contains no employee data.' };
+    }
+
+    const employeesToImport = [];
+
+    // Helper to safely convert exported text dates back into DB format
+    const parseDateForDB = (dStr) => {
+      if (!dStr || dStr === '—') return '';
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    // Custom CSV parser to handle quotes accurately
+    for (let i = 1; i < lines.length; i++) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      const line = lines[i];
+
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+        if (char === '"' && line[j+1] === '"') {
+          current += '"';
+          j++; // Skip escaped quote
+        } else if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+
+      // Ensure at least ID and Name exist before pushing
+      if (result.length >= 2 && result[0]) { 
+        let rawId = result[0].trim();
+
+        // Auto-pad numeric IDs with leading zeros (e.g., "2" becomes "002")
+        // This ignores alphanumeric IDs like "EMP-001" to keep them safe.
+        if (!isNaN(rawId)) {
+          rawId = rawId.padStart(3, '0');
+        }
+
+        employeesToImport.push({
+          emp_id: rawId,
+          name: result[1],
+          dob: result[2] ? parseDateForDB(result[2]) : '',
+          joining_date: result[3] ? parseDateForDB(result[3]) : ''
+        });
+      }
+    }
+
+    db.importData(employeesToImport);
+    checkTodayReminders(); // Refresh notifications in case imported users have birthdays today
+
+    return { success: true, count: employeesToImport.length };
+
+  } catch (error) {
+    console.error('Import failed:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 // ── Reminder logic ──
 function checkTodayReminders() {
   try {
     const employees = db.getAll();
-    const today = new Date();
-    const todayStr = today.toDateString();
-
-    const mm = today.getMonth();
-    const dd = today.getDate();
+    const todayStr = new Date().toDateString();
 
     // Read notification history from renderer localStorage-compatible file
     const notifPath = path.join(app.getPath('userData'), 'notif-state.json');
@@ -142,22 +224,12 @@ function checkTodayReminders() {
     }
 
     employees.forEach(emp => {
-
       // ── BIRTHDAY ──
-      if (emp.dob) {
-        const d = new Date(emp.dob);
+      if (emp.isBirthday) {
+        const key = `bday-${emp.emp_id}`;
+        const existing = notifState.notifications[key];
 
-        if (d.getMonth() === mm && d.getDate() === dd) {
-
-          const key = `bday-${emp.emp_id}`;
-
-          const existing = notifState.notifications[key];
-
-          // Skip if already seen/dismissed/notified today
-          if (existing && existing.handled) {
-            return;
-          }
-
+        if (!existing || !existing.handled) {
           sendPing(
             `🎂 Birthday — ${emp.name}`,
             `${emp.name} (${emp.emp_id}) has a birthday today!`
@@ -171,19 +243,11 @@ function checkTodayReminders() {
       }
 
       // ── ANNIVERSARY ──
-      if (emp.joining_date) {
-        const d = new Date(emp.joining_date);
+      if (emp.isAnniversary) {
+        const key = `anniv-${emp.emp_id}`;
+        const existing = notifState.notifications[key];
 
-        if (d.getMonth() === mm && d.getDate() === dd) {
-
-          const key = `anniv-${emp.emp_id}`;
-
-          const existing = notifState.notifications[key];
-
-          if (existing && existing.handled) {
-            return;
-          }
-
+        if (!existing || !existing.handled) {
           sendPing(
             `🏅 Work Anniversary — ${emp.name}`,
             `${emp.name} (${emp.emp_id}) joined on this day!`
@@ -195,7 +259,6 @@ function checkTodayReminders() {
           };
         }
       }
-
     });
 
     fs.writeFileSync(
