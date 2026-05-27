@@ -377,12 +377,51 @@
     }
     .btn-primary:hover { background-color: var(--accent-hover); }
     .search-container { width: 260px; }
+   /* ── CUSTOM AUTO-HIDING SCROLLBAR ── */
+    
+    /* Firefox Support */
     .table-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      width: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent; 
+    }
+    .table-container:hover {
+      scrollbar-color: var(--border) transparent;
+    }
+
+    /* WebKit Support (Chrome, Edge, Safari) */
+    .table-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .table-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    /* Thumb is transparent by default */
+    .table-container::-webkit-scrollbar-thumb {
+      background: transparent; 
+      border-radius: 4px;
+    }
+    /* Thumb appears only when hovering over the table area */
+    .table-container:hover::-webkit-scrollbar-thumb {
+      background: var(--border); 
+    }
+    /* Thumb gets slightly darker when you actively hover over the scrollbar itself */
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: var(--muted); 
+    }
+    
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    
+   th { 
+      background: #15181e; 
+      color: var(--muted); 
+      font-size: 0.75rem; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      padding: 12px 18px; 
+      border-bottom: 1px solid var(--border);
+      position: sticky; /* Keeps the headers frozen at the top */
+      top: 0;
+      z-index: 10;      /* Ensures data rows slide underneath the header */
     }
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th { background: #15181e; color: var(--muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; padding: 12px 18px; border-bottom: 1px solid var(--border); }
