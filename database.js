@@ -1,11 +1,11 @@
-const Database = require('better-sqlite3');
+const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const { app } = require('electron');
 
 const dbPath = path.join(app.getPath('userData'), 'employees.db');
 const db = new Database(dbPath);
 
-db.pragma('journal_mode = WAL');
+db.exec('PRAGMA journal_mode = WAL');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS employees (
@@ -80,25 +80,31 @@ module.exports = {
         joining_date = excluded.joining_date,
         email = excluded.email
     `);
+    insert.setAllowBareNamedParameters(true);
     
     // Execute all insertions inside a single transaction for safety and performance
-    const transaction = db.transaction((emps) => {
-      for (const emp of emps) {
+    db.exec('BEGIN TRANSACTION');
+    try {
+      for (const emp of employees) {
         insert.run(emp);
       }
-    });
-    
-    transaction(employees);
+      db.exec('COMMIT');
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
   },
 
   add: ({ emp_id, name, dob, joining_date, email }) => {
     try {
-      db.prepare(`
+      const stmt = db.prepare(`
         INSERT INTO employees (emp_id, name, dob, joining_date, email)
         VALUES (@emp_id, @name, @dob, @joining_date, @email)
-      `).run({ emp_id, name, dob, joining_date, email });
+      `);
+      stmt.setAllowBareNamedParameters(true);
+      stmt.run({ emp_id, name, dob, joining_date, email });
     } catch (error) {
-      if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || (error.message && error.message.includes('UNIQUE constraint failed'))) {
         throw new Error(`Employee ID "${emp_id}" already exists`);
       }
       throw error;
@@ -112,6 +118,7 @@ module.exports = {
       SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date, email = @email
       WHERE emp_id = @original_emp_id
     `);
+    stmt.setAllowBareNamedParameters(true);
     const info = stmt.run({ emp_id, original_emp_id, name, dob, joining_date, email });
     if (info.changes === 0) throw new Error('Employee not found');
   },
