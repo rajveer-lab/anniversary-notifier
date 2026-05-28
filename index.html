@@ -393,6 +393,57 @@
     }
     .btn-primary:hover { background-color: var(--accent-hover); }
     .search-container { width: 260px; }
+    
+    /* ── FILTER ROW ── */
+    .filter-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .filter-group.search {
+      flex: 1;
+    }
+    .filter-group.date {
+      width: 190px;
+    }
+    .filter-group label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .btn-clear-filters {
+      align-self: flex-end;
+      height: 38px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-stack);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-clear-filters:hover {
+      background: var(--border);
+    }
    /* ── CUSTOM AUTO-HIDING SCROLLBAR ── */
     
     /* Firefox Support */
@@ -576,10 +627,23 @@
           <button class="btn-control" id="btn-import"> Import CSV</button>
           <button class="btn-control" id="btn-export"> Export CSV</button>
           <button class="btn-control btn-danger-control" id="btn-clear-data">Clear Data</button>
-          <div class="search-container">
-            <input type="text" id="search-input" placeholder="Search name or ID...">
-          </div>
         </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group search">
+          <label for="search-input">Search Name or ID</label>
+          <input type="text" id="search-input" placeholder="Search name or ID...">
+        </div>
+        <div class="filter-group date">
+          <label for="filter-start-date">Start Date</label>
+          <input type="date" id="filter-start-date">
+        </div>
+        <div class="filter-group date">
+          <label for="filter-end-date">End Date</label>
+          <input type="date" id="filter-end-date">
+        </div>
+        <button class="btn-clear-filters" id="btn-clear-filters" title="Clear search and filters">✕ Clear</button>
       </div>
       <div class="table-container">
         <table>
@@ -611,6 +675,9 @@
     // ── ELEMENT REFS ──
     const tableBody      = document.getElementById('employee-table-body');
     const searchInput    = document.getElementById('search-input');
+    const filterStartDateEl = document.getElementById('filter-start-date');
+    const filterEndDateEl   = document.getElementById('filter-end-date');
+    const btnClearFilters   = document.getElementById('btn-clear-filters');
     const totalCountText = document.getElementById('total-count-text');
     const submitBtn      = document.getElementById('add-employee-btn');
     const formPanelTitle = document.getElementById('form-panel-title');
@@ -954,10 +1021,87 @@
 
       const employees = result.data;
       const query = searchInput.value.toLowerCase();
-      const filtered = employees.filter(emp =>
-        emp.emp_id.toLowerCase().includes(query) ||
-        emp.name.toLowerCase().includes(query)
-      );
+
+      const startVal = filterStartDateEl.value;
+      const endVal = filterEndDateEl.value;
+      
+      let dateFilterActive = false;
+      let startDate = null;
+      let endDate = null;
+      
+      // Helper to safely parse YYYY-MM-DD to a local date object
+      // This prevents the JS UTC timezone bug that shifts dates back by 1 day
+      const parseLocalDate = (raw) => {
+        if (!raw) return null;
+        const parts = raw.split('-');
+        if (parts.length !== 3) return null;
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+        return new Date(year, month - 1, day);
+      };
+
+      if (startVal && endVal) {
+        startDate = parseLocalDate(startVal);
+        endDate = parseLocalDate(endVal);
+        
+        if (startDate && endDate) {
+          if (startDate.getTime() > endDate.getTime()) {
+            showToast('Invalid Date Range: Start date must be before or equal to End date.', true);
+          } else {
+            dateFilterActive = true;
+            // Normalize times to include full day for end date
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+          }
+        }
+      }
+
+      // Helper to check if an anniversary/birthday falls in the date range
+      const isEventInRange = (rawDateStr, start, end) => {
+        if (!rawDateStr) return false;
+        
+        // Parse rawDateStr (YYYY-MM-DD) to get month and day
+        const parts = rawDateStr.split('-');
+        if (parts.length !== 3) return false;
+        const m = parseInt(parts[1], 10);
+        const d = parseInt(parts[2], 10);
+        
+        const yearStart = start.getFullYear();
+        const yearEnd = end.getFullYear();
+        
+        // If range is 1 year or more, everything falls within it
+        const diffDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 366) return true;
+        
+        for (let y = yearStart; y <= yearEnd; y++) {
+          // Construct the anniversary date in year y
+          const annivDate = new Date(y, m - 1, d, 12, 0, 0); // use midday to avoid timezone shifts
+          if (annivDate >= start && annivDate <= end) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      const filtered = employees.filter(emp => {
+        // Text query match
+        const textMatch = !query || 
+          emp.emp_id.toLowerCase().includes(query) ||
+          emp.name.toLowerCase().includes(query);
+        
+        if (!textMatch) return false;
+        
+        // Date range match
+        if (dateFilterActive) {
+          const birthdayMatch = isEventInRange(emp.dob, startDate, endDate);
+          const anniversaryMatch = isEventInRange(emp.joining_date, startDate, endDate);
+          return birthdayMatch || anniversaryMatch;
+        }
+        
+        return true;
+      });
 
       tableBody.innerHTML = '';
       totalCountText.innerHTML = `Total: <strong>${employees.length}</strong> employees`;
@@ -1066,6 +1210,14 @@
     }
 
     searchInput.addEventListener('input', loadEmployees);
+    filterStartDateEl.addEventListener('change', loadEmployees);
+    filterEndDateEl.addEventListener('change', loadEmployees);
+    btnClearFilters.addEventListener('click', () => {
+      searchInput.value = '';
+      filterStartDateEl.value = '';
+      filterEndDateEl.value = '';
+      loadEmployees();
+    });
     loadEmployees();
   </script>
 </body>
