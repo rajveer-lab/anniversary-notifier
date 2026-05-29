@@ -15,10 +15,42 @@
   "type": "commonjs",
   "main": "main.js",
   "scripts": {
-    "start": "set ELECTRON_RUN_AS_NODE=& electron ."
+    "start": "electron .",
+    "dist": "electron-builder --win"
   },
-  "dependencies": {},
   "devDependencies": {
-    "electron": "^41.7.0"
+    "electron": "^41.7.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.staffping.app",
+    "productName": "StaffPing",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "fusion-logo-square.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "StaffPing"
+    },
+    "files": [
+      "database.js",
+      "main.js",
+      "preload.js",
+      "index.html",
+      "fusion-logo.png",
+      "fusion-logo-square.png"
+    ],
+    "asar": true
   }
 }

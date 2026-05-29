@@ -338,7 +338,7 @@ function ensureWindowsNotificationShortcut() {
       cwd: app.getAppPath(),
       appUserModelId: APP_USER_MODEL_ID,
       description: 'StaffPing anniversary reminders',
-      icon: ICON_PATH,
+      icon: app.isPackaged ? process.execPath : ICON_PATH,
       iconIndex: 0,
     });
   } catch (e) {
