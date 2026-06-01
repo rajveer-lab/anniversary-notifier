@@ -356,6 +356,211 @@
       padding: 24px;
       display: flex; flex-direction: column;
       gap: 20px;
+      overflow-y: auto;
+      max-height: 100%;
+    }
+    .sidebar-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    .sidebar-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .sidebar-panel::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    .template-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: background 0.15s;
+    }
+    body.light-theme .template-card {
+      background: rgba(0, 0, 0, 0.01);
+    }
+    .template-card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .template-card textarea {
+      background-color: #171a21;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-stack);
+      font-size: 0.85rem;
+      padding: 8px 10px;
+      border-radius: 6px;
+      width: 100%;
+      min-height: 70px;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .template-card textarea:focus {
+      border-color: var(--accent);
+    }
+    body.light-theme .template-card textarea {
+      background-color: #f9fafb;
+      color: #111827;
+    }
+    .variables-desc {
+      font-size: 0.68rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .backup-restore-group {
+      display: flex;
+      gap: 10px;
+    }
+    .backup-restore-group button {
+      flex: 1;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox-group input {
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    /* ── DASHBOARD WIDGET ── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 900px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    .dash-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .dash-card:hover {
+      border-color: rgba(214, 0, 28, 0.2);
+      transform: translateY(-2px);
+    }
+    body.light-theme .dash-card:hover {
+      border-color: rgba(214, 0, 28, 0.15);
+    }
+    .dash-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .dash-card-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 120px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+    }
+    .dash-card-content::-webkit-scrollbar {
+      width: 4px;
+    }
+    .dash-card-content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+    .dash-event-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px dashed rgba(255,255,255,0.02);
+    }
+    body.light-theme .dash-event-item {
+      border-bottom: 1px dashed rgba(0,0,0,0.04);
+    }
+    .dash-event-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .dash-event-date {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .dash-event-countdown {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      font-weight: 600;
+    }
+    body.light-theme .dash-event-countdown {
+      background: rgba(0, 0, 0, 0.04);
+    }
+    .countdown-today {
+      background: var(--accent-glow) !important;
+      color: #ff4d61 !important;
+      animation: pulse-glow-today 2s infinite;
+    }
+    body.light-theme .countdown-today {
+      color: #dc2626 !important;
+    }
+    @keyframes pulse-glow-today {
+      0% { box-shadow: 0 0 0 0 rgba(214, 0, 28, 0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(214, 0, 28, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(214, 0, 28, 0); }
+    }
+
+    /* ── VARIABLE CHIPS ── */
+    .variable-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .var-chip {
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 3px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .var-chip:hover {
+      background: var(--surface-hover);
+      color: var(--text);
+      border-color: var(--muted);
+    }
+    body.light-theme .var-chip {
+      background: rgba(0, 0, 0, 0.04);
     }
     .panel-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
     .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
@@ -590,6 +795,11 @@
 
   <div class="app-viewport">
     <aside class="sidebar-panel">
+      <div class="checkbox-group">
+        <input type="checkbox" id="chk-clear-notifs-on-clear-data" checked>
+        <label for="chk-clear-notifs-on-clear-data">Clear Notifications When Clearing Employee Data</label>
+      </div>
+
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <div class="panel-title" id="form-panel-title">Add Employee</div>
         <button type="button" class="btn-control" id="btn-clear-form" style="font-size: 0.7rem; padding: 4px 8px;">Clear Form</button>
@@ -605,18 +815,69 @@
           <input type="text" id="full-name" placeholder="e.g. Rajveer Singh" tabindex="2">
         </div>
         <div class="form-group">
+          <label for="department">Department</label>
+          <input type="text" id="department" placeholder="e.g. Sales" tabindex="3">
+        </div>
+        <div class="form-group">
           <label for="email">Email Address</label>
-          <input type="text" id="email" placeholder="e.g. employee@company.com" tabindex="3">
+          <input type="text" id="email" placeholder="e.g. employee@company.com" tabindex="4">
         </div>
         <div class="form-group">
           <label for="dob">Date of Birth</label>
-          <input type="date" id="dob" tabindex="4">
+          <input type="date" id="dob" tabindex="5">
         </div>
         <div class="form-group">
           <label for="joining-date">Joining Date</label>
-          <input type="date" id="joining-date" tabindex="5">
+          <input type="date" id="joining-date" tabindex="6">
         </div>
-        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="6">Add Employee</button>
+        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="7">Add Employee</button>
+      </div>
+
+      <div class="panel-title" style="margin-top: 10px;">Email Templates</div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Birthday template -->
+        <div class="template-card">
+          <div class="template-card-title">🎂 Birthday</div>
+          <div class="form-group" style="margin-bottom: 6px;">
+            <label for="template-bday-subject" style="font-size: 0.68rem;">Subject</label>
+            <input type="text" id="template-bday-subject" style="font-size: 0.8rem; padding: 6px 10px;">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="template-bday-body" style="font-size: 0.68rem;">Body</label>
+            <textarea id="template-bday-body"></textarea>
+          </div>
+        </div>
+
+        <!-- Anniversary template -->
+        <div class="template-card">
+          <div class="template-card-title">🏅 Anniversary</div>
+          <div class="form-group" style="margin-bottom: 6px;">
+            <label for="template-anniv-subject" style="font-size: 0.68rem;">Subject</label>
+            <input type="text" id="template-anniv-subject" style="font-size: 0.8rem; padding: 6px 10px;">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="template-anniv-body" style="font-size: 0.68rem;">Body</label>
+            <textarea id="template-anniv-body"></textarea>
+          </div>
+        </div>
+
+        <div class="variables-desc">
+          Click variable to insert:
+          <div class="variable-chips">
+            <span class="var-chip" data-val="{name}">{name}</span>
+            <span class="var-chip" data-val="{department}">{department}</span>
+            <span class="var-chip" data-val="{employeeId}">{employeeId}</span>
+            <span class="var-chip" data-val="{email}">{email}</span>
+            <span class="var-chip" data-val="{joiningDate}">{joiningDate}</span>
+          </div>
+        </div>
+        <button type="button" class="btn-primary" id="btn-save-templates">Save Templates</button>
+      </div>
+
+      <div class="panel-title" style="margin-top: 10px;">Backup & Restore</div>
+      <div class="backup-restore-group" style="margin-bottom: 10px;">
+        <button type="button" class="btn-control" id="btn-backup-db">Backup</button>
+        <button type="button" class="btn-control" id="btn-restore-db">Restore Database</button>
       </div>
     </aside>
 
@@ -627,6 +888,42 @@
           <button class="btn-control" id="btn-import"> Import CSV</button>
           <button class="btn-control" id="btn-export"> Export CSV</button>
           <button class="btn-control btn-danger-control" id="btn-clear-data">Clear Data</button>
+        </div>
+      </div>
+
+      <!-- Celebrations Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Today's events -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span>🎉 Today's Celebrations</span>
+            <span style="font-size: 0.65rem; background: var(--accent); color: #fff; padding: 1px 5px; border-radius: 3px; font-weight: 700;" id="dash-today-count">0</span>
+          </div>
+          <div class="dash-card-content" id="dash-today-content">
+            <div style="color: var(--muted); text-align: center; margin-top: 15px; font-size: 0.8rem;">No events today</div>
+          </div>
+        </div>
+
+        <!-- Upcoming birthdays -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span>🎂 Upcoming Birthdays (30 Days)</span>
+            <span style="font-size: 0.65rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 1px 5px; border-radius: 3px; font-weight: 700;" id="dash-bday-count">0</span>
+          </div>
+          <div class="dash-card-content" id="dash-bday-content">
+            <div style="color: var(--muted); text-align: center; margin-top: 15px; font-size: 0.8rem;">No upcoming birthdays</div>
+          </div>
+        </div>
+
+        <!-- Upcoming anniversaries -->
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span>🏅 Upcoming Anniversaries (30 Days)</span>
+            <span style="font-size: 0.65rem; background: rgba(234, 179, 8, 0.2); color: #fbbf24; padding: 1px 5px; border-radius: 3px; font-weight: 700;" id="dash-anniv-count">0</span>
+          </div>
+          <div class="dash-card-content" id="dash-anniv-content">
+            <div style="color: var(--muted); text-align: center; margin-top: 15px; font-size: 0.8rem;">No upcoming anniversaries</div>
+          </div>
         </div>
       </div>
 
@@ -651,9 +948,11 @@
             <tr>
               <th>Emp ID</th>
               <th>Name</th>
+              <th>Department</th>
               <th>Email</th>
               <th>Date of Birth</th>
               <th>Joining Date</th>
+              <th>Service</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -684,6 +983,7 @@
     const editOrigEmpId  = document.getElementById('edit-original-emp-id');
     const idInput        = document.getElementById('emp-id');
     const nameInput      = document.getElementById('full-name');
+    const deptInput      = document.getElementById('department');
     const emailInput     = document.getElementById('email');
     const dobInput       = document.getElementById('dob');
     const joiningInput   = document.getElementById('joining-date');
@@ -706,6 +1006,16 @@
     const btnClosePanel  = document.getElementById('btn-close-panel');
     const btnMarkAllSeen = document.getElementById('btn-mark-all-seen');
     const btnClearAll    = document.getElementById('btn-clear-all');
+
+    // Email Templates & Settings refs
+    const templateBdaySub   = document.getElementById('template-bday-subject');
+    const templateBdayBody  = document.getElementById('template-bday-body');
+    const templateAnnivSub  = document.getElementById('template-anniv-subject');
+    const templateAnnivBody = document.getElementById('template-anniv-body');
+    const btnSaveTemplates  = document.getElementById('btn-save-templates');
+    const btnBackupDb       = document.getElementById('btn-backup-db');
+    const btnRestoreDb      = document.getElementById('btn-restore-db');
+    const chkClearNotifs    = document.getElementById('chk-clear-notifs-on-clear-data');
 
     // Live date
     const now = new Date();
@@ -764,7 +1074,13 @@
       const result = await window.electronAPI.clearEmployees();
 
       if (result.success) {
-        showToast('Clear Complete: All employee records have been removed.');
+        let msg = 'Clear Complete: All employee records have been removed.';
+        if (chkClearNotifs.checked) {
+          localStorage.removeItem(NOTIF_KEY);
+          await window.electronAPI.clearNotifications();
+          msg += ' Notification history has also been cleared.';
+        }
+        showToast(msg);
         resetForm();
         loadEmployees(); // Instantly refresh the data table
       } else {
@@ -778,6 +1094,107 @@
 
     // ── FORM CLEAR LOGIC ──
     btnClearForm.addEventListener('click', resetForm);
+
+    // ── EMAIL TEMPLATES LOGIC ──
+    const BDAY_SUBJECT_KEY = 'staffping_bday_subject';
+    const BDAY_BODY_KEY = 'staffping_bday_body';
+    const ANNIV_SUBJECT_KEY = 'staffping_anniv_subject';
+    const ANNIV_BODY_KEY = 'staffping_anniv_body';
+    const CLEAR_NOTIFS_SETTINGS_KEY = 'staffping_clear_notifs_setting';
+
+    const DEFAULT_BDAY_SUBJECT = 'Happy Birthday, {name}!';
+    const DEFAULT_BDAY_BODY = 'Birthday and a great year ahead!\n\nBest regards,\nHR Team';
+    const DEFAULT_ANNIV_SUBJECT = 'Happy Work Anniversary, {name}!';
+    const DEFAULT_ANNIV_BODY = 'Dear {name},\n\nCongratulations on your work anniversary! Thank you for all your hard work and dedication.\n\nBest regards,\nHR Team';
+
+    function loadSettings() {
+      templateBdaySub.value = localStorage.getItem(BDAY_SUBJECT_KEY) || DEFAULT_BDAY_SUBJECT;
+      templateBdayBody.value = localStorage.getItem(BDAY_BODY_KEY) || DEFAULT_BDAY_BODY;
+      templateAnnivSub.value = localStorage.getItem(ANNIV_SUBJECT_KEY) || DEFAULT_ANNIV_SUBJECT;
+      templateAnnivBody.value = localStorage.getItem(ANNIV_BODY_KEY) || DEFAULT_ANNIV_BODY;
+      
+      const clearNotifsVal = localStorage.getItem(CLEAR_NOTIFS_SETTINGS_KEY);
+      chkClearNotifs.checked = clearNotifsVal === null ? true : clearNotifsVal === 'true';
+    }
+
+    btnSaveTemplates.addEventListener('click', () => {
+      localStorage.setItem(BDAY_SUBJECT_KEY, templateBdaySub.value);
+      localStorage.setItem(BDAY_BODY_KEY, templateBdayBody.value);
+      localStorage.setItem(ANNIV_SUBJECT_KEY, templateAnnivSub.value);
+      localStorage.setItem(ANNIV_BODY_KEY, templateAnnivBody.value);
+      showToast('Success: Email templates saved.');
+    });
+    
+    chkClearNotifs.addEventListener('change', () => {
+      localStorage.setItem(CLEAR_NOTIFS_SETTINGS_KEY, chkClearNotifs.checked);
+    });
+
+    // Track focused template input for quick variables insertion
+    let lastFocusedTemplateInput = templateBdayBody;
+    [templateBdaySub, templateBdayBody, templateAnnivSub, templateAnnivBody].forEach(input => {
+      input.addEventListener('focus', () => {
+        lastFocusedTemplateInput = input;
+      });
+    });
+
+    // Handle quick insertion when clicking a variable chip
+    document.querySelectorAll('.var-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!lastFocusedTemplateInput) return;
+        
+        const valToInsert = chip.dataset.val;
+        const input = lastFocusedTemplateInput;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const text = input.value;
+        
+        // Insert the tag at current selection
+        input.value = text.slice(0, start) + valToInsert + text.slice(end);
+        
+        // Restore cursor position immediately after the inserted text
+        input.selectionStart = input.selectionEnd = start + valToInsert.length;
+        input.focus();
+      });
+    });
+
+    // ── BACKUP & RESTORE LOGIC ──
+    btnBackupDb.addEventListener('click', async () => {
+      const originalText = btnBackupDb.innerText;
+      btnBackupDb.innerText = '⏳ Saving...';
+      btnBackupDb.disabled = true;
+      
+      const result = await window.electronAPI.backupDatabase();
+      if (result.success) {
+        showToast(`Backup Complete: Saved to ${result.path}`);
+      } else if (result.error !== 'CANCELLED') {
+        showToast(`Backup Failed: ${result.error}`, true);
+      }
+      
+      btnBackupDb.innerText = originalText;
+      btnBackupDb.disabled = false;
+    });
+
+    btnRestoreDb.addEventListener('click', async () => {
+      const confirmRestore = confirm('Are you sure you want to restore the database from a backup? This will overwrite your current employee list.');
+      if (!confirmRestore) return;
+
+      const originalText = btnRestoreDb.innerText;
+      btnRestoreDb.innerText = '⏳ Restoring...';
+      btnRestoreDb.disabled = true;
+      
+      const result = await window.electronAPI.restoreDatabase();
+      if (result.success) {
+        showToast('Restore Complete: Employee database has been restored.');
+        resetForm();
+        loadEmployees();
+      } else if (result.error !== 'CANCELLED') {
+        showToast(`Restore Failed: ${result.error}`, true);
+      }
+      
+      btnRestoreDb.innerText = originalText;
+      btnRestoreDb.disabled = false;
+    });
 
     // ── THEME ──
     const themeToggleBtn = document.getElementById('theme-toggle');
@@ -1000,18 +1417,174 @@
     // ── GET MAILTO URL ──
     function getMailtoUrl(emp) {
       if (!emp.email) return '';
-      let subject = 'StaffPing Connect';
-      let body = `Hi ${emp.name},\n\n`;
+      
+      let subjectTemplate = '';
+      let bodyTemplate = '';
       
       if (emp.isBirthday) {
-        subject = `Happy Birthday, ${emp.name}! 🎂`;
-        body = `Hi ${emp.name},\n\nWishing you a very Happy Birthday! Hope you have a wonderful day ahead.\n\nBest regards,\n`;
+        subjectTemplate = localStorage.getItem(BDAY_SUBJECT_KEY) || DEFAULT_BDAY_SUBJECT;
+        bodyTemplate = localStorage.getItem(BDAY_BODY_KEY) || DEFAULT_BDAY_BODY;
       } else if (emp.isAnniversary) {
-        subject = `Happy Work Anniversary, ${emp.name}! 🏅`;
-        body = `Hi ${emp.name},\n\nCongratulations on your work anniversary! Thank you for all your hard work and dedication.\n\nBest regards,\n`;
+        subjectTemplate = localStorage.getItem(ANNIV_SUBJECT_KEY) || DEFAULT_ANNIV_SUBJECT;
+        bodyTemplate = localStorage.getItem(ANNIV_BODY_KEY) || DEFAULT_ANNIV_BODY;
+      } else {
+        subjectTemplate = 'StaffPing Connect';
+        bodyTemplate = 'Hi {name},\n\nBest regards,';
       }
       
+      // Helper to compile placeholders
+      const compile = (tmpl) => {
+        if (!tmpl) return '';
+        return tmpl
+          .replace(/{name}/g, emp.name || '')
+          .replace(/{department}/g, emp.department || '')
+          .replace(/{employeeId}/g, emp.emp_id || '')
+          .replace(/{email}/g, emp.email || '')
+          .replace(/{joiningDate}/g, emp.joining_date_display || '');
+      };
+      
+      const subject = compile(subjectTemplate);
+      const body = compile(bodyTemplate);
+      
       return `mailto:${emp.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    // ── UPDATE CELEBRATIONS DASHBOARD ──
+    function updateCelebrationsDashboard(employees) {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      
+      const mmToday = today.getMonth();
+      const ddToday = today.getDate();
+      
+      const todayEvents = [];
+      const upcomingBirthdays = [];
+      const upcomingAnniversaries = [];
+
+      // Helper to safely parse YYYY-MM-DD to a local date object
+      const parseLocalDate = (raw) => {
+        if (!raw) return null;
+        const parts = raw.split('-');
+        if (parts.length !== 3) return null;
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      };
+
+      // Helper to calculate days until next occurrence of month/day
+      const getDaysUntilNextEvent = (rawDateStr) => {
+        if (!rawDateStr) return null;
+        const dobParts = rawDateStr.split('-');
+        if (dobParts.length !== 3) return null;
+        
+        const m = parseInt(dobParts[1], 10) - 1;
+        const d = parseInt(dobParts[2], 10);
+        
+        const currentYear = today.getFullYear();
+        
+        // Next event date in this year or next year
+        let nextEventDate = new Date(currentYear, m, d);
+        nextEventDate.setHours(0,0,0,0);
+        
+        if (nextEventDate.getTime() < today.getTime()) {
+          nextEventDate.setFullYear(currentYear + 1);
+        }
+        
+        const diffTime = nextEventDate.getTime() - today.getTime();
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      };
+
+      employees.forEach(emp => {
+        // Check birthday
+        if (emp.dob) {
+          const dobDate = parseLocalDate(emp.dob);
+          if (dobDate) {
+            const isBdayToday = dobDate.getMonth() === mmToday && dobDate.getDate() === ddToday;
+            if (isBdayToday) {
+              todayEvents.push({ emp, type: 'birthday', label: `🎂 ${emp.name}'s Birthday` });
+            } else {
+              const days = getDaysUntilNextEvent(emp.dob);
+              if (days !== null && days > 0 && days <= 30) {
+                upcomingBirthdays.push({ emp, days, dateStr: dobDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) });
+              }
+            }
+          }
+        }
+
+        // Check anniversary
+        if (emp.joining_date) {
+          const joinDate = parseLocalDate(emp.joining_date);
+          if (joinDate) {
+            const isAnnivToday = joinDate.getMonth() === mmToday && joinDate.getDate() === ddToday;
+            if (isAnnivToday) {
+              // Calculate service years today
+              const years = today.getFullYear() - joinDate.getFullYear();
+              todayEvents.push({ emp, type: 'anniversary', label: `🏅 ${emp.name}'s Anniversary (${years} Yr${years !== 1 ? 's' : ''})` });
+            } else {
+              const days = getDaysUntilNextEvent(emp.joining_date);
+              if (days !== null && days > 0 && days <= 30) {
+                // Calculate next anniversary years
+                const nextAnnivYear = (today.getMonth() > joinDate.getMonth() || (today.getMonth() === joinDate.getMonth() && today.getDate() >= joinDate.getDate())) ? today.getFullYear() + 1 : today.getFullYear();
+                const years = nextAnnivYear - joinDate.getFullYear();
+                upcomingAnniversaries.push({ emp, days, years, dateStr: joinDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) });
+              }
+            }
+          }
+        }
+      });
+
+      // Sort upcoming events by days remaining
+      upcomingBirthdays.sort((a, b) => a.days - b.days);
+      upcomingAnniversaries.sort((a, b) => a.days - b.days);
+
+      // Render today's celebrations
+      const todayContainer = document.getElementById('dash-today-content');
+      const todayCount = document.getElementById('dash-today-count');
+      todayCount.textContent = todayEvents.length;
+      if (todayEvents.length === 0) {
+        todayContainer.innerHTML = `<div style="color: var(--muted); text-align: center; margin-top: 15px; font-size: 0.8rem;">No events today</div>`;
+      } else {
+        todayContainer.innerHTML = todayEvents.map(evt => `
+          <div class="dash-event-item">
+            <span class="dash-event-name">${evt.label}</span>
+            <span class="dash-event-countdown countdown-today">Today</span>
+          </div>
+        `).join('');
+      }
+
+      // Render upcoming birthdays
+      const bdayContainer = document.getElementById('dash-bday-content');
+      const bdayCount = document.getElementById('dash-bday-count');
+      bdayCount.textContent = upcomingBirthdays.length;
+      if (upcomingBirthdays.length === 0) {
+        bdayContainer.innerHTML = `<div style="color: var(--muted); text-align: center; margin-top: 15px; font-size: 0.8rem;">No birthdays in 30 days</div>`;
+      } else {
+        bdayContainer.innerHTML = upcomingBirthdays.map(evt => `
+          <div class="dash-event-item">
+            <div>
+              <span class="dash-event-name">${evt.emp.name}</span>
+              <span class="dash-event-date">(${evt.dateStr})</span>
+            </div>
+            <span class="dash-event-countdown">In ${evt.days} day${evt.days !== 1 ? 's' : ''}</span>
+          </div>
+        `).join('');
+      }
+
+      // Render upcoming anniversaries
+      const annivContainer = document.getElementById('dash-anniv-content');
+      const annivCount = document.getElementById('dash-anniv-count');
+      annivCount.textContent = upcomingAnniversaries.length;
+      if (upcomingAnniversaries.length === 0) {
+        annivContainer.innerHTML = `<div style="color: var(--muted); text-align: center; margin-top: 15px; font-size: 0.8rem;">No anniversaries in 30 days</div>`;
+      } else {
+        annivContainer.innerHTML = upcomingAnniversaries.map(evt => `
+          <div class="dash-event-item">
+            <div>
+              <span class="dash-event-name">${evt.emp.name}</span>
+              <span class="dash-event-date">(${evt.dateStr} - ${evt.years} Yr${evt.years !== 1 ? 's' : ''})</span>
+            </div>
+            <span class="dash-event-countdown">In ${evt.days} day${evt.days !== 1 ? 's' : ''}</span>
+          </div>
+        `).join('');
+      }
     }
 
     // ── LOAD EMPLOYEES ──
@@ -1020,6 +1593,8 @@
       if (!result.success) { showToast('Failed to load: ' + result.error, true); return; }
 
       const employees = result.data;
+      updateCelebrationsDashboard(employees);
+
       const query = searchInput.value.toLowerCase();
 
       const startVal = filterStartDateEl.value;
@@ -1112,20 +1687,23 @@
         if (emp.isBirthday)    badgesHTML += ` <span class="badge badge-birthday">🎂 Birthday</span>`;
         if (emp.isAnniversary) badgesHTML += ` <span class="badge badge-anniversary">🏅 Anniversary</span>`;
         const safeName = emp.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeDept = (emp.department || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const safeEmail = (emp.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const mailtoUrl = getMailtoUrl(emp);
         tr.innerHTML = `
           <td class="emp-id-cell">${emp.emp_id}</td>
           <td class="emp-name-cell">${emp.name}</td>
+          <td>${emp.department || '—'}</td>
           <td>
-            ${emp.email ? `<a href="${mailtoUrl}" class="email-link" title="Open in Windows Mail">✉️ ${emp.email}</a>` : '—'}
+            ${emp.email ? `<a href="${mailtoUrl}" class="email-link" title="Send email via Outlook">✉️ ${emp.email}</a>` : '—'}
           </td>
           <td>${emp.dob_display}</td>
           <td>${emp.joining_date_display}${badgesHTML}</td>
+          <td>${emp.service_display || '—'}</td>
           <td>
             <div class="actions-cell">
               <button class="btn-table btn-edit"
-                onclick="startEdit('${emp.emp_id}','${safeName}','${safeEmail}','${emp.dob||''}','${emp.joining_date||''}')">Edit</button>
+                onclick="startEdit('${emp.emp_id}','${safeName}','${safeDept}','${safeEmail}','${emp.dob||''}','${emp.joining_date||''}')">Edit</button>
               <button class="btn-table btn-delete"
                 onclick="deleteEmployee('${emp.emp_id}')">Delete</button>
             </div>
@@ -1136,18 +1714,19 @@
 
     // ── VALIDATE & SUBMIT ──
     async function validateAndSubmit() {
-      let emp_id         = idInput.value.trim(); // Changed to 'let' so we can update it
+      let emp_id         = idInput.value.trim();
       const name         = nameInput.value.trim();
+      const department   = deptInput.value.trim();
       const email        = emailInput.value.trim();
       const dob          = dobInput.value;
       const joining_date = joiningInput.value;
 
-      // Auto-pad manual numeric IDs with leading zeros (e.g., "8" becomes "008")
+      // Auto-pad manual numeric IDs with leading zeros
       if (emp_id && !isNaN(emp_id)) {
         emp_id = emp_id.padStart(3, '0');
       }
 
-      if (!emp_id || !name || !dob || !joining_date) {
+      if (!emp_id || !name || !department || !dob || !joining_date) {
         showToast('Form Incomplete: Please fill in all fields.', true); return;
       }
       if (/^\d+$/.test(name)) {
@@ -1158,10 +1737,10 @@
       let result;
       if (editOrigEmpId.value) {
         result = await window.electronAPI.updateEmployee({
-          original_emp_id: editOrigEmpId.value, emp_id, name, email, dob, joining_date
+          original_emp_id: editOrigEmpId.value, emp_id, name, department, email, dob, joining_date
         });
       } else {
-        result = await window.electronAPI.addEmployee({ emp_id, name, email, dob, joining_date });
+        result = await window.electronAPI.addEmployee({ emp_id, name, department, email, dob, joining_date });
       }
 
       if (result.success) {
@@ -1179,19 +1758,21 @@
     nameInput.addEventListener('keydown',    (e) => {
       if (e.key !== 'Enter') return; e.preventDefault();
       if (/^\d+$/.test(nameInput.value.trim())) { showToast('Validation Error: Full Name cannot be only numbers.', true); return; }
-      emailInput.focus();
+      deptInput.focus();
     });
+    deptInput.addEventListener('keydown',    (e) => { if (e.key !== 'Enter') return; e.preventDefault(); emailInput.focus(); });
     emailInput.addEventListener('keydown',   (e) => { if (e.key !== 'Enter') return; e.preventDefault(); dobInput.focus(); });
     dobInput.addEventListener('keydown',     (e) => { if (e.key !== 'Enter') return; e.preventDefault(); joiningInput.focus(); });
     joiningInput.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); validateAndSubmit(); });
 
     // ── EDIT / RESET / DELETE ──
-    function startEdit(emp_id, name, email, dob, joiningDate) {
+    function startEdit(emp_id, name, department, email, dob, joiningDate) {
       formPanelTitle.innerText = 'Edit Employee';
       submitBtn.innerText      = 'Save Changes';
       editOrigEmpId.value      = emp_id;
       idInput.value            = emp_id;
       nameInput.value          = name;
+      deptInput.value          = department;
       emailInput.value         = email;
       dobInput.value           = dob;
       joiningInput.value       = joiningDate;
@@ -1200,7 +1781,7 @@
     function resetForm() {
       formPanelTitle.innerText = 'Add Employee';
       submitBtn.innerText      = 'Add Employee';
-      editOrigEmpId.value = idInput.value = nameInput.value = emailInput.value = dobInput.value = joiningInput.value = '';
+      editOrigEmpId.value = idInput.value = nameInput.value = deptInput.value = emailInput.value = dobInput.value = joiningInput.value = '';
     }
     async function deleteEmployee(emp_id) {
       if (!confirm(`Remove employee ${emp_id}?`)) return;
@@ -1218,6 +1799,9 @@
       filterEndDateEl.value = '';
       loadEmployees();
     });
+    
+    // Initialise settings and load data
+    loadSettings();
     loadEmployees();
   </script>
 </body>

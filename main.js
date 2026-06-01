@@ -102,18 +102,19 @@ ipcMain.handle('export-data', async () => {
     }
 
     // 1. Construct the CSV Header
-    let csvContent = 'Employee ID,Full Name,Email,Date of Birth,Joining Date\n';
+    let csvContent = 'Employee ID,Full Name,Department,Email,Date of Birth,Joining Date\n';
 
     // 2. Map the SQLite database rows into CSV format
     employees.forEach(emp => {
       // Wrapping values in quotes prevents issues if names contain commas
       const id = `"${emp.emp_id}"`;
       const name = `"${emp.name}"`;
+      const department = `"${emp.department || ''}"`;
       const email = `"${emp.email || ''}"`;
       const dob = `"${emp.dob_display}"`;
       const joining = `"${emp.joining_date_display}"`;
       
-      csvContent += `${id},${name},${email},${dob},${joining}\n`;
+      csvContent += `${id},${name},${department},${email},${dob},${joining}\n`;
     });
 
     // 3. Open the native OS "Save As" window
@@ -174,6 +175,7 @@ ipcMain.handle('import-data', async () => {
     const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
     const idIdx = headers.indexOf('employee id') !== -1 ? headers.indexOf('employee id') : 0;
     const nameIdx = headers.indexOf('full-name') !== -1 ? headers.indexOf('full-name') : (headers.indexOf('full name') !== -1 ? headers.indexOf('full name') : 1);
+    const departmentIdx = headers.indexOf('department') !== -1 ? headers.indexOf('department') : (headers.indexOf('dept') !== -1 ? headers.indexOf('dept') : (headers.indexOf('dept.') !== -1 ? headers.indexOf('dept.') : -1));
     const emailIdx = headers.indexOf('email');
     
     let dobIdx = headers.indexOf('date of birth') !== -1 ? headers.indexOf('date of birth') : -1;
@@ -218,6 +220,7 @@ ipcMain.handle('import-data', async () => {
         employeesToImport.push({
           emp_id: rawId,
           name: result[nameIdx] || '',
+          department: departmentIdx !== -1 ? (result[departmentIdx] || '') : '',
           email: emailIdx !== -1 ? (result[emailIdx] || '') : '',
           dob: result[dobIdx] ? parseDateForDB(result[dobIdx]) : '',
           joining_date: result[joinIdx] ? parseDateForDB(result[joinIdx]) : ''
@@ -233,6 +236,76 @@ ipcMain.handle('import-data', async () => {
   } catch (error) {
     console.error('Import failed:', error);
     return { success: false, error: error.message };
+  }
+});
+
+// ── Database Backup Handler ──
+ipcMain.handle('backup-database', async () => {
+  try {
+    const sqliteDbPath = path.join(app.getPath('userData'), 'employees.db');
+    const { filePath } = await dialog.showSaveDialog(win, {
+      title: 'Backup Database',
+      defaultPath: 'employees_backup.db',
+      filters: [{ name: 'SQLite Database Files', extensions: ['db'] }]
+    });
+
+    if (filePath) {
+      fs.copyFileSync(sqliteDbPath, filePath);
+      return { success: true, path: filePath };
+    } else {
+      return { success: false, error: 'CANCELLED' };
+    }
+  } catch (e) {
+    console.error('Backup failed:', e);
+    return { success: false, error: e.message };
+  }
+});
+
+// ── Database Restore Handler ──
+ipcMain.handle('restore-database', async () => {
+  try {
+    const sqliteDbPath = path.join(app.getPath('userData'), 'employees.db');
+    const { filePaths } = await dialog.showOpenDialog(win, {
+      title: 'Restore Database',
+      properties: ['openFile'],
+      filters: [{ name: 'SQLite Database Files', extensions: ['db'] }]
+    });
+
+    if (!filePaths || filePaths.length === 0) {
+      return { success: false, error: 'CANCELLED' };
+    }
+
+    // Safe restore: Close DB first, copy file, reopen DB.
+    db.reopen();
+    try {
+      fs.copyFileSync(filePaths[0], sqliteDbPath);
+      try { fs.unlinkSync(sqliteDbPath + '-wal'); } catch(e){}
+      try { fs.unlinkSync(sqliteDbPath + '-shm'); } catch(e){}
+    } catch (err) {
+      db.reopen();
+      throw err;
+    }
+    db.reopen();
+    checkTodayReminders();
+    return { success: true };
+  } catch (e) {
+    console.error('Restore failed:', e);
+    return { success: false, error: e.message };
+  }
+});
+
+// ── Clear Notification State Handler ──
+ipcMain.handle('clear-notifications', () => {
+  try {
+    const notifPath = path.join(app.getPath('userData'), 'notif-state.json');
+    if (fs.existsSync(notifPath)) {
+      fs.writeFileSync(notifPath, JSON.stringify({ date: '', notifications: {} }, null, 2));
+    }
+    notifiedToday.clear();
+    return { success: true };
+  } catch (e) {
+    console.error('Clear notifications failed:', e);
+    return { success: false, error: e.message };
   }
 });
 

@@ -8,5 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   clearEmployees: ()    => ipcRenderer.invoke('clear-employees'),
   exportData:     ()    => ipcRenderer.invoke('export-data'),
   importData:     ()    => ipcRenderer.invoke('import-data'),
+  backupDatabase: ()    => ipcRenderer.invoke('backup-database'),
+  restoreDatabase:()    => ipcRenderer.invoke('restore-database'),
+  clearNotifications: () => ipcRenderer.invoke('clear-notifications'),
   onPing: (cb) => ipcRenderer.on('ping', (_, msg) => cb(msg)),
 });
