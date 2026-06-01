@@ -562,6 +562,89 @@
     body.light-theme .var-chip {
       background: rgba(0, 0, 0, 0.04);
     }
+
+    /* ── MODALS ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal-dialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.92);
+      width: 540px;
+      max-width: 90%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+      z-index: 1050;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-dialog.open {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .btn-close-modal:hover {
+      color: var(--text);
+    }
+    .modal-dialog textarea {
+      background-color: #171a21;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--font-stack);
+      font-size: 0.9rem;
+      padding: 10px 12px;
+      border-radius: 6px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .modal-dialog textarea:focus {
+      border-color: var(--accent);
+    }
+    body.light-theme .modal-dialog textarea {
+      background-color: #f9fafb;
+      color: #111827;
+    }
     .panel-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
     .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
     .view-header { display: flex; align-items: center; justify-content: space-between; }
@@ -970,6 +1053,33 @@
     </div>
   </div>
 
+  <!-- Email Preview/Draft Modal -->
+  <div class="modal-overlay" id="email-preview-overlay"></div>
+  <div class="modal-dialog" id="email-preview-modal">
+    <div class="modal-header">
+      <div class="modal-title">✉️ Edit Email Draft</div>
+      <button class="btn-close-modal" id="btn-close-preview-modal" title="Close">✕</button>
+    </div>
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="preview-to">To</label>
+        <input type="text" id="preview-to" readonly style="background-color: var(--surface-hover); opacity: 0.85;">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="preview-subject">Subject</label>
+        <input type="text" id="preview-subject" placeholder="Enter subject...">
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="preview-body">Body</label>
+        <textarea id="preview-body" style="min-height: 180px; resize: vertical;" placeholder="Enter email body..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--border);">
+      <button type="button" class="btn-control" id="btn-cancel-preview">Cancel</button>
+      <button type="button" class="btn-primary" id="btn-send-outlook" style="width: auto; margin-top: 0;">Open in Outlook</button>
+    </div>
+  </div>
+
   <script>
     // ── ELEMENT REFS ──
     const tableBody      = document.getElementById('employee-table-body');
@@ -1016,6 +1126,19 @@
     const btnBackupDb       = document.getElementById('btn-backup-db');
     const btnRestoreDb      = document.getElementById('btn-restore-db');
     const chkClearNotifs    = document.getElementById('chk-clear-notifs-on-clear-data');
+
+    // Email Preview Modal refs
+    const previewOverlay   = document.getElementById('email-preview-overlay');
+    const previewModal     = document.getElementById('email-preview-modal');
+    const previewTo        = document.getElementById('preview-to');
+    const previewSubject   = document.getElementById('preview-subject');
+    const previewBody      = document.getElementById('preview-body');
+    const btnSendOutlook   = document.getElementById('btn-send-outlook');
+    const btnCancelPreview = document.getElementById('btn-cancel-preview');
+    const btnClosePreviewModal = document.getElementById('btn-close-preview-modal');
+
+    // Global employee data list tracker
+    let globalEmployeesList = [];
 
     // Live date
     const now = new Date();
@@ -1156,6 +1279,54 @@
         input.selectionStart = input.selectionEnd = start + valToInsert.length;
         input.focus();
       });
+    });
+
+    // ── EMAIL DRAFT PREVIEW MODAL LOGIC ──
+    function openEmailPreview(empId) {
+      const emp = globalEmployeesList.find(x => x.emp_id === empId);
+      if (!emp || !emp.email) {
+        showToast('Error: Employee does not have a valid email address.', true);
+        return;
+      }
+      
+      const draft = getCompiledEmailDraft(emp);
+      if (!draft) return;
+      
+      previewTo.value = draft.to;
+      previewSubject.value = draft.subject;
+      previewBody.value = draft.body;
+      
+      previewOverlay.classList.add('open');
+      previewModal.classList.add('open');
+      previewSubject.focus();
+    }
+
+    function closeEmailPreview() {
+      previewOverlay.classList.remove('open');
+      previewModal.classList.remove('open');
+    }
+
+    btnCancelPreview.addEventListener('click', closeEmailPreview);
+    btnClosePreviewModal.addEventListener('click', closeEmailPreview);
+    previewOverlay.addEventListener('click', closeEmailPreview);
+
+    // Escape key listener to close modal
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeEmailPreview();
+      }
+    });
+
+    btnSendOutlook.addEventListener('click', () => {
+      const to = previewTo.value;
+      const subject = previewSubject.value;
+      const body = previewBody.value;
+      
+      const mailtoUrl = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      
+      // Navigate inside Electron (triggers mail navigation & launches outlook)
+      window.location.href = mailtoUrl;
+      closeEmailPreview();
     });
 
     // ── BACKUP & RESTORE LOGIC ──
@@ -1414,9 +1585,9 @@
       updateBadge();
     });
 
-    // ── GET MAILTO URL ──
-    function getMailtoUrl(emp) {
-      if (!emp.email) return '';
+    // ── GET COMPILED EMAIL DRAFT ──
+    function getCompiledEmailDraft(emp) {
+      if (!emp.email) return null;
       
       let subjectTemplate = '';
       let bodyTemplate = '';
@@ -1443,10 +1614,11 @@
           .replace(/{joiningDate}/g, emp.joining_date_display || '');
       };
       
-      const subject = compile(subjectTemplate);
-      const body = compile(bodyTemplate);
-      
-      return `mailto:${emp.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      return {
+        to: emp.email,
+        subject: compile(subjectTemplate),
+        body: compile(bodyTemplate)
+      };
     }
 
     // ── UPDATE CELEBRATIONS DASHBOARD ──
@@ -1592,7 +1764,8 @@
       const result = await window.electronAPI.getEmployees();
       if (!result.success) { showToast('Failed to load: ' + result.error, true); return; }
 
-      const employees = result.data;
+      globalEmployeesList = result.data;
+      const employees = globalEmployeesList;
       updateCelebrationsDashboard(employees);
 
       const query = searchInput.value.toLowerCase();
@@ -1689,13 +1862,12 @@
         const safeName = emp.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const safeDept = (emp.department || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const safeEmail = (emp.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const mailtoUrl = getMailtoUrl(emp);
         tr.innerHTML = `
           <td class="emp-id-cell">${emp.emp_id}</td>
           <td class="emp-name-cell">${emp.name}</td>
           <td>${emp.department || '—'}</td>
           <td>
-            ${emp.email ? `<a href="${mailtoUrl}" class="email-link" title="Send email via Outlook">✉️ ${emp.email}</a>` : '—'}
+            ${emp.email ? `<a href="javascript:openEmailPreview('${emp.emp_id}')" class="email-link" title="Preview and customize email wish">✉️ ${emp.email}</a>` : '—'}
           </td>
           <td>${emp.dob_display}</td>
           <td>${emp.joining_date_display}${badgesHTML}</td>
