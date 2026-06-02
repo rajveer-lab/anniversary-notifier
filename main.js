@@ -25,6 +25,7 @@ function createWindow() {
     backgroundColor: '#0d0f12',
   });
   win.loadFile('index.html');
+  win.webContents.openDevTools();
 
   // Handle native mailto: and web link navigations
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -93,6 +94,82 @@ ipcMain.handle('clear-employees', () => {
   }
 });
 
+// ── SMTP Configurations & Handling ──
+ipcMain.handle('get-smtp-config', () => {
+  try {
+    return {
+      success: true,
+      data: {
+        host: db.getSetting('smtp_host') || '',
+        port: db.getSetting('smtp_port') || '587',
+        secure: db.getSetting('smtp_secure') || 'false',
+        user: db.getSetting('smtp_user') || '',
+        pass: db.getSetting('smtp_pass') || '',
+        fromEmail: db.getSetting('smtp_from_email') || '',
+        fromName: db.getSetting('smtp_from_name') || ''
+      }
+    };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('save-smtp-config', (_, config) => {
+  try {
+    db.saveSetting('smtp_host', config.host);
+    db.saveSetting('smtp_port', config.port);
+    db.saveSetting('smtp_secure', config.secure);
+    db.saveSetting('smtp_user', config.user);
+    db.saveSetting('smtp_pass', config.pass);
+    db.saveSetting('smtp_from_email', config.fromEmail);
+    db.saveSetting('smtp_from_name', config.fromName);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('send-smtp-email', async (_, { to, subject, body }) => {
+  try {
+    const nodemailer = require('nodemailer');
+    
+    const host = db.getSetting('smtp_host');
+    const port = db.getSetting('smtp_port');
+    const secure = db.getSetting('smtp_secure') === 'true';
+    const user = db.getSetting('smtp_user');
+    const pass = db.getSetting('smtp_pass');
+    const fromEmail = db.getSetting('smtp_from_email');
+    const fromName = db.getSetting('smtp_from_name');
+    
+    if (!host || !port || !user || !pass || !fromEmail) {
+      return { success: false, error: 'SMTP settings are not configured. Please fill in SMTP details in the sidebar.' };
+    }
+
+    const transporter = nodemailer.createTransport({
+      host,
+      port: parseInt(port, 10),
+      secure,
+      auth: { user, pass },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
+    const mailOptions = {
+      from: fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
+      to,
+      subject,
+      text: body
+    };
+
+    await transporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (e) {
+    console.error('SMTP sending failed:', e);
+    return { success: false, error: e.message };
+  }
+});
+
 // ── Data Export Handler ──
 ipcMain.handle('export-data', async () => {
   try {
@@ -102,7 +179,7 @@ ipcMain.handle('export-data', async () => {
     }
 
     // 1. Construct the CSV Header
-    let csvContent = 'Employee ID,Full Name,Department,Email,Date of Birth,Joining Date\n';
+    let csvContent = 'Employee ID,Full Name,Department,Job Title,Email,Date of Birth,Joining Date\n';
 
     // 2. Map the SQLite database rows into CSV format
     employees.forEach(emp => {
@@ -110,11 +187,12 @@ ipcMain.handle('export-data', async () => {
       const id = `"${emp.emp_id}"`;
       const name = `"${emp.name}"`;
       const department = `"${emp.department || ''}"`;
+      const jobTitle = `"${emp.job_title || ''}"`;
       const email = `"${emp.email || ''}"`;
       const dob = `"${emp.dob_display}"`;
       const joining = `"${emp.joining_date_display}"`;
       
-      csvContent += `${id},${name},${department},${email},${dob},${joining}\n`;
+      csvContent += `${id},${name},${department},${jobTitle},${email},${dob},${joining}\n`;
     });
 
     // 3. Open the native OS "Save As" window
@@ -176,13 +254,14 @@ ipcMain.handle('import-data', async () => {
     const idIdx = headers.indexOf('employee id') !== -1 ? headers.indexOf('employee id') : 0;
     const nameIdx = headers.indexOf('full-name') !== -1 ? headers.indexOf('full-name') : (headers.indexOf('full name') !== -1 ? headers.indexOf('full name') : 1);
     const departmentIdx = headers.indexOf('department') !== -1 ? headers.indexOf('department') : (headers.indexOf('dept') !== -1 ? headers.indexOf('dept') : (headers.indexOf('dept.') !== -1 ? headers.indexOf('dept.') : -1));
+    const jobTitleIdx = headers.indexOf('job title') !== -1 ? headers.indexOf('job title') : (headers.indexOf('title') !== -1 ? headers.indexOf('title') : -1);
     const emailIdx = headers.indexOf('email');
     
     let dobIdx = headers.indexOf('date of birth') !== -1 ? headers.indexOf('date of birth') : -1;
-    if (dobIdx === -1) dobIdx = (emailIdx !== -1) ? 3 : 2;
+    if (dobIdx === -1) dobIdx = headers.indexOf('dob') !== -1 ? headers.indexOf('dob') : 5; // default fallback if headers missing
     
     let joinIdx = headers.indexOf('joining date') !== -1 ? headers.indexOf('joining date') : -1;
-    if (joinIdx === -1) joinIdx = (emailIdx !== -1) ? 4 : 3;
+    if (joinIdx === -1) joinIdx = headers.indexOf('joining') !== -1 ? headers.indexOf('joining') : 6; // default fallback if headers missing
 
     // Custom CSV parser to handle quotes accurately
     for (let i = 1; i < lines.length; i++) {
@@ -221,6 +300,7 @@ ipcMain.handle('import-data', async () => {
           emp_id: rawId,
           name: result[nameIdx] || '',
           department: departmentIdx !== -1 ? (result[departmentIdx] || '') : '',
+          job_title: jobTitleIdx !== -1 ? (result[jobTitleIdx] || '') : '',
           email: emailIdx !== -1 ? (result[emailIdx] || '') : '',
           dob: result[dobIdx] ? parseDateForDB(result[dobIdx]) : '',
           joining_date: result[joinIdx] ? parseDateForDB(result[joinIdx]) : ''

@@ -12,4 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   restoreDatabase:()    => ipcRenderer.invoke('restore-database'),
   clearNotifications: () => ipcRenderer.invoke('clear-notifications'),
   onPing: (cb) => ipcRenderer.on('ping', (_, msg) => cb(msg)),
+  sendSMTPEmail: (mailOptions) => ipcRenderer.invoke('send-smtp-email', mailOptions),
+  getSMTPConfig: () => ipcRenderer.invoke('get-smtp-config'),
+  saveSMTPConfig: (config) => ipcRenderer.invoke('save-smtp-config', config),
 });
