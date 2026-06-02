@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;">
   <title>StaffPing — Fusion Global Business Solutions</title>
   <style>
     :root {
@@ -1095,7 +1096,7 @@
         <button type="button" class="btn-primary" id="btn-save-templates">Save Templates</button>
       </div>
 
-      <div class="panel-title" style="margin-top: 10px;">Backup & Restore</div>
+      <div class="panel-title" style="margin-top: 10px;">Backup &amp; Restore</div>
       <div class="backup-restore-group" style="margin-bottom: 10px;">
         <button type="button" class="btn-control" id="btn-backup-db">Backup</button>
         <button type="button" class="btn-control" id="btn-restore-db">Restore Database</button>
@@ -1155,7 +1156,7 @@
       <!-- Main Tab Bar Navigator -->
       <div style="display: flex; border-bottom: 1px solid var(--border); gap: 12px; margin-bottom: 4px;">
         <button class="notif-tab active" id="tab-btn-directory" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">📂 Employee Directory</button>
-        <button class="notif-tab" id="tab-btn-insights" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">📊 Celebrations & Insights</button>
+        <button class="notif-tab" id="tab-btn-insights" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">📊 Celebrations &amp; Insights</button>
       </div>
 
       <!-- ── DIRECTORY SCREEN ── -->
@@ -1328,6 +1329,17 @@
 
 
 <script>
+    // Helper to sanitize text and prevent Cross-Site Scripting (XSS)
+    function escapeHtml(unsafe) {
+      if (unsafe === undefined || unsafe === null) return '';
+      return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
     // ── ELEMENT REFS ──
     const tableBody      = document.getElementById('employee-table-body');
     const searchInput    = document.getElementById('search-input');
@@ -1833,14 +1845,18 @@
           const pct = totalStaff > 0 ? Math.round((count / totalStaff) * 100) : 0;
           const bar = document.createElement('div');
           bar.className = 'dept-bar-item';
-          bar.innerHTML = `
-            <div class="dept-bar-meta">
-              <span>${dept}</span>
-              <span style="color: var(--muted);">${count} (${pct}%)</span>
-            </div>
-            <div class="dept-bar-track">
-              <div class="dept-bar-fill" style="width: ${pct}%"></div>
-            </div>`;
+          const meta = document.createElement('div');
+meta.className = 'dept-bar-meta';
+
+const deptSpan = document.createElement('span');
+deptSpan.textContent = dept;
+
+const countSpan = document.createElement('span');
+countSpan.textContent = `${count} (${pct}%)`;
+
+meta.appendChild(deptSpan);
+meta.appendChild(countSpan);
+bar.appendChild(meta);
           deptContainer.appendChild(bar);
         });
       }
@@ -1859,7 +1875,7 @@
               emp,
               type: 'birthday',
               day: dobDate.getDate(),
-              title: `🎂 ${emp.name}'s Birthday`,
+              title: `🎂 ${escapeHtml(emp.name)}'s Birthday`,
               subtitle: `Date: ${dobDate.getDate()} ${months[selectedInsightsMonth].slice(0,3)} (${emp.dob_display})`
             });
           }
@@ -1873,7 +1889,7 @@
               emp,
               type: 'anniversary',
               day: joinDate.getDate(),
-              title: `🏅 ${emp.name}'s Work Anniversary`,
+              title: `🏅 ${escapeHtml(emp.name)}'s Work Anniversary`,
               subtitle: `${years} Year${years !== 1 ? 's' : ''} of service (${joinDate.getDate()} ${months[selectedInsightsMonth].slice(0,3)})`
             });
           }
@@ -1900,19 +1916,14 @@
           card.style.padding = '12px 16px';
           card.style.borderRadius = '6px';
           
-          const safeName = evt.emp.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-          const safeDept = (evt.emp.department || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-          const safeJobTitle = (evt.emp.job_title || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-          const safeEmail = (evt.emp.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-          
           card.innerHTML = `
             <div>
               <div style="font-weight: 700; font-size: 0.85rem; color: var(--text);">${evt.title}</div>
-              <div style="font-size: 0.75rem; color: var(--muted); margin-top: 2px;">${evt.subtitle} | Dept: ${evt.emp.department || '—'}</div>
+              <div style="font-size: 0.75rem; color: var(--muted); margin-top: 2px;">${evt.subtitle} | Dept: ${escapeHtml(evt.emp.department || '—')}</div>
             </div>
              <div style="display: flex; gap: 8px;">
               <button class="btn-control" style="font-size: 0.72rem; padding: 4px 8px;"
-                onclick="startEdit('${evt.emp.emp_id}','${safeName}','${safeDept}','${safeJobTitle}','${safeEmail}','${evt.emp.dob||''}','${evt.emp.joining_date||''}')">Edit</button>
+                onclick="startEdit('${evt.emp.emp_id}')">Edit</button>
             </div>`;
           listContainer.appendChild(card);
         });
@@ -2084,8 +2095,8 @@
             <div class="notif-card-icon">${n.type === 'birthday' ? '🎂' : n.type === 'anniversary' ? '🏅' : '🔔'}</div>
             <div class="notif-card-body">
               <div><span class="notif-type-pill ${pillClass}">${pillLabel}</span></div>
-              <div class="notif-card-title">${cardTitle}</div>
-              ${cardBody ? `<div class="notif-card-msg">${cardBody}</div>` : ''}
+              <div class="notif-card-title">${escapeHtml(cardTitle)}</div>
+              ${cardBody ? `<div class="notif-card-msg">${escapeHtml(cardBody)}</div>` : ''}
             </div>
             ${!n.seen ? '<div class="notif-card-unread-dot"></div>' : ''}
           </div>
@@ -2273,7 +2284,7 @@
       } else {
         todayContainer.innerHTML = todayEvents.map(evt => `
           <div class="dash-event-item">
-            <span class="dash-event-name">${evt.label}</span>
+            <span class="dash-event-name">${escapeHtml(evt.label)}</span>
             <span class="dash-event-countdown countdown-today">Today</span>
           </div>
         `).join('');
@@ -2289,8 +2300,8 @@
         bdayContainer.innerHTML = upcomingBirthdays.map(evt => `
           <div class="dash-event-item">
             <div>
-              <span class="dash-event-name">${evt.emp.name}</span>
-              <span class="dash-event-date">(${evt.dateStr})</span>
+              <span class="dash-event-name">${escapeHtml(evt.emp.name)}</span>
+              <span class="dash-event-date">(${escapeHtml(evt.dateStr)})</span>
             </div>
             <span class="dash-event-countdown">In ${evt.days} day${evt.days !== 1 ? 's' : ''}</span>
           </div>
@@ -2307,8 +2318,8 @@
         annivContainer.innerHTML = upcomingAnniversaries.map(evt => `
           <div class="dash-event-item">
             <div>
-              <span class="dash-event-name">${evt.emp.name}</span>
-              <span class="dash-event-date">(${evt.dateStr} - ${evt.years} Yr${evt.years !== 1 ? 's' : ''})</span>
+              <span class="dash-event-name">${escapeHtml(evt.emp.name)}</span>
+              <span class="dash-event-date">(${escapeHtml(evt.dateStr)} - ${evt.years} Yr${evt.years !== 1 ? 's' : ''})</span>
             </div>
             <span class="dash-event-countdown">In ${evt.days} day${evt.days !== 1 ? 's' : ''}</span>
           </div>
@@ -2416,25 +2427,21 @@
         let badgesHTML = '';
         if (emp.isBirthday)    badgesHTML += ` <span class="badge badge-birthday">🎂 Birthday</span>`;
         if (emp.isAnniversary) badgesHTML += ` <span class="badge badge-anniversary">🏅 Anniversary</span>`;
-        const safeName = emp.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const safeDept = (emp.department || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const safeJobTitle = (emp.job_title || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const safeEmail = (emp.email || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         tr.innerHTML = `
-          <td class="emp-id-cell">${emp.emp_id}</td>
-          <td class="emp-name-cell">${emp.name}</td>
-          <td>${emp.department || '—'}</td>
-          <td>${emp.job_title || '—'}</td>
+          <td class="emp-id-cell">${escapeHtml(emp.emp_id)}</td>
+          <td class="emp-name-cell">${escapeHtml(emp.name)}</td>
+          <td>${escapeHtml(emp.department || '—')}</td>
+          <td>${escapeHtml(emp.job_title || '—')}</td>
           <td>
-            ${emp.email ? `<a href="javascript:openEmailPreview('${emp.emp_id}')" class="email-link" title="Preview and customize email wish">✉️ ${emp.email}</a>` : '—'}
+            ${emp.email ? `<a href="javascript:openEmailPreview('${escapeHtml(emp.emp_id)}')" class="email-link" title="Preview and customize email wish">✉️ ${escapeHtml(emp.email)}</a>` : '—'}
           </td>
-          <td>${emp.dob_display}</td>
-          <td>${emp.joining_date_display}${badgesHTML}</td>
-          <td>${emp.service_display || '—'}</td>
+          <td>${escapeHtml(emp.dob_display)}</td>
+          <td>${escapeHtml(emp.joining_date_display)}${badgesHTML}</td>
+          <td>${escapeHtml(emp.service_display || '—')}</td>
           <td>
             <div class="actions-cell">
               <button class="btn-table btn-edit"
-                onclick="startEdit('${emp.emp_id}','${safeName}','${safeDept}','${safeJobTitle}','${safeEmail}','${emp.dob||''}','${emp.joining_date||''}')">Edit</button>
+                onclick="startEdit('${emp.emp_id}')">Edit</button>
               <button class="btn-table btn-delete"
                 onclick="deleteEmployee('${emp.emp_id}')">Delete</button>
             </div>
@@ -2499,17 +2506,20 @@
     joiningInput.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); validateAndSubmit(); });
 
     // ── EDIT / RESET / DELETE ──
-    function startEdit(emp_id, name, department, job_title, email, dob, joiningDate) {
+    function startEdit(emp_id) {
+      const emp = globalEmployeesList.find(x => String(x.emp_id) === String(emp_id));
+      if (!emp) return;
+
       formPanelTitle.innerText = 'Edit Employee';
       submitBtn.innerText      = 'Save Changes';
-      editOrigEmpId.value      = emp_id;
-      idInput.value            = emp_id;
-      nameInput.value          = name;
-      deptInput.value          = department;
-      jobTitleInput.value      = job_title !== 'undefined' ? job_title : '';
-      emailInput.value         = email;
-      dobInput.value           = dob;
-      joiningInput.value       = joiningDate;
+      editOrigEmpId.value      = emp.emp_id;
+      idInput.value            = emp.emp_id;
+      nameInput.value          = emp.name;
+      deptInput.value          = emp.department || '';
+      jobTitleInput.value      = emp.job_title || '';
+      emailInput.value         = emp.email || '';
+      dobInput.value           = emp.dob || '';
+      joiningInput.value       = emp.joining_date || '';
       idInput.focus();
     }
     function resetForm() {

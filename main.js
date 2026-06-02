@@ -14,6 +14,20 @@ let db;
 let lastCheckedDate = null;
 let notifiedToday = new Set();
 
+// Safely open external web links by strictly enforcing allowed protocols (HTTP/HTTPS/MAILTO)
+function safeOpenExternal(url) {
+  if (typeof url !== 'string') return;
+  try {
+    const parsedUrl = new URL(url);
+    const allowedProtocols = ['http:', 'https:', 'mailto:'];
+    if (allowedProtocols.includes(parsedUrl.protocol)) {
+      shell.openExternal(url);
+    }
+  } catch (err) {
+    console.error('Failed to parse URL for safeOpenExternal:', err);
+  }
+}
+
 function createWindow() {
   win = new BrowserWindow({
     width: 1100, height: 700,
@@ -21,30 +35,41 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
     },
     backgroundColor: '#0d0f12',
   });
   win.loadFile('index.html');
-  win.webContents.openDevTools();
+  if (!app.isPackaged) {
+    win.webContents.openDevTools();
+  }
 
-  // Handle native mailto: and web link navigations
+  // Handle native mailto: and web link navigations securely
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('mailto:') || url.startsWith('http:') || url.startsWith('https:')) {
-      shell.openExternal(url);
-      return { action: 'deny' };
+      safeOpenExternal(url);
     }
-    return { action: 'accept' };
+    return { action: 'deny' };
   });
 
+  // Prevent auxclick and general in-app navigations to untrusted origins
   win.webContents.on('will-navigate', (event, url) => {
-    if (url.startsWith('mailto:')) {
-      event.preventDefault();
-      shell.openExternal(url);
+    event.preventDefault();
+    if (url.startsWith('mailto:') || url.startsWith('http:') || url.startsWith('https:')) {
+      safeOpenExternal(url);
     }
   });
 }
 
 app.whenReady().then(() => {
+  const { session } = require('electron');
+  
+  // Set permission request handler to deny geolocation, camera, etc. permissions inside the app
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    return callback(false);
+  });
+
   db = require('./database');
   ensureWindowsNotificationShortcut();
   createWindow();
@@ -149,10 +174,7 @@ ipcMain.handle('send-smtp-email', async (_, { to, subject, body }) => {
       host,
       port: parseInt(port, 10),
       secure,
-      auth: { user, pass },
-      tls: {
-        rejectUnauthorized: false
-      }
+      auth: { user, pass }
     });
 
     const mailOptions = {
@@ -170,6 +192,19 @@ ipcMain.handle('send-smtp-email', async (_, { to, subject, body }) => {
   }
 });
 
+// Helper to prevent CSV injection (Formula Injection) in spreadsheet software
+function escapeCSVValue(val) {
+  if (val === undefined || val === null) return '""';
+  let str = String(val).trim();
+  // Prevent CSV Injection: If string starts with =, +, -, @, tab, or carriage return, prepend '
+  if (str.length > 0 && /^[=\+\-\@\t\r]/.test(str)) {
+    str = "'" + str;
+  }
+  // Double quotes inside a CSV field must be escaped by doubling them
+  str = str.replace(/"/g, '""');
+  return `"${str}"`;
+}
+
 // ── Data Export Handler ──
 ipcMain.handle('export-data', async () => {
   try {
@@ -183,14 +218,13 @@ ipcMain.handle('export-data', async () => {
 
     // 2. Map the SQLite database rows into CSV format
     employees.forEach(emp => {
-      // Wrapping values in quotes prevents issues if names contain commas
-      const id = `"${emp.emp_id}"`;
-      const name = `"${emp.name}"`;
-      const department = `"${emp.department || ''}"`;
-      const jobTitle = `"${emp.job_title || ''}"`;
-      const email = `"${emp.email || ''}"`;
-      const dob = `"${emp.dob_display}"`;
-      const joining = `"${emp.joining_date_display}"`;
+      const id = escapeCSVValue(emp.emp_id);
+      const name = escapeCSVValue(emp.name);
+      const department = escapeCSVValue(emp.department || '');
+      const jobTitle = escapeCSVValue(emp.job_title || '');
+      const email = escapeCSVValue(emp.email || '');
+      const dob = escapeCSVValue(emp.dob_display || '');
+      const joining = escapeCSVValue(emp.joining_date_display || '');
       
       csvContent += `${id},${name},${department},${jobTitle},${email},${dob},${joining}\n`;
     });
@@ -237,6 +271,16 @@ ipcMain.handle('import-data', async () => {
     }
 
     const employeesToImport = [];
+
+    // Helper to clean CSV values (strips CSV injection escape quotes)
+    const cleanCSVValue = (val) => {
+      if (val === undefined || val === null) return '';
+      let str = String(val).trim();
+      if (str.startsWith("'") && str.length > 1 && /^[=\+\-\@\t\r]/.test(str.slice(1))) {
+        str = str.slice(1);
+      }
+      return str;
+    };
 
     // Helper to safely convert exported text dates back into DB format
     const parseDateForDB = (dStr) => {
@@ -288,22 +332,22 @@ ipcMain.handle('import-data', async () => {
 
       // Ensure at least ID and Name exist before pushing
       if (result.length > Math.max(idIdx, nameIdx) && result[idIdx]) { 
-        let rawId = result[idIdx].trim();
+        let rawId = cleanCSVValue(result[idIdx]);
 
         // Auto-pad numeric IDs with leading zeros (e.g., "2" becomes "002")
         // This ignores alphanumeric IDs like "EMP-001" to keep them safe.
-        if (!isNaN(rawId)) {
+        if (rawId && !isNaN(rawId)) {
           rawId = rawId.padStart(3, '0');
         }
 
         employeesToImport.push({
           emp_id: rawId,
-          name: result[nameIdx] || '',
-          department: departmentIdx !== -1 ? (result[departmentIdx] || '') : '',
-          job_title: jobTitleIdx !== -1 ? (result[jobTitleIdx] || '') : '',
-          email: emailIdx !== -1 ? (result[emailIdx] || '') : '',
-          dob: result[dobIdx] ? parseDateForDB(result[dobIdx]) : '',
-          joining_date: result[joinIdx] ? parseDateForDB(result[joinIdx]) : ''
+          name: cleanCSVValue(result[nameIdx]),
+          department: departmentIdx !== -1 ? cleanCSVValue(result[departmentIdx]) : '',
+          job_title: jobTitleIdx !== -1 ? cleanCSVValue(result[jobTitleIdx]) : '',
+          email: emailIdx !== -1 ? cleanCSVValue(result[emailIdx]) : '',
+          dob: result[dobIdx] ? parseDateForDB(cleanCSVValue(result[dobIdx])) : '',
+          joining_date: result[joinIdx] ? parseDateForDB(cleanCSVValue(result[joinIdx])) : ''
         });
       }
     }
