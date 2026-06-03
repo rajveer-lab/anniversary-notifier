@@ -52,8 +52,5 @@
       "fusion-logo-square.png"
     ],
     "asar": true
-  },
-  "dependencies": {
-    "nodemailer": "^8.0.10"
   }
 }

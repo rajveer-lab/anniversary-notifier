@@ -1102,45 +1102,6 @@
         <button type="button" class="btn-control" id="btn-restore-db">Restore Database</button>
       </div>
 
-      <!-- Collapsible SMTP Config Panel -->
-      <div class="panel-title" id="smtp-panel-header" style="margin-top: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px;">
-        <span style="display: flex; align-items: center; gap: 6px;">✉️ SMTP Settings</span>
-        <span id="smtp-toggle-icon">▼</span>
-      </div>
-      <div id="smtp-settings-panel" style="display: none; flex-direction: column; gap: 10px; margin-top: 8px; border: 1px solid var(--border); padding: 12px; border-radius: 6px; background-color: rgba(255,255,255,0.01);">
-        <div class="form-group" style="margin-bottom: 4px;">
-          <label for="smtp-host" style="font-size: 0.65rem;">SMTP Host</label>
-          <input type="text" id="smtp-host" style="font-size: 0.8rem; padding: 6px 10px;" placeholder="e.g. smtp.mail.com">
-        </div>
-        <div class="form-group" style="margin-bottom: 4px;">
-          <label for="smtp-port" style="font-size: 0.65rem;">SMTP Port</label>
-          <input type="text" id="smtp-port" style="font-size: 0.8rem; padding: 6px 10px;" placeholder="e.g. 587 or 465">
-        </div>
-        <div class="checkbox-group" style="margin-bottom: 4px; padding: 4px 0;">
-          <input type="checkbox" id="smtp-secure">
-          <label for="smtp-secure">SSL/TLS (Port 465)</label>
-        </div>
-        <div class="form-group" style="margin-bottom: 4px;">
-          <label for="smtp-user" style="font-size: 0.65rem;">Username</label>
-          <input type="text" id="smtp-user" style="font-size: 0.8rem; padding: 6px 10px;">
-        </div>
-        <div class="form-group" style="margin-bottom: 4px;">
-          <label for="smtp-pass" style="font-size: 0.65rem;">Password</label>
-          <input type="password" id="smtp-pass" style="font-size: 0.8rem; padding: 6px 10px; background-color: #171a21; border: 1px solid var(--border); color: var(--text); border-radius: 6px; outline: none;">
-        </div>
-        <div class="form-group" style="margin-bottom: 4px;">
-          <label for="smtp-from-email" style="font-size: 0.65rem;">From Email</label>
-          <input type="text" id="smtp-from-email" style="font-size: 0.8rem; padding: 6px 10px;" placeholder="e.g. sender@company.com">
-        </div>
-        <div class="form-group" style="margin-bottom: 4px;">
-          <label for="smtp-from-name" style="font-size: 0.65rem;">Sender Name</label>
-          <input type="text" id="smtp-from-name" style="font-size: 0.8rem; padding: 6px 10px;" placeholder="e.g. HR Department">
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn-control" id="btn-test-smtp" style="flex: 1; font-size: 0.72rem; padding: 6px 0;">Test SMTP</button>
-          <button type="button" class="btn-primary" id="btn-save-smtp" style="flex: 1; margin-top: 0; padding: 6px 0; font-size: 0.72rem;">Save SMTP</button>
-        </div>
-      </div>
     </aside>
 
     <main class="main-content">
@@ -1322,7 +1283,6 @@
     </div>
     <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--border);">
       <button type="button" class="btn-control" id="btn-cancel-preview">Cancel</button>
-      <button type="button" class="btn-primary" id="btn-send-smtp" style="width: auto; margin-top: 0; background-color: #10b981;">Send via SMTP</button>
       <button type="button" class="btn-primary" id="btn-send-outlook" style="width: auto; margin-top: 0;">Open in Outlook</button>
     </div>
   </div>
@@ -1394,7 +1354,6 @@
     const previewSubject   = document.getElementById('preview-subject');
     const previewBody      = document.getElementById('preview-body');
     const btnSendOutlook   = document.getElementById('btn-send-outlook');
-    const btnSendSMTP      = document.getElementById('btn-send-smtp');
     const btnCancelPreview = document.getElementById('btn-cancel-preview');
     const btnClosePreviewModal = document.getElementById('btn-close-preview-modal');
 
@@ -1404,19 +1363,6 @@
     const directoryView    = document.getElementById('directory-view-container');
     const insightsView     = document.getElementById('insights-view-container');
 
-    // SMTP settings refs
-    const smtpPanelHeader  = document.getElementById('smtp-panel-header');
-    const smtpSettingsPanel = document.getElementById('smtp-settings-panel');
-    const smtpToggleIcon   = document.getElementById('smtp-toggle-icon');
-    const smtpHost         = document.getElementById('smtp-host');
-    const smtpPort         = document.getElementById('smtp-port');
-    const smtpSecure       = document.getElementById('smtp-secure');
-    const smtpUser         = document.getElementById('smtp-user');
-    const smtpPass         = document.getElementById('smtp-pass');
-    const smtpFromEmail    = document.getElementById('smtp-from-email');
-    const smtpFromName     = document.getElementById('smtp-from-name');
-    const btnTestSMTP      = document.getElementById('btn-test-smtp');
-    const btnSaveSMTP      = document.getElementById('btn-save-smtp');
 
 
     // Global employee data list tracker
@@ -1445,12 +1391,6 @@
       loadInsightsScreen();
     });
 
-    // ── SMTP ACCORDION TOGGLE ──
-    smtpPanelHeader.addEventListener('click', () => {
-      const isOpen = smtpSettingsPanel.style.display === 'flex';
-      smtpSettingsPanel.style.display = isOpen ? 'none' : 'flex';
-      smtpToggleIcon.textContent = isOpen ? '▼' : '▲';
-    });
 
     // ── DATA EXPORT LOGIC ──
     btnExport.addEventListener('click', async () => {
@@ -1545,8 +1485,6 @@
       const clearNotifsVal = localStorage.getItem(CLEAR_NOTIFS_SETTINGS_KEY);
       chkClearNotifs.checked = clearNotifsVal === null ? true : clearNotifsVal === 'true';
 
-      // Load SMTP Credentials
-      await loadSMTPSettings();
     }
 
     btnSaveTemplates.addEventListener('click', () => {
@@ -1638,31 +1576,6 @@
       closeEmailPreview();
     });
 
-    btnSendSMTP.addEventListener('click', async () => {
-      const to = previewTo.value;
-      const subject = previewSubject.value;
-      const body = previewBody.value;
-
-      if (!to) {
-        showToast('Error: Recipient email is missing.', true);
-        return;
-      }
-
-      btnSendSMTP.innerText = 'Sending...';
-      btnSendSMTP.disabled = true;
-
-      const res = await window.electronAPI.sendSMTPEmail({ to, subject, body });
-
-      btnSendSMTP.innerText = 'Send via SMTP';
-      btnSendSMTP.disabled = false;
-
-      if (res.success) {
-        showToast('Success: Email wish sent to ' + to);
-        closeEmailPreview();
-      } else {
-        showToast('Email Sending Failed: ' + res.error, true);
-      }
-    });
 
     // ── BACKUP & RESTORE LOGIC ──
     btnBackupDb.addEventListener('click', async () => {
@@ -1702,80 +1615,6 @@
       btnRestoreDb.disabled = false;
     });
 
-    // ── SMTP CONFIG MANAGER ──
-    btnSaveSMTP.addEventListener('click', async () => {
-      const config = {
-        host: smtpHost.value.trim(),
-        port: smtpPort.value.trim(),
-        secure: smtpSecure.checked ? 'true' : 'false',
-        user: smtpUser.value.trim(),
-        pass: smtpPass.value.trim(),
-        fromEmail: smtpFromEmail.value.trim(),
-        fromName: smtpFromName.value.trim(),
-      };
-
-      if (!config.host || !config.port || !config.user || !config.pass || !config.fromEmail) {
-        showToast('Form Incomplete: Please fill in all SMTP fields.', true);
-        return;
-      }
-
-      btnSaveSMTP.innerText = 'Saving...';
-      btnSaveSMTP.disabled = true;
-      const res = await window.electronAPI.saveSMTPConfig(config);
-      btnSaveSMTP.innerText = 'Save SMTP';
-      btnSaveSMTP.disabled = false;
-
-      if (res.success) {
-        showToast('Success: SMTP settings updated.');
-      } else {
-        showToast('Error saving settings: ' + res.error, true);
-      }
-    });
-
-    async function loadSMTPSettings() {
-      const res = await window.electronAPI.getSMTPConfig();
-      if (res.success && res.data) {
-        smtpHost.value = res.data.host || '';
-        smtpPort.value = res.data.port || '587';
-        smtpSecure.checked = res.data.secure === 'true';
-        smtpUser.value = res.data.user || '';
-        smtpPass.value = res.data.pass || '';
-        smtpFromEmail.value = res.data.fromEmail || '';
-        smtpFromName.value = res.data.fromName || '';
-      }
-    }
-
-    btnTestSMTP.addEventListener('click', async () => {
-      const originalText = btnTestSMTP.innerText;
-      btnTestSMTP.innerText = 'Testing...';
-      btnTestSMTP.disabled = true;
-
-      // Automatically save current input credentials so test runs correctly
-      await window.electronAPI.saveSMTPConfig({
-        host: smtpHost.value.trim(),
-        port: smtpPort.value.trim(),
-        secure: smtpSecure.checked ? 'true' : 'false',
-        user: smtpUser.value.trim(),
-        pass: smtpPass.value.trim(),
-        fromEmail: smtpFromEmail.value.trim(),
-        fromName: smtpFromName.value.trim()
-      });
-
-      const res = await window.electronAPI.sendSMTPEmail({
-        to: smtpFromEmail.value.trim(),
-        subject: 'StaffPing - SMTP Test Connection',
-        body: 'Success! Your SMTP connection has been configured correctly.'
-      });
-
-      btnTestSMTP.innerText = originalText;
-      btnTestSMTP.disabled = false;
-
-      if (res.success) {
-        showToast('Connection Success: Test email sent to ' + smtpFromEmail.value.trim());
-      } else {
-        showToast('Connection Failed: ' + res.error, true);
-      }
-    });
 
     // ── CELEBRATIONS & INSIGHTS RENDERING ──
     let selectedInsightsMonth = new Date().getMonth();

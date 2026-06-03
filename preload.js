@@ -19,7 +19,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeListener('ping', listener);
   };
 },
-  sendSMTPEmail: (mailOptions) => ipcRenderer.invoke('send-smtp-email', mailOptions),
-  getSMTPConfig: () => ipcRenderer.invoke('get-smtp-config'),
-  saveSMTPConfig: (config) => ipcRenderer.invoke('save-smtp-config', config),
 });
