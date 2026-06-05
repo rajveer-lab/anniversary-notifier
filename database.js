@@ -44,6 +44,13 @@ db.exec(`
   )
 `);
 
+// Migration: Normalize all existing employee IDs to uppercase to prevent case-sensitivity duplicates
+try {
+  db.exec(`UPDATE employees SET emp_id = UPPER(TRIM(emp_id));`);
+} catch (e) {
+  console.warn('Migration warning: Could not normalize all employee IDs to uppercase (likely due to pre-existing duplicates):', e.message);
+}
+
 module.exports = {
 
   getAll: () => {
@@ -122,7 +129,11 @@ module.exports = {
     db.exec('BEGIN TRANSACTION');
     try {
       for (const emp of employees) {
-        insert.run(emp);
+        const normalizedEmp = {
+          ...emp,
+          emp_id: emp.emp_id.trim().toUpperCase()
+        };
+        insert.run(normalizedEmp);
       }
       db.exec('COMMIT');
     } catch (e) {
@@ -132,22 +143,30 @@ module.exports = {
   },
 
   add: ({ emp_id, name, dob, joining_date, email, department, job_title }) => {
+    const cleanId = emp_id.trim().toUpperCase();
     if (email && email.trim() !== '') {
       const existing = db.prepare('SELECT emp_id FROM employees WHERE email = ?').get(email.trim());
       if (existing) {
         throw new Error(`Email address "${email.trim()}" is already assigned to employee ${existing.emp_id}`);
       }
     }
+
+    // Case-insensitive uniqueness check
+    const existingEmp = db.prepare('SELECT emp_id FROM employees WHERE LOWER(emp_id) = LOWER(?)').get(cleanId);
+    if (existingEmp) {
+      throw new Error(`Employee ID "${cleanId}" already exists (registered as "${existingEmp.emp_id}")`);
+    }
+
     try {
       const stmt = db.prepare(`
         INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title)
         VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title)
       `);
       stmt.setAllowBareNamedParameters(true);
-      stmt.run({ emp_id, name, dob, joining_date, email, department, job_title });
+      stmt.run({ emp_id: cleanId, name, dob, joining_date, email, department, job_title });
     } catch (error) {
       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || (error.message && error.message.includes('UNIQUE constraint failed'))) {
-        throw new Error(`Employee ID "${emp_id}" already exists`);
+        throw new Error(`Employee ID "${cleanId}" already exists`);
       }
       throw error;
     }
@@ -155,24 +174,40 @@ module.exports = {
 
   // Update by emp_id (the text ID the user controls), not the auto-increment integer
   update: ({ emp_id, original_emp_id, name, dob, joining_date, email, department, job_title }) => {
+    const cleanId = emp_id.trim().toUpperCase();
+    const cleanOrigId = original_emp_id.trim().toUpperCase();
     if (email && email.trim() !== '') {
-      const existing = db.prepare('SELECT emp_id FROM employees WHERE email = ? AND emp_id != ?').get(email.trim(), original_emp_id);
+      const existing = db.prepare('SELECT emp_id FROM employees WHERE email = ? AND LOWER(emp_id) != LOWER(?)').get(email.trim(), cleanOrigId);
       if (existing) {
         throw new Error(`Email address "${email.trim()}" is already assigned to employee ${existing.emp_id}`);
       }
     }
-    const stmt = db.prepare(`
-      UPDATE employees
-      SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title
-      WHERE emp_id = @original_emp_id
-    `);
-    stmt.setAllowBareNamedParameters(true);
-    const info = stmt.run({ emp_id, original_emp_id, name, dob, joining_date, email, department, job_title });
-    if (info.changes === 0) throw new Error('Employee not found');
+
+    // Case-insensitive uniqueness check on other employees
+    const existingEmp = db.prepare('SELECT emp_id FROM employees WHERE LOWER(emp_id) = LOWER(?) AND LOWER(emp_id) != LOWER(?)').get(cleanId, cleanOrigId);
+    if (existingEmp) {
+      throw new Error(`Employee ID "${cleanId}" already exists (registered as "${existingEmp.emp_id}")`);
+    }
+
+    try {
+      const stmt = db.prepare(`
+        UPDATE employees
+        SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title
+        WHERE emp_id = @original_emp_id
+      `);
+      stmt.setAllowBareNamedParameters(true);
+      const info = stmt.run({ emp_id: cleanId, original_emp_id: cleanOrigId, name, dob, joining_date, email, department, job_title });
+      if (info.changes === 0) throw new Error('Employee not found');
+    } catch (error) {
+      if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || (error.message && error.message.includes('UNIQUE constraint failed'))) {
+        throw new Error(`Employee ID "${cleanId}" already exists`);
+      }
+      throw error;
+    }
   },
 
   delete: (emp_id) => {
-    db.prepare('DELETE FROM employees WHERE emp_id = ?').run(emp_id);
+    db.prepare('DELETE FROM employees WHERE LOWER(emp_id) = LOWER(?)').run(emp_id.trim());
   },
 
   clearAll: () => {

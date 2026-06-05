@@ -2305,6 +2305,9 @@ bar.appendChild(meta);
       }
 
       globalEmployeesList = result.data;
+      // Sort naturally by emp_id in ascending order (e.g., EMP-2 before EMP-10)
+      globalEmployeesList.sort((a, b) => a.emp_id.localeCompare(b.emp_id, undefined, { numeric: true, sensitivity: 'base' }));
+      
       updateCelebrationsDashboard(globalEmployeesList);
       renderEmployees();
 
