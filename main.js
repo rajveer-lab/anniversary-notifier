@@ -41,9 +41,9 @@ function createWindow() {
     backgroundColor: '#0d0f12',
   });
   win.loadFile('index.html');
-  if (!app.isPackaged) {
-    win.webContents.openDevTools();
-  }
+  // if (!app.isPackaged) {
+  //   win.webContents.openDevTools();
+  // }
 
   // Handle native mailto: and web link navigations securely
   win.webContents.setWindowOpenHandler(({ url }) => {

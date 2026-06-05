@@ -966,9 +966,101 @@
     body:not(.light-theme) .toast-title { color: #ffffff; }
     body.light-theme .toast-title { color: #111827; }
     .toast-body { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+
+    /* ── SPLASH SCREEN ── */
+    .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: var(--background);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+      opacity: 1;
+      visibility: visible;
+    }
+    .splash-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    .splash-logo {
+      max-width: 280px;
+      height: auto;
+      opacity: 0;
+      transform: scale(0.92);
+      animation: logoFadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .splash-loader {
+      width: 160px;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+      opacity: 0;
+      animation: fadeIn 0.4s ease forwards 0.3s;
+    }
+    .splash-loader-bar {
+      width: 60px;
+      height: 100%;
+      background: var(--accent);
+      position: absolute;
+      left: -60px;
+      border-radius: 2px;
+      animation: loadingProgress 1.4s infinite ease-in-out;
+    }
+    @keyframes logoFadeInUp {
+      0% {
+        opacity: 0;
+        transform: scale(0.85) translateY(12px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes loadingProgress {
+      0% {
+        left: -60px;
+      }
+      50% {
+        left: 100%;
+        width: 80px;
+      }
+      100% {
+        left: 100%;
+        width: 60px;
+      }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Splash Screen Overlay -->
+  <div id="splash-screen" class="splash-screen">
+    <div class="splash-content">
+      <img src="./fusion-logo.png" alt="Fusion Logo" class="splash-logo">
+      <div class="splash-loader">
+        <div class="splash-loader-bar"></div>
+      </div>
+    </div>
+  </div>
 
   <div class="notif-overlay" id="notif-overlay"></div>
 
@@ -1300,6 +1392,16 @@
         .replace(/'/g, "&#039;");
     }
 
+    // Debounce helper to limit execution frequency of rapid events (e.g. typing)
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+      };
+    }
+
     // ── ELEMENT REFS ──
     const tableBody      = document.getElementById('employee-table-body');
     const searchInput    = document.getElementById('search-input');
@@ -1367,6 +1469,29 @@
 
     // Global employee data list tracker
     let globalEmployeesList = [];
+
+    // Splash screen state control
+    let isFirstLoad = true;
+    let minTimeElapsed = false;
+    let initialLoadComplete = false;
+
+    function hideSplashScreen() {
+      if (initialLoadComplete && minTimeElapsed) {
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+          splash.classList.add('fade-out');
+          setTimeout(() => {
+            splash.style.display = 'none';
+          }, 500);
+        }
+      }
+    }
+
+    // Set 1.2 second minimum timer for splash screen animation to complete smoothly
+    setTimeout(() => {
+      minTimeElapsed = true;
+      hideSplashScreen();
+    }, 1200);
 
     // Live date
     const now = new Date();
@@ -2169,12 +2294,29 @@ bar.appendChild(meta);
     // ── LOAD EMPLOYEES ──
     async function loadEmployees() {
       const result = await window.electronAPI.getEmployees();
-      if (!result.success) { showToast('Failed to load: ' + result.error, true); return; }
+      if (!result.success) {
+        showToast('Failed to load: ' + result.error, true);
+        if (isFirstLoad) {
+          isFirstLoad = false;
+          initialLoadComplete = true;
+          hideSplashScreen();
+        }
+        return;
+      }
 
       globalEmployeesList = result.data;
-      const employees = globalEmployeesList;
-      updateCelebrationsDashboard(employees);
+      updateCelebrationsDashboard(globalEmployeesList);
+      renderEmployees();
 
+      if (isFirstLoad) {
+        isFirstLoad = false;
+        initialLoadComplete = true;
+        hideSplashScreen();
+      }
+    }
+
+    // ── RENDER EMPLOYEES ──
+    function renderEmployees() {
       const query = searchInput.value.toLowerCase();
 
       const startVal = filterStartDateEl.value;
@@ -2240,7 +2382,7 @@ bar.appendChild(meta);
         return false;
       };
 
-      const filtered = employees.filter(emp => {
+      const filtered = globalEmployeesList.filter(emp => {
         // Text query match
         const textMatch = !query || 
           emp.emp_id.toLowerCase().includes(query) ||
@@ -2259,7 +2401,7 @@ bar.appendChild(meta);
       });
 
       tableBody.innerHTML = '';
-      totalCountText.innerHTML = `Total: <strong>${employees.length}</strong> employees`;
+      totalCountText.innerHTML = `Total: <strong>${globalEmployeesList.length}</strong> employees`;
 
       filtered.forEach(emp => {
         const tr = document.createElement('tr');
@@ -2373,14 +2515,15 @@ bar.appendChild(meta);
       else showToast('Error: ' + result.error, true);
     }
 
-    searchInput.addEventListener('input', loadEmployees);
-    filterStartDateEl.addEventListener('change', loadEmployees);
-    filterEndDateEl.addEventListener('change', loadEmployees);
+    const debouncedRenderEmployees = debounce(renderEmployees, 150);
+    searchInput.addEventListener('input', debouncedRenderEmployees);
+    filterStartDateEl.addEventListener('change', renderEmployees);
+    filterEndDateEl.addEventListener('change', renderEmployees);
     btnClearFilters.addEventListener('click', () => {
       searchInput.value = '';
       filterStartDateEl.value = '';
       filterEndDateEl.value = '';
-      loadEmployees();
+      renderEmployees();
     });
     
     // Initialise settings and load data
