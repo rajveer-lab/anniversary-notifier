@@ -959,13 +959,34 @@
     }
     body.light-theme .toast { background: rgba(255,255,255,0.95); box-shadow: 0 16px 32px rgba(0,0,0,0.15); }
     .toast.show { transform: translateX(0); opacity: 1; }
-    .toast-icon { background: var(--accent-glow); color: #fc8181; padding: 6px; border-radius: 6px; display: inline-flex; font-size: 1rem; flex-shrink: 0; }
+    .toast-icon { background: var(--accent-glow); color: #fc8181; padding: 8px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
     body.light-theme .toast-icon { color: #d6001c; }
     .toast-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
     .toast-title { font-weight: 600; font-size: 0.85rem; }
     body:not(.light-theme) .toast-title { color: #ffffff; }
     body.light-theme .toast-title { color: #111827; }
     .toast-body { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+
+    /* ── SVG ICONS ── */
+    .svg-icon {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .svg-icon-inline {
+      margin-right: 6px;
+    }
+    .svg-icon-lg {
+      width: 18px;
+      height: 18px;
+    }
+    .svg-icon-xl {
+      width: 24px;
+      height: 24px;
+    }
 
     /* ── SCROLL TO TOP BUTTON ── */
     .scroll-top-btn {
@@ -1100,8 +1121,8 @@
 
   <div class="notif-panel" id="notif-panel">
     <div class="notif-panel-header">
-      <div class="notif-panel-title">
-        <span>🔔</span> Notifications
+      <div class="notif-panel-title" style="display: flex; align-items: center; gap: 6px;">
+        <svg class="svg-icon svg-icon-lg" style="color: var(--accent);" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg> Notifications
       </div>
       <div class="notif-panel-actions">
         <button class="btn-notif-action" id="btn-mark-all-seen">Mark all seen</button>
@@ -1113,8 +1134,12 @@
     <div class="notif-tabs">
       <button class="notif-tab active" data-tab="all">All</button>
       <button class="notif-tab" data-tab="unread">Unread</button>
-      <button class="notif-tab" data-tab="birthday">🎂 Birthdays</button>
-      <button class="notif-tab" data-tab="anniversary">🏅 Anniversaries</button>
+      <button class="notif-tab" data-tab="birthday" style="display: inline-flex; align-items: center; gap: 4px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg> Birthdays
+      </button>
+      <button class="notif-tab" data-tab="anniversary" style="display: inline-flex; align-items: center; gap: 4px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg> Anniversaries
+      </button>
     </div>
 
     <div class="notif-list" id="notif-list"></div>
@@ -1129,7 +1154,7 @@
       <button class="btn-control" id="theme-toggle">🌙 Dark Mode</button>
 
       <button class="notif-bell-btn" id="notif-bell-btn" title="Notifications">
-        🔔
+        <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
         <span class="notif-badge" id="notif-badge">0</span>
       </button>
 
@@ -1185,7 +1210,9 @@
       <div style="display: flex; flex-direction: column; gap: 12px;">
         <!-- Birthday template -->
         <div class="template-card">
-          <div class="template-card-title">🎂 Birthday</div>
+          <div class="template-card-title" style="display: flex; align-items: center; gap: 4px;">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg> Birthday
+          </div>
           <div class="form-group" style="margin-bottom: 6px;">
             <label for="template-bday-subject" style="font-size: 0.68rem;">Subject</label>
             <input type="text" id="template-bday-subject" style="font-size: 0.8rem; padding: 6px 10px;">
@@ -1198,7 +1225,9 @@
 
         <!-- Anniversary template -->
         <div class="template-card">
-          <div class="template-card-title">🏅 Anniversary</div>
+          <div class="template-card-title" style="display: flex; align-items: center; gap: 4px;">
+            <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg> Anniversary
+          </div>
           <div class="form-group" style="margin-bottom: 6px;">
             <label for="template-anniv-subject" style="font-size: 0.68rem;">Subject</label>
             <input type="text" id="template-anniv-subject" style="font-size: 0.8rem; padding: 6px 10px;">
@@ -1242,8 +1271,12 @@
 
       <!-- Main Tab Bar Navigator -->
       <div style="display: flex; border-bottom: 1px solid var(--border); gap: 12px; margin-bottom: 4px;">
-        <button class="notif-tab active" id="tab-btn-directory" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">📂 Employee Directory</button>
-        <button class="notif-tab" id="tab-btn-insights" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em;">📊 Celebrations &amp; Insights</button>
+        <button class="notif-tab active" id="tab-btn-directory" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 6px;">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z" fill="currentColor"/></svg> Employee Directory
+        </button>
+        <button class="notif-tab" id="tab-btn-insights" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 6px;">
+          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M5 19h14v2H5v-2zm2-6h3v5H7v-5zm4-6h3v11h-3V7zm4-4h3v15h-3V3z" fill="currentColor"/></svg> Celebrations &amp; Insights
+        </button>
       </div>
 
       <!-- ── DIRECTORY SCREEN ── -->
@@ -1253,7 +1286,9 @@
           <!-- Today's events -->
           <div class="dash-card">
             <div class="dash-card-header">
-              <span>🎉 Today's Celebrations</span>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <svg class="svg-icon" style="color: var(--accent);" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg> Today's Celebrations
+              </span>
               <span style="font-size: 0.65rem; background: var(--accent); color: #fff; padding: 1px 5px; border-radius: 3px; font-weight: 700;" id="dash-today-count">0</span>
             </div>
             <div class="dash-card-content" id="dash-today-content">
@@ -1264,7 +1299,9 @@
           <!-- Upcoming birthdays -->
           <div class="dash-card">
             <div class="dash-card-header">
-              <span>🎂 Upcoming Birthdays (30 Days)</span>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <svg class="svg-icon" style="color: #93c5fd;" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg> Upcoming Birthdays (30 Days)
+              </span>
               <span style="font-size: 0.65rem; background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 1px 5px; border-radius: 3px; font-weight: 700;" id="dash-bday-count">0</span>
             </div>
             <div class="dash-card-content" id="dash-bday-content">
@@ -1275,7 +1312,9 @@
           <!-- Upcoming anniversaries -->
           <div class="dash-card">
             <div class="dash-card-header">
-              <span>🏅 Upcoming Anniversaries (30 Days)</span>
+              <span style="display: flex; align-items: center; gap: 6px;">
+                <svg class="svg-icon" style="color: #fbbf24;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg> Upcoming Anniversaries (30 Days)
+              </span>
               <span style="font-size: 0.65rem; background: rgba(234, 179, 8, 0.2); color: #fbbf24; padding: 1px 5px; border-radius: 3px; font-weight: 700;" id="dash-anniv-count">0</span>
             </div>
             <div class="dash-card-content" id="dash-anniv-content">
@@ -1382,7 +1421,9 @@
   <button class="scroll-top-btn" id="scroll-top-btn" title="Back to top">↑</button>
 
   <div class="toast" id="toast-notification">
-    <div class="toast-icon" id="toast-icon-el">🔔</div>
+    <div class="toast-icon" id="toast-icon-el">
+      <svg class="svg-icon" style="color: #4ade80" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/></svg>
+    </div>
     <div class="toast-content">
       <div class="toast-title" id="toast-title-text">Notification</div>
       <div class="toast-body" id="toast-body-text"></div>
@@ -1393,7 +1434,10 @@
   <div class="modal-overlay" id="email-preview-overlay"></div>
   <div class="modal-dialog" id="email-preview-modal">
     <div class="modal-header">
-      <div class="modal-title">✉️ Edit Email Draft</div>
+      <div class="modal-title" style="display: flex; align-items: center; gap: 6px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/></svg>
+        Edit Email Draft
+      </div>
       <button class="btn-close-modal" id="btn-close-preview-modal" title="Close">✕</button>
     </div>
     <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
@@ -1880,7 +1924,7 @@ bar.appendChild(meta);
               emp,
               type: 'birthday',
               day: dobDate.getDate(),
-              title: `🎂 ${escapeHtml(emp.name)}'s Birthday`,
+              title: `${escapeHtml(emp.name)}'s Birthday`,
               subtitle: `Date: ${dobDate.getDate()} ${months[selectedInsightsMonth].slice(0,3)} (${emp.dob_display})`
             });
           }
@@ -1894,7 +1938,7 @@ bar.appendChild(meta);
               emp,
               type: 'anniversary',
               day: joinDate.getDate(),
-              title: `🏅 ${escapeHtml(emp.name)}'s Work Anniversary`,
+              title: `${escapeHtml(emp.name)}'s Work Anniversary`,
               subtitle: `${years} Year${years !== 1 ? 's' : ''} of service (${joinDate.getDate()} ${months[selectedInsightsMonth].slice(0,3)})`
             });
           }
@@ -1921,10 +1965,18 @@ bar.appendChild(meta);
           card.style.padding = '12px 16px';
           card.style.borderRadius = '6px';
           
+          const iconHTML = evt.type === 'birthday'
+            ? `<svg class="svg-icon svg-icon-inline" style="color: #93c5fd;" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg>`
+            : `<svg class="svg-icon svg-icon-inline" style="color: #fbbf24;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg>`;
+
           card.innerHTML = `
             <div>
-              <div style="font-weight: 700; font-size: 0.85rem; color: var(--text);">${evt.title}</div>
-              <div style="font-size: 0.75rem; color: var(--muted); margin-top: 2px;">${evt.subtitle} | Dept: ${escapeHtml(evt.emp.department || '—')}</div>
+              <div style="font-weight: 700; font-size: 0.85rem; color: var(--text); display: inline-flex; align-items: center;">
+                ${iconHTML}${evt.title}
+              </div>
+              <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px; padding-left: 20px;">
+                ${evt.subtitle} | Dept: ${escapeHtml(evt.emp.department || '—')}
+              </div>
             </div>
              <div style="display: flex; gap: 8px;">
               <button class="btn-control" style="font-size: 0.72rem; padding: 4px 8px;"
@@ -1958,7 +2010,11 @@ bar.appendChild(meta);
       const colonIdx = msg.indexOf(': ');
       toastTitleEl.innerText = colonIdx !== -1 ? msg.slice(0, colonIdx) : (isError ? 'Error' : 'Info');
       toastBodyEl.innerText  = colonIdx !== -1 ? msg.slice(colonIdx + 2) : msg;
-      toastIconEl.innerText  = isError ? '🚨' : '✅';
+      if (isError) {
+        toastIconEl.innerHTML = `<svg class="svg-icon" style="color: #f87171" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/></svg>`;
+      } else {
+        toastIconEl.innerHTML = `<svg class="svg-icon" style="color: #4ade80" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/></svg>`;
+      }
       toastEl.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toastEl.classList.remove('show'), 4500);
@@ -2075,7 +2131,9 @@ bar.appendChild(meta);
       if (list.length === 0) {
         notifList.innerHTML = `
           <div class="notif-empty">
-            <div class="notif-empty-icon">🔕</div>
+            <div class="notif-empty-icon" style="color: var(--muted); opacity: 0.5; margin-bottom: 8px; display: flex; justify-content: center;">
+              <svg class="svg-icon svg-icon-xl" viewBox="0 0 24 24"><path d="M20 18.61L4.93 3.54 3.51 4.96l2.9 2.9A8.006 8.006 0 0 0 6 11v5l-2 2v1h13.11l2.09 2.09 1.41-1.41-1.61-1.61zM6 16v-5c0-.49.09-.96.25-1.4l6.4 6.4H6zm6-11c2.21 0 4 1.79 4 4v5c0 .34-.04.67-.11.99l1.46 1.46c.41-.75.65-1.6.65-2.45v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68c-.78.18-1.52.48-2.18.88l1.46 1.46c.66-.33 1.42-.52 2.22-.52zm0 17c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2z" fill="currentColor"/></svg>
+            </div>
             <div class="notif-empty-text">
               ${activeTab === 'unread' ? 'All caught up! No unread notifications.' : 'No notifications yet.'}
             </div>
@@ -2086,21 +2144,31 @@ bar.appendChild(meta);
       notifList.innerHTML = '';
       list.forEach(n => {
         const pillClass = n.type === 'birthday' ? 'pill-birthday' : n.type === 'anniversary' ? 'pill-anniversary' : 'pill-system';
-        const pillLabel = n.type === 'birthday' ? '🎂 Birthday' : n.type === 'anniversary' ? '🏅 Anniversary' : '⚙ System';
+        const pillLabel = n.type === 'birthday' ? 'Birthday' : n.type === 'anniversary' ? 'Anniversary' : 'System';
 
         // Split msg into title / body at first ": "
         const colonIdx = n.msg.indexOf(': ');
         const cardTitle = colonIdx !== -1 ? n.msg.slice(0, colonIdx) : n.msg;
         const cardBody  = colonIdx !== -1 ? n.msg.slice(colonIdx + 2) : '';
 
+        // Select the clean icon SVG
+        let iconHTML = '';
+        if (n.type === 'birthday') {
+          iconHTML = `<svg class="svg-icon svg-icon-lg" style="color: #93c5fd" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg>`;
+        } else if (n.type === 'anniversary') {
+          iconHTML = `<svg class="svg-icon svg-icon-lg" style="color: #ff4d61" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg>`;
+        } else {
+          iconHTML = `<svg class="svg-icon svg-icon-lg" style="color: #fbbf24" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>`;
+        }
+
         const card = document.createElement('div');
         card.className = 'notif-card' + (n.seen ? '' : ' unread');
         card.innerHTML = `
           <div class="notif-card-top">
-            <div class="notif-card-icon">${n.type === 'birthday' ? '🎂' : n.type === 'anniversary' ? '🏅' : '🔔'}</div>
-            <div class="notif-card-body">
+            <div class="notif-card-icon" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;">${iconHTML}</div>
+            <div class="notif-card-body" style="padding-left: 4px;">
               <div><span class="notif-type-pill ${pillClass}">${pillLabel}</span></div>
-              <div class="notif-card-title">${escapeHtml(cardTitle)}</div>
+              <div class="notif-card-title" style="margin-top: 4px;">${escapeHtml(cardTitle)}</div>
               ${cardBody ? `<div class="notif-card-msg">${escapeHtml(cardBody)}</div>` : ''}
             </div>
             ${!n.seen ? '<div class="notif-card-unread-dot"></div>' : ''}
@@ -2244,7 +2312,7 @@ bar.appendChild(meta);
           if (dobDate) {
             const isBdayToday = dobDate.getMonth() === mmToday && dobDate.getDate() === ddToday;
             if (isBdayToday) {
-              todayEvents.push({ emp, type: 'birthday', label: `🎂 ${emp.name}'s Birthday` });
+              todayEvents.push({ emp, type: 'birthday', label: `${emp.name}'s Birthday` });
             } else {
               const days = getDaysUntilNextEvent(emp.dob);
               if (days !== null && days > 0 && days <= 30) {
@@ -2262,7 +2330,7 @@ bar.appendChild(meta);
             if (isAnnivToday) {
               // Calculate service years today
               const years = today.getFullYear() - joinDate.getFullYear();
-              todayEvents.push({ emp, type: 'anniversary', label: `🏅 ${emp.name}'s Anniversary (${years} Yr${years !== 1 ? 's' : ''})` });
+              todayEvents.push({ emp, type: 'anniversary', label: `${emp.name}'s Anniversary (${years} Yr${years !== 1 ? 's' : ''})` });
             } else {
               const days = getDaysUntilNextEvent(emp.joining_date);
               if (days !== null && days > 0 && days <= 30) {
@@ -2287,12 +2355,19 @@ bar.appendChild(meta);
       if (todayEvents.length === 0) {
         todayContainer.innerHTML = `<div style="color: var(--muted); text-align: center; margin-top: 15px; font-size: 0.8rem;">No events today</div>`;
       } else {
-        todayContainer.innerHTML = todayEvents.map(evt => `
-          <div class="dash-event-item">
-            <span class="dash-event-name">${escapeHtml(evt.label)}</span>
-            <span class="dash-event-countdown countdown-today">Today</span>
-          </div>
-        `).join('');
+        todayContainer.innerHTML = todayEvents.map(evt => {
+          const iconHTML = evt.type === 'birthday'
+            ? `<svg class="svg-icon svg-icon-inline" style="color: #93c5fd;" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg>`
+            : `<svg class="svg-icon svg-icon-inline" style="color: #fbbf24;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg>`;
+          return `
+            <div class="dash-event-item">
+              <span class="dash-event-name" style="display: inline-flex; align-items: center;">
+                ${iconHTML}${escapeHtml(evt.label)}
+              </span>
+              <span class="dash-event-countdown countdown-today">Today</span>
+            </div>
+          `;
+        }).join('');
       }
 
       // Render upcoming birthdays
@@ -2450,15 +2525,20 @@ bar.appendChild(meta);
       filtered.forEach(emp => {
         const tr = document.createElement('tr');
         let badgesHTML = '';
-        if (emp.isBirthday)    badgesHTML += ` <span class="badge badge-birthday">🎂 Birthday</span>`;
-        if (emp.isAnniversary) badgesHTML += ` <span class="badge badge-anniversary">🏅 Anniversary</span>`;
+        if (emp.isBirthday) {
+          badgesHTML += ` <span class="badge badge-birthday"><svg class="svg-icon svg-icon-inline" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg>Birthday</span>`;
+        }
+        if (emp.isAnniversary) {
+          badgesHTML += ` <span class="badge badge-anniversary"><svg class="svg-icon svg-icon-inline" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg>Anniversary</span>`;
+        }
+        const emailIcon = `<svg class="svg-icon svg-icon-inline" style="color:var(--muted);width:13px;height:13px;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/></svg>`;
         tr.innerHTML = `
           <td class="emp-id-cell">${escapeHtml(emp.emp_id)}</td>
           <td class="emp-name-cell">${escapeHtml(emp.name)}</td>
           <td>${escapeHtml(emp.department || '—')}</td>
           <td>${escapeHtml(emp.job_title || '—')}</td>
           <td>
-            ${emp.email ? `<a href="javascript:openEmailPreview('${escapeHtml(emp.emp_id)}')" class="email-link" title="Preview and customize email wish">✉️ ${escapeHtml(emp.email)}</a>` : '—'}
+            ${emp.email ? `<a href="javascript:openEmailPreview('${escapeHtml(emp.emp_id)}')" class="email-link" title="Preview and customize email wish">${emailIcon}${escapeHtml(emp.email)}</a>` : '—'}
           </td>
           <td>${escapeHtml(emp.dob_display)}</td>
           <td>${escapeHtml(emp.joining_date_display)}${badgesHTML}</td>

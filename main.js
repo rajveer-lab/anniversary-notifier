@@ -459,7 +459,7 @@ function checkTodayReminders() {
 
         if (!existing || !existing.handled) {
           sendPing(
-            `🎂 Birthday — ${emp.name}`,
+            `Birthday — ${emp.name}`,
             `${emp.name} (${emp.emp_id}) has a birthday today!`
           );
 
@@ -477,7 +477,7 @@ function checkTodayReminders() {
 
         if (!existing || !existing.handled) {
           sendPing(
-            `🏅 Work Anniversary — ${emp.name}`,
+            `Work Anniversary — ${emp.name}`,
             `${emp.name} (${emp.emp_id}) joined on this day!`
           );
 
