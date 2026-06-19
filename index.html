@@ -1473,6 +1473,36 @@
         .replace(/'/g, "&#039;");
     }
 
+    // Custom natural compare to ignore spaces, hyphens and other symbols, comparing prefixes and numbers numerically
+    function naturalCompare(a, b) {
+      const getChunks = (str) => {
+        const clean = String(str || '').replace(/[^a-zA-Z0-9]/g, '');
+        return clean.match(/[a-zA-Z]+|[0-9]+/g) || [];
+      };
+
+      const chunksA = getChunks(a);
+      const chunksB = getChunks(b);
+
+      const minLen = Math.min(chunksA.length, chunksB.length);
+      for (let i = 0; i < minLen; i++) {
+        const valA = chunksA[i];
+        const valB = chunksB[i];
+
+        const isNumA = /^\d+$/.test(valA);
+        const isNumB = /^\d+$/.test(valB);
+
+        if (isNumA && isNumB) {
+          const numA = parseInt(valA, 10);
+          const numB = parseInt(valB, 10);
+          if (numA !== numB) return numA - numB;
+        } else {
+          const comp = valA.localeCompare(valB, undefined, { sensitivity: 'base' });
+          if (comp !== 0) return comp;
+        }
+      }
+      return chunksA.length - chunksB.length;
+    }
+
     // Debounce helper to limit execution frequency of rapid events (e.g. typing)
     function debounce(func, wait) {
       let timeout;
@@ -2421,8 +2451,8 @@ bar.appendChild(meta);
       }
 
       globalEmployeesList = result.data;
-      // Sort naturally by emp_id in ascending order (e.g., EMP-2 before EMP-10)
-      globalEmployeesList.sort((a, b) => a.emp_id.localeCompare(b.emp_id, undefined, { numeric: true, sensitivity: 'base' }));
+      // Sort naturally by emp_id in ascending order (e.g., EMP-2 before EMP-10) ignoring formatting characters like spaces or hyphens
+      globalEmployeesList.sort((a, b) => naturalCompare(a.emp_id, b.emp_id));
       
       updateCelebrationsDashboard(globalEmployeesList);
       renderEmployees();
@@ -2519,6 +2549,9 @@ bar.appendChild(meta);
         return true;
       });
 
+      // Always sort naturally by Employee ID in ascending order (e.g., EMP-2 before EMP-10) ignoring formatting characters like spaces or hyphens
+      filtered.sort((a, b) => naturalCompare(a.emp_id, b.emp_id));
+
       tableBody.innerHTML = '';
       totalCountText.innerHTML = `Total: <strong>${globalEmployeesList.length}</strong> employees`;
 
@@ -2576,6 +2609,29 @@ bar.appendChild(meta);
       if (/^\d+$/.test(name)) {
         showToast('Validation Error: Full Name cannot be only numbers.', true);
         nameInput.focus(); return;
+      }
+
+      // Prevent birthday from being today or in the future
+      const parseLocalDate = (raw) => {
+        if (!raw) return null;
+        const parts = raw.split('-');
+        if (parts.length !== 3) return null;
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      };
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dobDate = parseLocalDate(dob);
+      if (dobDate) {
+        dobDate.setHours(0, 0, 0, 0);
+        if (dobDate.getTime() === today.getTime()) {
+          showToast("Validation Error: Date of Birth cannot be today's date.", true);
+          dobInput.focus(); return;
+        }
+        if (dobDate.getTime() > today.getTime()) {
+          showToast("Validation Error: Date of Birth cannot be in the future.", true);
+          dobInput.focus(); return;
+        }
       }
 
       let result;
