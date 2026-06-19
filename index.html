@@ -967,6 +967,40 @@
     body.light-theme .toast-title { color: #111827; }
     .toast-body { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
 
+    /* ── SCROLL TO TOP BUTTON ── */
+    .scroll-top-btn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 38px;
+      height: 38px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(214, 0, 28, 0.45);
+      z-index: 8000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease, background 0.15s;
+      transform: translateY(10px);
+    }
+    .scroll-top-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0);
+    }
+    .scroll-top-btn:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 6px 20px rgba(214, 0, 28, 0.65);
+    }
+
+
     /* ── SPLASH SCREEN ── */
     .splash-screen {
       position: fixed;
@@ -1343,6 +1377,9 @@
       </div>
     </main>
   </div>
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-top-btn" id="scroll-top-btn" title="Back to top">↑</button>
 
   <div class="toast" id="toast-notification">
     <div class="toast-icon" id="toast-icon-el">🔔</div>
@@ -2521,6 +2558,32 @@ bar.appendChild(meta);
       if (result.success) { showToast('Deleted: Employee removed.'); loadEmployees(); }
       else showToast('Error: ' + result.error, true);
     }
+
+    // ── SCROLL TO TOP BUTTON LOGIC ──
+    const scrollTopBtn = document.getElementById('scroll-top-btn');
+    const mainContent  = document.querySelector('.main-content');
+    let scrollHideTimer;
+
+    mainContent.addEventListener('scroll', () => {
+      if (mainContent.scrollTop > 200) {
+        scrollTopBtn.classList.add('visible');
+        // Auto-hide 3 seconds after scrolling stops
+        clearTimeout(scrollHideTimer);
+        scrollHideTimer = setTimeout(() => {
+          scrollTopBtn.classList.remove('visible');
+        }, 3000);
+      } else {
+        clearTimeout(scrollHideTimer);
+        scrollTopBtn.classList.remove('visible');
+      }
+    });
+
+    scrollTopBtn.addEventListener('click', () => {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+      clearTimeout(scrollHideTimer);
+      scrollTopBtn.classList.remove('visible');
+    });
+
 
     const debouncedRenderEmployees = debounce(renderEmployees, 150);
     searchInput.addEventListener('input', debouncedRenderEmployees);

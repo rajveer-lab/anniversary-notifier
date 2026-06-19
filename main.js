@@ -41,9 +41,49 @@ function createWindow() {
     backgroundColor: '#0d0f12',
   });
   win.loadFile('index.html');
+  win.maximize(); // Open maximized (full screen) by default
+
+  // Reset zoom to 100% AFTER page loads — setting it before load is ignored by Electron
+  win.webContents.on('did-finish-load', () => {
+    win.webContents.setZoomFactor(1.0);
+  });
+
+
   // if (!app.isPackaged) {
   //   win.webContents.openDevTools();
   // }
+
+  // ── Enable full bidirectional zoom (Ctrl+scroll, pinch-to-zoom) ──
+  // Allow zoom between 25% and 300%
+  win.webContents.setVisualZoomLevelLimits(0.25, 3);
+
+  // Handle Ctrl+scroll / trackpad pinch zoom
+  win.webContents.on('zoom-changed', (event, zoomDirection) => {
+    const current = win.webContents.getZoomFactor();
+    if (zoomDirection === 'in') {
+      win.webContents.setZoomFactor(Math.min(parseFloat((current + 0.1).toFixed(2)), 3.0));
+    } else {
+      win.webContents.setZoomFactor(Math.max(parseFloat((current - 0.1).toFixed(2)), 0.25));
+    }
+  });
+
+  // Handle Ctrl+= (zoom in), Ctrl+- (zoom out), Ctrl+0 (reset) keyboard shortcuts
+  win.webContents.on('before-input-event', (event, input) => {
+    if (!input.control) return;
+    const current = win.webContents.getZoomFactor();
+    if (input.type === 'keyDown') {
+      if (input.key === '=' || input.key === '+') {
+        win.webContents.setZoomFactor(Math.min(parseFloat((current + 0.1).toFixed(2)), 3.0));
+        event.preventDefault();
+      } else if (input.key === '-') {
+        win.webContents.setZoomFactor(Math.max(parseFloat((current - 0.1).toFixed(2)), 0.25));
+        event.preventDefault();
+      } else if (input.key === '0') {
+        win.webContents.setZoomFactor(1.0);
+        event.preventDefault();
+      }
+    }
+  });
 
   // Handle native mailto: and web link navigations securely
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -61,6 +101,7 @@ function createWindow() {
     }
   });
 }
+
 
 app.whenReady().then(() => {
   const { session } = require('electron');
