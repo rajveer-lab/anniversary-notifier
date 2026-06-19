@@ -1545,6 +1545,10 @@
       const result = await window.electronAPI.importData();
 
       if (result.success) {
+        // Clear old notification history so stale alerts don't show for the new dataset
+        localStorage.removeItem(NOTIF_KEY);
+        await window.electronAPI.clearNotifications();
+        renderNotifPanel();
         showToast(`Import Complete: Successfully updated ${result.count} records.`);
         loadEmployees(); // Instantly refresh the data table
       } else if (result.error !== 'CANCELLED') {

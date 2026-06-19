@@ -292,7 +292,18 @@ ipcMain.handle('import-data', async () => {
     }
 
     db.importData(employeesToImport);
-    checkTodayReminders(); // Refresh notifications in case imported users have birthdays today
+
+    // Reset notification state so fresh today-reminders fire for the new dataset
+    // without this, the dedup logic would suppress all new notifications
+    const notifPath = path.join(app.getPath('userData'), 'notif-state.json');
+    try {
+      fs.writeFileSync(notifPath, JSON.stringify({ date: '', notifications: {} }, null, 2));
+      notifiedToday.clear();
+    } catch (e) {
+      console.error('Failed to reset notification state after import:', e);
+    }
+
+    checkTodayReminders(); // Fire fresh notifications for the newly imported data
 
     return { success: true, count: employeesToImport.length };
 
