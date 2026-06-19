@@ -210,14 +210,25 @@ ipcMain.handle('import-data', async () => {
       return str;
     };
 
-    // Helper to safely convert exported text dates back into DB format
+    // Helper to safely convert exported text dates back into DB format (YYYY-MM-DD)
+    // Uses Date.parse carefully: for "DD Mon YYYY" or ISO formats, parse then extract local parts
     const parseDateForDB = (dStr) => {
       if (!dStr || dStr === '—') return '';
+      // Try to parse the date string
       const d = new Date(dStr);
       if (isNaN(d.getTime())) return '';
-      const year = d.getFullYear();
+      // Use UTC methods if the string looks like YYYY-MM-DD (ISO), else local
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dStr.trim())) {
+        // ISO string — read UTC values to avoid timezone day-shift
+        const year  = d.getUTCFullYear();
+        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day   = String(d.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+      // For human-readable strings like "08 Apr 1997", use local values
+      const year  = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
+      const day   = String(d.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
 

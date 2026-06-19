@@ -63,7 +63,12 @@ module.exports = {
     // This prevents the JS UTC timezone bug that shifts dates back by 1 day
     const parseLocalDate = (raw) => {
       if (!raw) return null;
-      const [year, month, day] = raw.split('-');
+      const parts = raw.split('-');
+      if (parts.length !== 3) return null;
+      const year  = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const day   = parseInt(parts[2], 10);
+      if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
       return new Date(year, month - 1, day);
     };
 
