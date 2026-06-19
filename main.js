@@ -150,6 +150,21 @@ ipcMain.handle('delete-employee', (_, emp_id) => {
   catch (e) { return { success: false, error: e.message }; }
 });
 
+ipcMain.handle('bulk-delete-employees', (_, emp_ids) => {
+  try { db.bulkDelete(emp_ids); return { success: true }; }
+  catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('bulk-update-status-employees', (_, emp_ids, status) => {
+  try {
+    db.bulkUpdateStatus(emp_ids, status);
+    checkTodayReminders();
+    return { success: true };
+  }
+  catch (e) { return { success: false, error: e.message }; }
+});
+
+
 ipcMain.handle('clear-employees', () => {
   try {
     db.clearAll();
@@ -452,6 +467,7 @@ function checkTodayReminders() {
     }
 
     employees.forEach(emp => {
+      if (emp.status === 'Inactive') return;
       // ── BIRTHDAY ──
       if (emp.isBirthday) {
         const key = `bday-${emp.emp_id}`;

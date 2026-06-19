@@ -653,7 +653,7 @@
     .counter-text strong { color: var(--text); }
     .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
     .form-group label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--muted); }
-    input[type="text"], input[type="date"] {
+    input[type="text"], input[type="date"], select {
       background-color: #171a21;
       border: 1px solid var(--border);
       color: var(--text);
@@ -665,8 +665,16 @@
       outline: none;
       transition: border-color 0.15s;
     }
-    input[type="text"]:focus, input[type="date"]:focus { border-color: var(--accent); }
-    body.light-theme input[type="text"], body.light-theme input[type="date"] { background-color: #f9fafb; color: #111827; }
+    select option {
+      background-color: #171a21;
+      color: var(--text);
+    }
+    body.light-theme select option {
+      background-color: #f9fafb;
+      color: #111827;
+    }
+    input[type="text"]:focus, input[type="date"]:focus, select:focus { border-color: var(--accent); }
+    body.light-theme input[type="text"], body.light-theme input[type="date"], body.light-theme select { background-color: #f9fafb; color: #111827; }
     .btn-primary {
       background-color: var(--accent);
       color: #fff;
@@ -782,6 +790,17 @@
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th { background: #15181e; color: var(--muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; padding: 12px 18px; border-bottom: 1px solid var(--border); }
     body.light-theme th { background: #f9fafb; }
+    .sortable-header:hover {
+      background: var(--surface-hover) !important;
+      color: var(--text);
+    }
+    .sort-icon {
+      font-size: 0.68rem;
+      margin-left: 4px;
+      opacity: 0.7;
+      display: inline-block;
+      vertical-align: middle;
+    }
     td { padding: 14px 18px; font-size: 0.85rem; border-bottom: 1px solid var(--border); color: var(--text); }
     .emp-id-cell { font-family: monospace; color: var(--muted); font-weight: 600; }
     .emp-name-cell { font-weight: 600; }
@@ -813,6 +832,67 @@
     .badge-birthday { background: rgba(59,130,246,0.12); color: #93c5fd; border: 1px solid rgba(59,130,246,0.2); }
     body.light-theme .badge-birthday { color: #1d4ed8; background: rgba(59,130,246,0.08); }
 
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-active {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    body.light-theme .status-active {
+      color: #047857;
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .status-inactive {
+      background: rgba(107, 114, 128, 0.1);
+      color: #9ca3af;
+      border: 1px solid rgba(107, 114, 128, 0.2);
+    }
+    body.light-theme .status-inactive {
+      color: #4b5563;
+      background: rgba(107, 114, 128, 0.08);
+    }
+
+    #btn-bulk-active {
+      border-color: rgba(16, 185, 129, 0.4) !important;
+      color: #34d399 !important;
+    }
+    #btn-bulk-active:hover {
+      background: rgba(16, 185, 129, 0.15) !important;
+      border-color: rgba(16, 185, 129, 0.6) !important;
+    }
+    body.light-theme #btn-bulk-active {
+      color: #047857 !important;
+      border-color: rgba(16, 185, 129, 0.3) !important;
+    }
+    body.light-theme #btn-bulk-active:hover {
+      background: rgba(16, 185, 129, 0.08) !important;
+      border-color: rgba(16, 185, 129, 0.6) !important;
+    }
+
+    #btn-bulk-inactive {
+      border-color: rgba(107, 114, 128, 0.4) !important;
+      color: #9ca3af !important;
+    }
+    #btn-bulk-inactive:hover {
+      background: rgba(107, 114, 128, 0.15) !important;
+      border-color: rgba(107, 114, 128, 0.6) !important;
+    }
+    body.light-theme #btn-bulk-inactive {
+      color: #4b5563 !important;
+      border-color: rgba(107, 114, 128, 0.3) !important;
+    }
+    body.light-theme #btn-bulk-inactive:hover {
+      background: rgba(107, 114, 128, 0.08) !important;
+      border-color: rgba(107, 114, 128, 0.6) !important;
+    }
 
     /* Month grid for Insights view */
     .month-grid {
@@ -1203,7 +1283,14 @@
           <label for="joining-date">Joining Date</label>
           <input type="date" id="joining-date" tabindex="7">
         </div>
-        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="8">Add Employee</button>
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" tabindex="8" style="cursor: pointer;">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="9">Add Employee</button>
       </div>
 
       <div class="panel-title" style="margin-top: 10px;">Email Templates</div>
@@ -1263,6 +1350,9 @@
       <div class="view-header">
         <div class="counter-text" id="total-count-text">Total: <strong>0</strong> employees</div>
         <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-control btn-danger-control" id="btn-bulk-delete" style="display: none; border-color: rgba(214, 0, 28, 0.4) !important;" title="Delete selected employees">🗑️ Delete Selected (0)</button>
+          <button class="btn-control" id="btn-bulk-active" style="display: none;" title="Set status to Active for selected employees">🟢 Set Active (0)</button>
+          <button class="btn-control" id="btn-bulk-inactive" style="display: none;" title="Set status to Inactive for selected employees">⚪ Set Inactive (0)</button>
           <button class="btn-control" id="btn-import"> Import CSV</button>
           <button class="btn-control" id="btn-export"> Export CSV</button>
           <button class="btn-control btn-danger-control" id="btn-clear-data">Clear Data</button>
@@ -1336,6 +1426,14 @@
             <label for="filter-end-date">End Date</label>
             <input type="date" id="filter-end-date">
           </div>
+          <div class="filter-group status" style="width: 140px;">
+            <label for="filter-status">Status</label>
+            <select id="filter-status" style="cursor: pointer;">
+              <option value="All">All Statuses</option>
+              <option value="Active">Active Only</option>
+              <option value="Inactive">Inactive Only</option>
+            </select>
+          </div>
           <button class="btn-clear-filters" id="btn-clear-filters" title="Clear search and filters">✕ Clear</button>
         </div>
 
@@ -1343,14 +1441,16 @@
           <table>
             <thead>
               <tr>
-                <th>Emp ID</th>
-                <th>Name</th>
-                <th>Department</th>
-                <th>Job Title</th>
-                <th>Email</th>
-                <th>Date of Birth</th>
-                <th>Joining Date</th>
-                <th>Service</th>
+                <th style="width: 40px; text-align: center; vertical-align: middle;"><input type="checkbox" id="chk-all-employees" style="cursor: pointer; width: 14px; height: 14px;"></th>
+                <th class="sortable-header" data-col="emp_id" style="cursor: pointer; user-select: none;">Emp ID <span class="sort-icon" id="sort-icon-emp_id"></span></th>
+                <th class="sortable-header" data-col="name" style="cursor: pointer; user-select: none;">Name <span class="sort-icon" id="sort-icon-name"></span></th>
+                <th class="sortable-header" data-col="department" style="cursor: pointer; user-select: none;">Department <span class="sort-icon" id="sort-icon-department"></span></th>
+                <th class="sortable-header" data-col="job_title" style="cursor: pointer; user-select: none;">Job Title <span class="sort-icon" id="sort-icon-job_title"></span></th>
+                <th class="sortable-header" data-col="email" style="cursor: pointer; user-select: none;">Email <span class="sort-icon" id="sort-icon-email"></span></th>
+                <th class="sortable-header" data-col="dob" style="cursor: pointer; user-select: none;">Date of Birth <span class="sort-icon" id="sort-icon-dob"></span></th>
+                <th class="sortable-header" data-col="joining_date" style="cursor: pointer; user-select: none;">Joining Date <span class="sort-icon" id="sort-icon-joining_date"></span></th>
+                <th class="sortable-header" data-col="service_display" style="cursor: pointer; user-select: none;">Service <span class="sort-icon" id="sort-icon-service_display"></span></th>
+                <th class="sortable-header" data-col="status" style="cursor: pointer; user-select: none;">Status <span class="sort-icon" id="sort-icon-status"></span></th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -1539,6 +1639,16 @@
     const btnImport      = document.getElementById('btn-import');
     const btnClearData   = document.getElementById('btn-clear-data');
     const btnClearForm   = document.getElementById('btn-clear-form');
+    const statusInput    = document.getElementById('status');
+    const chkAllEmployees = document.getElementById('chk-all-employees');
+    const btnBulkDelete  = document.getElementById('btn-bulk-delete');
+    const btnBulkActive  = document.getElementById('btn-bulk-active');
+    const btnBulkInactive = document.getElementById('btn-bulk-inactive');
+    const filterStatusEl = document.getElementById('filter-status');
+
+    // Sorting state variables
+    let currentSortCol = 'emp_id';
+    let currentSortDir = 'asc';
 
     // Notification panel refs
     const notifBellBtn   = document.getElementById('notif-bell-btn');
@@ -1870,8 +1980,9 @@
     });
 
     function loadInsightsScreen() {
+      const activeEmployees = globalEmployeesList.filter(emp => emp.status !== 'Inactive');
       // 1. Total active staff
-      const totalStaff = globalEmployeesList.length;
+      const totalStaff = activeEmployees.length;
       document.getElementById('stat-total-staff').textContent = totalStaff;
 
       // 2. Average tenure calculation
@@ -1886,7 +1997,7 @@
         return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
       };
 
-      globalEmployeesList.forEach(emp => {
+      activeEmployees.forEach(emp => {
         if (emp.joining_date) {
           const jDate = parseLocalDate(emp.joining_date);
           if (jDate) {
@@ -1908,7 +2019,7 @@
 
       // 3. Department distribution rendering
       const deptCounts = {};
-      globalEmployeesList.forEach(emp => {
+      activeEmployees.forEach(emp => {
         const d = emp.department ? emp.department.trim() : 'General';
         deptCounts[d] = (deptCounts[d] || 0) + 1;
       });
@@ -1925,18 +2036,31 @@
           const bar = document.createElement('div');
           bar.className = 'dept-bar-item';
           const meta = document.createElement('div');
-meta.className = 'dept-bar-meta';
+          meta.className = 'dept-bar-meta';
 
-const deptSpan = document.createElement('span');
-deptSpan.textContent = dept;
+          const deptSpan = document.createElement('span');
+          deptSpan.textContent = dept;
 
-const countSpan = document.createElement('span');
-countSpan.textContent = `${count} (${pct}%)`;
+          const countSpan = document.createElement('span');
+          countSpan.textContent = `${count} (${pct}%)`;
 
-meta.appendChild(deptSpan);
-meta.appendChild(countSpan);
-bar.appendChild(meta);
+          meta.appendChild(deptSpan);
+          meta.appendChild(countSpan);
+          bar.appendChild(meta);
+          
+          const track = document.createElement('div');
+          track.className = 'dept-bar-track';
+          const fill = document.createElement('div');
+          fill.className = 'dept-bar-fill';
+          fill.style.width = '0%';
+          track.appendChild(fill);
+          bar.appendChild(track);
+          
           deptContainer.appendChild(bar);
+          
+          setTimeout(() => {
+            fill.style.width = `${pct}%`;
+          }, 50);
         });
       }
 
@@ -1945,7 +2069,7 @@ bar.appendChild(meta);
       document.getElementById('insights-month-name').textContent = `${months[selectedInsightsMonth]} Celebrations`;
 
       const monthEvents = [];
-      globalEmployeesList.forEach(emp => {
+      activeEmployees.forEach(emp => {
         // Birthday check
         if (emp.dob) {
           const dobDate = parseLocalDate(emp.dob);
@@ -2336,6 +2460,7 @@ bar.appendChild(meta);
       };
 
       employees.forEach(emp => {
+        if (emp.status === 'Inactive') return;
         // Check birthday
         if (emp.dob) {
           const dobDate = parseLocalDate(emp.dob);
@@ -2531,7 +2656,14 @@ bar.appendChild(meta);
         return false;
       };
 
+      const statusFilter = filterStatusEl.value;
       const filtered = globalEmployeesList.filter(emp => {
+        // Status filter match
+        if (statusFilter !== 'All') {
+          const empStatus = emp.status || 'Active';
+          if (empStatus !== statusFilter) return false;
+        }
+
         // Text query match
         const textMatch = !query || 
           emp.emp_id.toLowerCase().includes(query) ||
@@ -2549,8 +2681,59 @@ bar.appendChild(meta);
         return true;
       });
 
-      // Always sort naturally by Employee ID in ascending order (e.g., EMP-2 before EMP-10) ignoring formatting characters like spaces or hyphens
-      filtered.sort((a, b) => naturalCompare(a.emp_id, b.emp_id));
+      // Update sort indicators on column headers
+      document.querySelectorAll('.sortable-header').forEach(th => {
+        const col = th.dataset.col;
+        const iconSpan = document.getElementById(`sort-icon-${col}`);
+        if (iconSpan) {
+          if (col === currentSortCol) {
+            iconSpan.innerHTML = currentSortDir === 'asc' ? ' &#9650;' : ' &#9660;';
+            iconSpan.style.opacity = '1';
+          } else {
+            iconSpan.innerHTML = '';
+            iconSpan.style.opacity = '0.5';
+          }
+        }
+      });
+
+      // Sort based on current sorting column and direction in memory
+      if (currentSortCol) {
+        filtered.sort((a, b) => {
+          let comparison = 0;
+          const col = currentSortCol;
+          
+          if (col === 'emp_id' || col === 'name') {
+            comparison = naturalCompare(a[col], b[col]);
+          } else if (col === 'dob' || col === 'joining_date') {
+            const dateA = a[col] ? parseLocalDate(a[col]) : null;
+            const dateB = b[col] ? parseLocalDate(b[col]) : null;
+            const timeA = dateA ? dateA.getTime() : 0;
+            const timeB = dateB ? dateB.getTime() : 0;
+            comparison = timeA - timeB;
+          } else if (col === 'service_display') {
+            const getServiceVal = (val) => {
+              if (!val || val === '—') return -1;
+              const match = val.match(/^(\d+)/);
+              return match ? parseInt(match[1], 10) : -1;
+            };
+            comparison = getServiceVal(a.service_display) - getServiceVal(b.service_display);
+          } else if (col === 'status') {
+            const statusA = a.status || 'Active';
+            const statusB = b.status || 'Active';
+            comparison = statusA.localeCompare(statusB, undefined, { sensitivity: 'base' });
+          } else {
+            const valA = a[col] || '';
+            const valB = b[col] || '';
+            comparison = valA.localeCompare(valB, undefined, { sensitivity: 'base' });
+          }
+          
+          return currentSortDir === 'asc' ? comparison : -comparison;
+        });
+      }
+
+      // Reset checkbox state
+      chkAllEmployees.checked = false;
+      updateBulkActionButtons();
 
       tableBody.innerHTML = '';
       totalCountText.innerHTML = `Total: <strong>${globalEmployeesList.length}</strong> employees`;
@@ -2566,6 +2749,9 @@ bar.appendChild(meta);
         }
         const emailIcon = `<svg class="svg-icon svg-icon-inline" style="color:var(--muted);width:13px;height:13px;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/></svg>`;
         tr.innerHTML = `
+          <td style="text-align: center; vertical-align: middle;">
+            <input type="checkbox" class="chk-employee" data-id="${escapeHtml(emp.emp_id)}" style="cursor: pointer; width: 14px; height: 14px;">
+          </td>
           <td class="emp-id-cell">${escapeHtml(emp.emp_id)}</td>
           <td class="emp-name-cell">${escapeHtml(emp.name)}</td>
           <td>${escapeHtml(emp.department || '—')}</td>
@@ -2576,6 +2762,9 @@ bar.appendChild(meta);
           <td>${escapeHtml(emp.dob_display)}</td>
           <td>${escapeHtml(emp.joining_date_display)}${badgesHTML}</td>
           <td>${escapeHtml(emp.service_display || '—')}</td>
+          <td>
+            <span class="status-badge ${emp.status === 'Inactive' ? 'status-inactive' : 'status-active'}">${escapeHtml(emp.status || 'Active')}</span>
+          </td>
           <td>
             <div class="actions-cell">
               <button class="btn-table btn-edit"
@@ -2597,6 +2786,7 @@ bar.appendChild(meta);
       const email        = emailInput.value.trim();
       const dob          = dobInput.value;
       const joining_date = joiningInput.value;
+      const status       = statusInput.value || 'Active';
 
       // Auto-pad manual numeric IDs with leading zeros
       if (emp_id && !isNaN(emp_id)) {
@@ -2637,10 +2827,10 @@ bar.appendChild(meta);
       let result;
       if (editOrigEmpId.value) {
         result = await window.electronAPI.updateEmployee({
-          original_emp_id: editOrigEmpId.value, emp_id, name, department, job_title, email, dob, joining_date
+          original_emp_id: editOrigEmpId.value, emp_id, name, department, job_title, email, dob, joining_date, status
         });
       } else {
-        result = await window.electronAPI.addEmployee({ emp_id, name, department, job_title, email, dob, joining_date });
+        result = await window.electronAPI.addEmployee({ emp_id, name, department, job_title, email, dob, joining_date, status });
       }
 
       if (result.success) {
@@ -2664,7 +2854,8 @@ bar.appendChild(meta);
     jobTitleInput.addEventListener('keydown',(e) => { if (e.key !== 'Enter') return; e.preventDefault(); emailInput.focus(); });
     emailInput.addEventListener('keydown',   (e) => { if (e.key !== 'Enter') return; e.preventDefault(); dobInput.focus(); });
     dobInput.addEventListener('keydown',     (e) => { if (e.key !== 'Enter') return; e.preventDefault(); joiningInput.focus(); });
-    joiningInput.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); validateAndSubmit(); });
+    joiningInput.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); statusInput.focus(); });
+    statusInput.addEventListener('keydown',  (e) => { if (e.key !== 'Enter') return; e.preventDefault(); validateAndSubmit(); });
 
     // ── EDIT / RESET / DELETE ──
     function startEdit(emp_id) {
@@ -2681,12 +2872,14 @@ bar.appendChild(meta);
       emailInput.value         = emp.email || '';
       dobInput.value           = emp.dob || '';
       joiningInput.value       = emp.joining_date || '';
+      statusInput.value        = emp.status || 'Active';
       idInput.focus();
     }
     function resetForm() {
       formPanelTitle.innerText = 'Add Employee';
       submitBtn.innerText      = 'Add Employee';
       editOrigEmpId.value = idInput.value = nameInput.value = deptInput.value = jobTitleInput.value = emailInput.value = dobInput.value = joiningInput.value = '';
+      statusInput.value        = 'Active';
     }
     async function deleteEmployee(emp_id) {
       if (!confirm(`Remove employee ${emp_id}?`)) return;
@@ -2729,7 +2922,131 @@ bar.appendChild(meta);
       searchInput.value = '';
       filterStartDateEl.value = '';
       filterEndDateEl.value = '';
+      filterStatusEl.value = 'All';
       renderEmployees();
+    });
+
+    // Checkbox and Bulk Action Button Handlers
+    function updateBulkActionButtons() {
+      const selectedCheckboxes = tableBody.querySelectorAll('.chk-employee:checked');
+      const count = selectedCheckboxes.length;
+      if (count > 0) {
+        btnBulkDelete.textContent = `🗑️ Delete Selected (${count})`;
+        btnBulkDelete.style.display = 'inline-flex';
+        btnBulkActive.textContent = `🟢 Set Active (${count})`;
+        btnBulkActive.style.display = 'inline-flex';
+        btnBulkInactive.textContent = `⚪ Set Inactive (${count})`;
+        btnBulkInactive.style.display = 'inline-flex';
+      } else {
+        btnBulkDelete.style.display = 'none';
+        btnBulkActive.style.display = 'none';
+        btnBulkInactive.style.display = 'none';
+      }
+    }
+
+    tableBody.addEventListener('change', (e) => {
+      if (e.target.classList.contains('chk-employee')) {
+        const visibleCheckboxes = tableBody.querySelectorAll('.chk-employee');
+        const checkedVisible = tableBody.querySelectorAll('.chk-employee:checked');
+        chkAllEmployees.checked = visibleCheckboxes.length > 0 && (visibleCheckboxes.length === checkedVisible.length);
+        updateBulkActionButtons();
+      }
+    });
+
+    chkAllEmployees.addEventListener('change', () => {
+      const isChecked = chkAllEmployees.checked;
+      tableBody.querySelectorAll('.chk-employee').forEach(chk => {
+        chk.checked = isChecked;
+      });
+      updateBulkActionButtons();
+    });
+
+    btnBulkDelete.addEventListener('click', async () => {
+      const selectedCheckboxes = tableBody.querySelectorAll('.chk-employee:checked');
+      const ids = Array.from(selectedCheckboxes).map(chk => chk.dataset.id);
+      if (ids.length === 0) return;
+      
+      const confirmMsg = `Are you sure you want to delete the ${ids.length} selected employee(s)? This action cannot be undone.`;
+      if (!confirm(confirmMsg)) return;
+
+      const originalText = btnBulkDelete.innerText;
+      btnBulkDelete.innerText = '⏳ Deleting...';
+      btnBulkDelete.disabled = true;
+
+      const result = await window.electronAPI.bulkDeleteEmployees(ids);
+      btnBulkDelete.disabled = false;
+      btnBulkDelete.innerText = originalText;
+
+      if (result.success) {
+        showToast(`Deleted: ${ids.length} employee records removed.`);
+        loadEmployees();
+      } else {
+        showToast('Error: ' + result.error, true);
+      }
+    });
+
+    btnBulkActive.addEventListener('click', async () => {
+      const selectedCheckboxes = tableBody.querySelectorAll('.chk-employee:checked');
+      const ids = Array.from(selectedCheckboxes).map(chk => chk.dataset.id);
+      if (ids.length === 0) return;
+      
+      const confirmMsg = `Are you sure you want to set the status to Active for the ${ids.length} selected employee(s)?`;
+      if (!confirm(confirmMsg)) return;
+
+      const originalText = btnBulkActive.innerText;
+      btnBulkActive.innerText = '⏳ Updating...';
+      btnBulkActive.disabled = true;
+
+      const result = await window.electronAPI.bulkUpdateStatusEmployees(ids, 'Active');
+      btnBulkActive.disabled = false;
+      btnBulkActive.innerText = originalText;
+
+      if (result.success) {
+        showToast(`Updated: ${ids.length} employee records set to Active.`);
+        loadEmployees();
+      } else {
+        showToast('Error: ' + result.error, true);
+      }
+    });
+
+    btnBulkInactive.addEventListener('click', async () => {
+      const selectedCheckboxes = tableBody.querySelectorAll('.chk-employee:checked');
+      const ids = Array.from(selectedCheckboxes).map(chk => chk.dataset.id);
+      if (ids.length === 0) return;
+      
+      const confirmMsg = `Are you sure you want to set the status to Inactive for the ${ids.length} selected employee(s)?`;
+      if (!confirm(confirmMsg)) return;
+
+      const originalText = btnBulkInactive.innerText;
+      btnBulkInactive.innerText = '⏳ Updating...';
+      btnBulkInactive.disabled = true;
+
+      const result = await window.electronAPI.bulkUpdateStatusEmployees(ids, 'Inactive');
+      btnBulkInactive.disabled = false;
+      btnBulkInactive.innerText = originalText;
+
+      if (result.success) {
+        showToast(`Updated: ${ids.length} employee records set to Inactive.`);
+        loadEmployees();
+      } else {
+        showToast('Error: ' + result.error, true);
+      }
+    });
+
+    filterStatusEl.addEventListener('change', renderEmployees);
+
+    // Sorting Click Handlers
+    document.querySelectorAll('.sortable-header').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (currentSortCol === col) {
+          currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          currentSortCol = col;
+          currentSortDir = 'asc';
+        }
+        renderEmployees();
+      });
     });
     
     // Initialise settings and load data

@@ -1,8 +1,63 @@
 const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const { app } = require('electron');
+const crypto = require('crypto');
+const fs = require('fs');
 
 let dbPath = path.join(app.getPath('userData'), 'employees.db');
+let keyPath = path.join(app.getPath('userData'), 'db-key.enc');
+let ENCRYPTION_KEY;
+
+// Auto-generate or load key from file
+if (fs.existsSync(keyPath)) {
+  ENCRYPTION_KEY = fs.readFileSync(keyPath);
+} else {
+  ENCRYPTION_KEY = crypto.randomBytes(32);
+  fs.writeFileSync(keyPath, ENCRYPTION_KEY);
+}
+
+const ALGORITHM = 'aes-256-gcm';
+
+function encrypt(text) {
+  if (text === undefined || text === null) return null;
+  const str = String(text);
+  if (str === '') return '';
+  if (str.startsWith('encv1:')) return str;
+
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
+  let encrypted = cipher.update(str, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+
+  return `encv1:${iv.toString('hex')}:${authTag}:${encrypted}`;
+}
+
+function decrypt(text) {
+  if (text === undefined || text === null) return null;
+  const str = String(text);
+  if (str === '') return '';
+  if (!str.startsWith('encv1:')) return str;
+
+  try {
+    const parts = str.split(':');
+    if (parts.length !== 4) return str;
+
+    const [, ivHex, tagHex, ciphertextHex] = parts;
+    const iv = Buffer.from(ivHex, 'hex');
+    const tag = Buffer.from(tagHex, 'hex');
+    const decipher = crypto.createDecipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
+    decipher.setAuthTag(tag);
+
+    let decrypted = decipher.update(ciphertextHex, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (err) {
+    console.error('Decryption failed:', err);
+    return str;
+  }
+}
+
 let db = new Database(dbPath);
 
 db.exec('PRAGMA journal_mode = WAL');
@@ -21,21 +76,19 @@ db.exec(`
 
 try {
   db.exec(`ALTER TABLE employees ADD COLUMN email TEXT;`);
-} catch (e) {
-  // Ignored if column already exists or table was just created with it
-}
+} catch (e) {}
 
 try {
   db.exec(`ALTER TABLE employees ADD COLUMN department TEXT;`);
-} catch (e) {
-  // Ignored if column already exists
-}
+} catch (e) {}
 
 try {
   db.exec(`ALTER TABLE employees ADD COLUMN job_title TEXT;`);
-} catch (e) {
-  // Ignored if column already exists
-}
+} catch (e) {}
+
+try {
+  db.exec(`ALTER TABLE employees ADD COLUMN status TEXT DEFAULT 'Active';`);
+} catch (e) {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS settings (
@@ -43,6 +96,53 @@ db.exec(`
     value TEXT
   )
 `);
+
+// Migration: Encrypt any raw/plaintext database values on startup
+function migrateExistingData() {
+  const rows = db.prepare('SELECT id, emp_id, name, dob, joining_date, email, department, job_title, status FROM employees').all();
+  let migrationCount = 0;
+  
+  db.exec('BEGIN TRANSACTION');
+  try {
+    const updateStmt = db.prepare(`
+      UPDATE employees 
+      SET name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title, status = @status
+      WHERE id = @id
+    `);
+    updateStmt.setAllowBareNamedParameters(true);
+
+    for (const row of rows) {
+      let needsMigration = false;
+      const updatedRow = { id: row.id };
+
+      const fields = ['name', 'dob', 'joining_date', 'email', 'department', 'job_title', 'status'];
+      for (const field of fields) {
+        let val = row[field];
+        if (field === 'status' && !val) {
+          val = 'Active';
+        }
+        if (val !== undefined && val !== null && val !== '' && !String(val).startsWith('encv1:')) {
+          needsMigration = true;
+        }
+        updatedRow[field] = encrypt(val);
+      }
+
+      if (needsMigration) {
+        updateStmt.run(updatedRow);
+        migrationCount++;
+      }
+    }
+    db.exec('COMMIT');
+    if (migrationCount > 0) {
+      console.log(`Database Migration: Successfully encrypted ${migrationCount} existing records.`);
+    }
+  } catch (e) {
+    db.exec('ROLLBACK');
+    console.error('Database migration failed:', e);
+  }
+}
+
+migrateExistingData();
 
 // Migration: Normalize all existing employee IDs to uppercase to prevent case-sensitivity duplicates
 try {
@@ -72,7 +172,20 @@ module.exports = {
       return new Date(year, month - 1, day);
     };
 
-    return rows.map(emp => {
+    return rows.map(row => {
+      // Decrypt all sensitive fields
+      const emp = {
+        id: row.id,
+        emp_id: row.emp_id, // kept as plaintext
+        name: decrypt(row.name),
+        dob: decrypt(row.dob),
+        joining_date: decrypt(row.joining_date),
+        email: decrypt(row.email),
+        department: decrypt(row.department),
+        job_title: decrypt(row.job_title),
+        status: decrypt(row.status) || 'Active'
+      };
+
       let isBirthday = false;
       let isAnniversary = false;
 
@@ -118,15 +231,16 @@ module.exports = {
   importData: (employees) => {
     // Uses UPSERT to overwrite existing records with the same emp_id to prevent crashes
     const insert = db.prepare(`
-      INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title)
-      VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title)
+      INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title, status)
+      VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title, @status)
       ON CONFLICT(emp_id) DO UPDATE SET
         name = excluded.name,
         dob = excluded.dob,
         joining_date = excluded.joining_date,
         email = excluded.email,
         department = excluded.department,
-        job_title = excluded.job_title
+        job_title = excluded.job_title,
+        status = excluded.status
     `);
     insert.setAllowBareNamedParameters(true);
     
@@ -134,11 +248,19 @@ module.exports = {
     db.exec('BEGIN TRANSACTION');
     try {
       for (const emp of employees) {
-        const normalizedEmp = {
-          ...emp,
-          emp_id: emp.emp_id.trim().toUpperCase()
+        const cleanId = emp.emp_id.trim().toUpperCase();
+        const statusVal = emp.status || 'Active';
+        const encryptedEmp = {
+          emp_id: cleanId,
+          name: encrypt(emp.name),
+          dob: encrypt(emp.dob),
+          joining_date: encrypt(emp.joining_date),
+          email: encrypt(emp.email),
+          department: encrypt(emp.department),
+          job_title: encrypt(emp.job_title),
+          status: encrypt(statusVal)
         };
-        insert.run(normalizedEmp);
+        insert.run(encryptedEmp);
       }
       db.exec('COMMIT');
     } catch (e) {
@@ -147,12 +269,15 @@ module.exports = {
     }
   },
 
-  add: ({ emp_id, name, dob, joining_date, email, department, job_title }) => {
+  add: ({ emp_id, name, dob, joining_date, email, department, job_title, status }) => {
     const cleanId = emp_id.trim().toUpperCase();
+    const statusVal = status || 'Active';
+
     if (email && email.trim() !== '') {
-      const existing = db.prepare('SELECT emp_id FROM employees WHERE email = ?').get(email.trim());
-      if (existing) {
-        throw new Error(`Email address "${email.trim()}" is already assigned to employee ${existing.emp_id}`);
+      const rows = db.prepare('SELECT emp_id, email FROM employees').all();
+      const duplicate = rows.find(r => decrypt(r.email) === email.trim());
+      if (duplicate) {
+        throw new Error(`Email address "${email.trim()}" is already assigned to employee ${duplicate.emp_id}`);
       }
     }
 
@@ -164,11 +289,20 @@ module.exports = {
 
     try {
       const stmt = db.prepare(`
-        INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title)
-        VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title)
+        INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title, status)
+        VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title, @status)
       `);
       stmt.setAllowBareNamedParameters(true);
-      stmt.run({ emp_id: cleanId, name, dob, joining_date, email, department, job_title });
+      stmt.run({
+        emp_id: cleanId,
+        name: encrypt(name),
+        dob: encrypt(dob),
+        joining_date: encrypt(joining_date),
+        email: encrypt(email),
+        department: encrypt(department),
+        job_title: encrypt(job_title),
+        status: encrypt(statusVal)
+      });
     } catch (error) {
       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || (error.message && error.message.includes('UNIQUE constraint failed'))) {
         throw new Error(`Employee ID "${cleanId}" already exists`);
@@ -178,13 +312,16 @@ module.exports = {
   },
 
   // Update by emp_id (the text ID the user controls), not the auto-increment integer
-  update: ({ emp_id, original_emp_id, name, dob, joining_date, email, department, job_title }) => {
+  update: ({ emp_id, original_emp_id, name, dob, joining_date, email, department, job_title, status }) => {
     const cleanId = emp_id.trim().toUpperCase();
     const cleanOrigId = original_emp_id.trim().toUpperCase();
+    const statusVal = status || 'Active';
+
     if (email && email.trim() !== '') {
-      const existing = db.prepare('SELECT emp_id FROM employees WHERE email = ? AND LOWER(emp_id) != LOWER(?)').get(email.trim(), cleanOrigId);
-      if (existing) {
-        throw new Error(`Email address "${email.trim()}" is already assigned to employee ${existing.emp_id}`);
+      const rows = db.prepare('SELECT emp_id, email FROM employees').all();
+      const duplicate = rows.find(r => decrypt(r.email) === email.trim() && r.emp_id.trim().toUpperCase() !== cleanOrigId);
+      if (duplicate) {
+        throw new Error(`Email address "${email.trim()}" is already assigned to employee ${duplicate.emp_id}`);
       }
     }
 
@@ -197,11 +334,21 @@ module.exports = {
     try {
       const stmt = db.prepare(`
         UPDATE employees
-        SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title
+        SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title, status = @status
         WHERE emp_id = @original_emp_id
       `);
       stmt.setAllowBareNamedParameters(true);
-      const info = stmt.run({ emp_id: cleanId, original_emp_id: cleanOrigId, name, dob, joining_date, email, department, job_title });
+      const info = stmt.run({
+        emp_id: cleanId,
+        original_emp_id: cleanOrigId,
+        name: encrypt(name),
+        dob: encrypt(dob),
+        joining_date: encrypt(joining_date),
+        email: encrypt(email),
+        department: encrypt(department),
+        job_title: encrypt(job_title),
+        status: encrypt(statusVal)
+      });
       if (info.changes === 0) throw new Error('Employee not found');
     } catch (error) {
       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || (error.message && error.message.includes('UNIQUE constraint failed'))) {
@@ -213,6 +360,37 @@ module.exports = {
 
   delete: (emp_id) => {
     db.prepare('DELETE FROM employees WHERE LOWER(emp_id) = LOWER(?)').run(emp_id.trim());
+  },
+
+  bulkDelete: (emp_ids) => {
+    if (!Array.isArray(emp_ids) || emp_ids.length === 0) return;
+    const stmt = db.prepare('DELETE FROM employees WHERE LOWER(emp_id) = LOWER(?)');
+    db.exec('BEGIN TRANSACTION');
+    try {
+      for (const id of emp_ids) {
+        stmt.run(id.trim());
+      }
+      db.exec('COMMIT');
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
+  },
+
+  bulkUpdateStatus: (emp_ids, status) => {
+    if (!Array.isArray(emp_ids) || emp_ids.length === 0) return;
+    const stmt = db.prepare('UPDATE employees SET status = ? WHERE LOWER(emp_id) = LOWER(?)');
+    const encryptedStatus = encrypt(status);
+    db.exec('BEGIN TRANSACTION');
+    try {
+      for (const id of emp_ids) {
+        stmt.run(encryptedStatus, id.trim());
+      }
+      db.exec('COMMIT');
+    } catch (e) {
+      db.exec('ROLLBACK');
+      throw e;
+    }
   },
 
   clearAll: () => {

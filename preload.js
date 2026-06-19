@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   backupDatabase: ()    => ipcRenderer.invoke('backup-database'),
   restoreDatabase:()    => ipcRenderer.invoke('restore-database'),
   clearNotifications: () => ipcRenderer.invoke('clear-notifications'),
+  bulkDeleteEmployees: (ids) => ipcRenderer.invoke('bulk-delete-employees', ids),
+  bulkUpdateStatusEmployees: (ids, status) => ipcRenderer.invoke('bulk-update-status-employees', ids, status),
  onPing: (cb) => {
   const listener = (_, msg) => cb(msg);
   ipcRenderer.on('ping', listener);
