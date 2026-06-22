@@ -90,6 +90,10 @@ try {
   db.exec(`ALTER TABLE employees ADD COLUMN status TEXT DEFAULT 'Active';`);
 } catch (e) {}
 
+try {
+  db.exec(`ALTER TABLE employees ADD COLUMN phone TEXT;`);
+} catch (e) {}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
@@ -99,14 +103,14 @@ db.exec(`
 
 // Migration: Encrypt any raw/plaintext database values on startup
 function migrateExistingData() {
-  const rows = db.prepare('SELECT id, emp_id, name, dob, joining_date, email, department, job_title, status FROM employees').all();
+  const rows = db.prepare('SELECT id, emp_id, name, dob, joining_date, email, department, job_title, status, phone FROM employees').all();
   let migrationCount = 0;
   
   db.exec('BEGIN TRANSACTION');
   try {
     const updateStmt = db.prepare(`
       UPDATE employees 
-      SET name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title, status = @status
+      SET name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title, status = @status, phone = @phone
       WHERE id = @id
     `);
     updateStmt.setAllowBareNamedParameters(true);
@@ -115,7 +119,7 @@ function migrateExistingData() {
       let needsMigration = false;
       const updatedRow = { id: row.id };
 
-      const fields = ['name', 'dob', 'joining_date', 'email', 'department', 'job_title', 'status'];
+      const fields = ['name', 'dob', 'joining_date', 'email', 'department', 'job_title', 'status', 'phone'];
       for (const field of fields) {
         let val = row[field];
         if (field === 'status' && !val) {
@@ -189,7 +193,8 @@ module.exports = {
         email: decrypt(row.email),
         department: decrypt(row.department),
         job_title: decrypt(row.job_title),
-        status: decrypt(row.status) || 'Active'
+        status: decrypt(row.status) || 'Active',
+        phone: decrypt(row.phone)
       };
 
       let isBirthday = false;
@@ -237,8 +242,8 @@ module.exports = {
   importData: (employees) => {
     // Uses UPSERT to overwrite existing records with the same emp_id to prevent crashes
     const insert = db.prepare(`
-      INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title, status)
-      VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title, @status)
+      INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title, status, phone)
+      VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title, @status, @phone)
       ON CONFLICT(emp_id) DO UPDATE SET
         name = excluded.name,
         dob = excluded.dob,
@@ -246,7 +251,8 @@ module.exports = {
         email = excluded.email,
         department = excluded.department,
         job_title = excluded.job_title,
-        status = excluded.status
+        status = excluded.status,
+        phone = excluded.phone
     `);
     insert.setAllowBareNamedParameters(true);
     
@@ -264,7 +270,8 @@ module.exports = {
           email: encrypt(emp.email),
           department: encrypt(emp.department),
           job_title: encrypt(emp.job_title),
-          status: encrypt(statusVal)
+          status: encrypt(statusVal),
+          phone: encrypt(emp.phone)
         };
         insert.run(encryptedEmp);
       }
@@ -275,7 +282,7 @@ module.exports = {
     }
   },
 
-  add: ({ emp_id, name, dob, joining_date, email, department, job_title, status }) => {
+  add: ({ emp_id, name, dob, joining_date, email, department, job_title, status, phone }) => {
     const cleanId = emp_id.trim().toUpperCase();
     const statusVal = status || 'Active';
 
@@ -297,8 +304,8 @@ module.exports = {
 
     try {
       const stmt = db.prepare(`
-        INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title, status)
-        VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title, @status)
+        INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title, status, phone)
+        VALUES (@emp_id, @name, @dob, @joining_date, @email, @department, @job_title, @status, @phone)
       `);
       stmt.setAllowBareNamedParameters(true);
       stmt.run({
@@ -309,7 +316,8 @@ module.exports = {
         email: encrypt(email),
         department: encrypt(department),
         job_title: encrypt(job_title),
-        status: encrypt(statusVal)
+        status: encrypt(statusVal),
+        phone: encrypt(phone)
       });
     } catch (error) {
       if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || (error.message && error.message.includes('UNIQUE constraint failed'))) {
@@ -320,7 +328,7 @@ module.exports = {
   },
 
   // Update by emp_id (the text ID the user controls), not the auto-increment integer
-  update: ({ emp_id, original_emp_id, name, dob, joining_date, email, department, job_title, status }) => {
+  update: ({ emp_id, original_emp_id, name, dob, joining_date, email, department, job_title, status, phone }) => {
     const cleanId = emp_id.trim().toUpperCase();
     const cleanOrigId = original_emp_id.trim().toUpperCase();
     const statusVal = status || 'Active';
@@ -344,7 +352,7 @@ module.exports = {
     try {
       const stmt = db.prepare(`
         UPDATE employees
-        SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title, status = @status
+        SET emp_id = @emp_id, name = @name, dob = @dob, joining_date = @joining_date, email = @email, department = @department, job_title = @job_title, status = @status, phone = @phone
         WHERE emp_id = @original_emp_id
       `);
       stmt.setAllowBareNamedParameters(true);
@@ -357,7 +365,8 @@ module.exports = {
         email: encrypt(email),
         department: encrypt(department),
         job_title: encrypt(job_title),
-        status: encrypt(statusVal)
+        status: encrypt(statusVal),
+        phone: encrypt(phone)
       });
       if (info.changes === 0) throw new Error('Employee not found');
     } catch (error) {

@@ -747,6 +747,61 @@
     .btn-clear-filters:hover {
       background: var(--border);
     }
+    
+    /* ── COLUMN TOGGLING ── */
+    .columns-dropdown-container {
+      position: relative;
+      align-self: flex-end;
+    }
+    .columns-dropdown {
+      position: absolute;
+      right: 0;
+      top: 44px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      min-width: 170px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .columns-dropdown.open {
+      display: flex;
+    }
+    .column-toggle-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+    .column-toggle-item input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: var(--accent);
+      width: 14px;
+      height: 14px;
+    }
+    .column-toggle-item label {
+      cursor: pointer;
+      flex: 1;
+    }
+    
+    table.hide-emp_id .col-emp_id { display: none; }
+    table.hide-name .col-name { display: none; }
+    table.hide-department .col-department { display: none; }
+    table.hide-job_title .col-job_title { display: none; }
+    table.hide-email .col-email { display: none; }
+    table.hide-phone .col-phone { display: none; }
+    table.hide-dob .col-dob { display: none; }
+    table.hide-joining_date .col-joining_date { display: none; }
+    table.hide-service_display .col-service_display { display: none; }
+    table.hide-status .col-status { display: none; }
    /* ── CUSTOM AUTO-HIDING SCROLLBAR ── */
     
     /* Firefox Support */
@@ -1295,21 +1350,25 @@
           <input type="text" id="email" placeholder="e.g. employee@company.com" tabindex="5">
         </div>
         <div class="form-group">
+          <label for="phone">Phone Number</label>
+          <input type="text" id="phone" placeholder="e.g. +1 234 567 890" tabindex="6">
+        </div>
+        <div class="form-group">
           <label for="dob">Date of Birth</label>
-          <input type="date" id="dob" tabindex="6">
+          <input type="date" id="dob" tabindex="7">
         </div>
         <div class="form-group">
           <label for="joining-date">Joining Date</label>
-          <input type="date" id="joining-date" tabindex="7">
+          <input type="date" id="joining-date" tabindex="8">
         </div>
         <div class="form-group">
           <label for="status">Status</label>
-          <select id="status" tabindex="8" style="cursor: pointer;">
+          <select id="status" tabindex="9" style="cursor: pointer;">
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
         </div>
-        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="9">Add Employee</button>
+        <button type="button" class="btn-primary" id="add-employee-btn" tabindex="10">Add Employee</button>
       </div>
 
       <div class="panel-title" style="margin-top: 10px;">Email Templates</div>
@@ -1451,6 +1510,53 @@
             </select>
           </div>
           <button class="btn-clear-filters" id="btn-clear-filters" title="Clear search and filters">✕ Clear</button>
+          <div class="columns-dropdown-container">
+            <button class="btn-clear-filters" id="btn-toggle-columns" title="Toggle visibility of directory columns" style="gap: 6px;">
+              👁️ Columns
+            </button>
+            <div class="columns-dropdown" id="columns-dropdown">
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-emp_id" checked>
+                <label for="col-toggle-emp_id">Emp ID</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-name" checked>
+                <label for="col-toggle-name">Name</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-department" checked>
+                <label for="col-toggle-department">Department</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-job_title" checked>
+                <label for="col-toggle-job_title">Job Title</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-email" checked>
+                <label for="col-toggle-email">Email</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-phone" checked>
+                <label for="col-toggle-phone">Phone Number</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-dob" checked>
+                <label for="col-toggle-dob">Date of Birth</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-joining_date" checked>
+                <label for="col-toggle-joining_date">Joining Date</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-service_display" checked>
+                <label for="col-toggle-service_display">Service</label>
+              </div>
+              <div class="column-toggle-item">
+                <input type="checkbox" id="col-toggle-status" checked>
+                <label for="col-toggle-status">Status</label>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Bulk Action Bar — shown only when rows are selected -->
@@ -1466,15 +1572,16 @@
             <thead>
               <tr>
                 <th style="width: 40px; text-align: center; vertical-align: middle;"><input type="checkbox" id="chk-all-employees" style="cursor: pointer; width: 14px; height: 14px;"></th>
-                <th class="sortable-header" data-col="emp_id" style="cursor: pointer; user-select: none;">Emp ID <span class="sort-icon" id="sort-icon-emp_id"></span></th>
-                <th class="sortable-header" data-col="name" style="cursor: pointer; user-select: none;">Name <span class="sort-icon" id="sort-icon-name"></span></th>
-                <th class="sortable-header" data-col="department" style="cursor: pointer; user-select: none;">Department <span class="sort-icon" id="sort-icon-department"></span></th>
-                <th class="sortable-header" data-col="job_title" style="cursor: pointer; user-select: none;">Job Title <span class="sort-icon" id="sort-icon-job_title"></span></th>
-                <th class="sortable-header" data-col="email" style="cursor: pointer; user-select: none;">Email <span class="sort-icon" id="sort-icon-email"></span></th>
-                <th class="sortable-header" data-col="dob" style="cursor: pointer; user-select: none;">Date of Birth <span class="sort-icon" id="sort-icon-dob"></span></th>
-                <th class="sortable-header" data-col="joining_date" style="cursor: pointer; user-select: none;">Joining Date <span class="sort-icon" id="sort-icon-joining_date"></span></th>
-                <th class="sortable-header" data-col="service_display" style="cursor: pointer; user-select: none;">Service <span class="sort-icon" id="sort-icon-service_display"></span></th>
-                <th class="sortable-header" data-col="status" style="cursor: pointer; user-select: none;">Status <span class="sort-icon" id="sort-icon-status"></span></th>
+                <th class="sortable-header col-emp_id" data-col="emp_id" style="cursor: pointer; user-select: none;">Emp ID <span class="sort-icon" id="sort-icon-emp_id"></span></th>
+                <th class="sortable-header col-name" data-col="name" style="cursor: pointer; user-select: none;">Name <span class="sort-icon" id="sort-icon-name"></span></th>
+                <th class="sortable-header col-department" data-col="department" style="cursor: pointer; user-select: none;">Department <span class="sort-icon" id="sort-icon-department"></span></th>
+                <th class="sortable-header col-job_title" data-col="job_title" style="cursor: pointer; user-select: none;">Job Title <span class="sort-icon" id="sort-icon-job_title"></span></th>
+                <th class="sortable-header col-email" data-col="email" style="cursor: pointer; user-select: none;">Email <span class="sort-icon" id="sort-icon-email"></span></th>
+                <th class="sortable-header col-phone" data-col="phone" style="cursor: pointer; user-select: none;">Phone Number <span class="sort-icon" id="sort-icon-phone"></span></th>
+                <th class="sortable-header col-dob" data-col="dob" style="cursor: pointer; user-select: none;">Date of Birth <span class="sort-icon" id="sort-icon-dob"></span></th>
+                <th class="sortable-header col-joining_date" data-col="joining_date" style="cursor: pointer; user-select: none;">Joining Date <span class="sort-icon" id="sort-icon-joining_date"></span></th>
+                <th class="sortable-header col-service_display" data-col="service_display" style="cursor: pointer; user-select: none;">Service <span class="sort-icon" id="sort-icon-service_display"></span></th>
+                <th class="sortable-header col-status" data-col="status" style="cursor: pointer; user-select: none;">Status <span class="sort-icon" id="sort-icon-status"></span></th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -1551,6 +1658,29 @@
     <div class="toast-content">
       <div class="toast-title" id="toast-title-text">Notification</div>
       <div class="toast-body" id="toast-body-text"></div>
+    </div>
+  </div>
+
+  <!-- Encryption Password Modal -->
+  <div class="modal-overlay" id="crypto-modal-overlay"></div>
+  <div class="modal-dialog" id="crypto-modal">
+    <div class="modal-header">
+      <div class="modal-title" id="crypto-modal-title" style="display: flex; align-items: center; gap: 6px;">
+        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="currentColor"/></svg>
+        <span id="crypto-action-title">Encrypt Export</span>
+      </div>
+      <button class="btn-close-modal" id="btn-close-crypto-modal" title="Close">✕</button>
+    </div>
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
+      <p id="crypto-modal-desc" style="font-size: 0.82rem; color: var(--muted); line-height: 1.45;"></p>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="crypto-password" id="crypto-password-label">Password</label>
+        <input type="password" id="crypto-password" placeholder="Enter password..." style="background-color: var(--surface-hover);">
+      </div>
+    </div>
+    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--border);">
+      <button type="button" class="btn-control" id="btn-cancel-crypto">Cancel</button>
+      <button type="button" class="btn-primary" id="btn-confirm-crypto" style="width: auto; margin-top: 0;">Confirm</button>
     </div>
   </div>
 
@@ -1652,8 +1782,17 @@
     const deptInput      = document.getElementById('department');
     const jobTitleInput  = document.getElementById('job-title');
     const emailInput     = document.getElementById('email');
+    const phoneInput     = document.getElementById('phone');
     const dobInput       = document.getElementById('dob');
     const joiningInput   = document.getElementById('joining-date');
+    const cryptoModalOverlay = document.getElementById('crypto-modal-overlay');
+    const cryptoModal        = document.getElementById('crypto-modal');
+    const cryptoActionTitle  = document.getElementById('crypto-action-title');
+    const cryptoModalDesc    = document.getElementById('crypto-modal-desc');
+    const cryptoPassword     = document.getElementById('crypto-password');
+    const btnCancelCrypto    = document.getElementById('btn-cancel-crypto');
+    const btnConfirmCrypto   = document.getElementById('btn-confirm-crypto');
+    const btnCloseCryptoModal = document.getElementById('btn-close-crypto-modal');
     const toastEl        = document.getElementById('toast-notification');
     const toastTitleEl   = document.getElementById('toast-title-text');
     const toastBodyEl    = document.getElementById('toast-body-text');
@@ -1763,46 +1902,68 @@
 
 
     // ── DATA EXPORT LOGIC ──
-    btnExport.addEventListener('click', async () => {
-      const originalText = btnExport.innerText;
-      btnExport.innerText = '⏳ Exporting...';
-      btnExport.disabled = true;
+    btnExport.addEventListener('click', () => {
+      openCryptoModal(
+        'Encrypt Export',
+        'Protect your exported data by entering an encryption password. Leave it blank to export as a standard unencrypted CSV.',
+        'Proceed',
+        async (password) => {
+          const originalText = btnExport.innerText;
+          btnExport.innerText = '⏳ Exporting...';
+          btnExport.disabled = true;
 
-      const result = await window.electronAPI.exportData();
+          const result = await window.electronAPI.exportData(password);
 
-      if (result.success) {
-        showToast(`Export Complete: Saved to ${result.path}`);
-      } else if (result.error !== 'CANCELLED') {
-        showToast(`Export Failed: ${result.error}`, true);
-      }
+          if (result.success) {
+            showToast(`Export Complete: Saved to ${result.path}`);
+          } else if (result.error !== 'CANCELLED') {
+            showToast(`Export Failed: ${result.error}`, true);
+          }
 
-      // Restore button state
-      btnExport.innerText = originalText;
-      btnExport.disabled = false;
+          btnExport.innerText = originalText;
+          btnExport.disabled = false;
+        }
+      );
     });
 
-    // ── DATA IMPORT LOGIC ──
-    btnImport.addEventListener('click', async () => {
+    async function processImport(password = '', filePath = null) {
       const originalText = btnImport.innerText;
       btnImport.innerText = '⏳ Importing...';
       btnImport.disabled = true;
 
-      const result = await window.electronAPI.importData();
+      const result = await window.electronAPI.importData(password, filePath);
 
       if (result.success) {
-        // Clear old notification history so stale alerts don't show for the new dataset
         localStorage.removeItem(NOTIF_KEY);
         await window.electronAPI.clearNotifications();
         renderNotifPanel();
         showToast(`Import Complete: Successfully updated ${result.count} records.`);
         loadEmployees(); // Instantly refresh the data table
-      } else if (result.error !== 'CANCELLED') {
-        showToast(`Import Failed: ${result.error}`, true);
+        btnImport.innerText = originalText;
+        btnImport.disabled = false;
+      } else if (result.needsPassword) {
+        btnImport.innerText = originalText;
+        btnImport.disabled = false;
+        openCryptoModal(
+          'Decrypt File',
+          'This import file is encrypted. Please enter the password to decrypt and import the records.',
+          'Decrypt',
+          (pass) => {
+            processImport(pass, result.filePath);
+          }
+        );
+      } else {
+        if (result.error !== 'CANCELLED') {
+          showToast(`Import Failed: ${result.error}`, true);
+        }
+        btnImport.innerText = originalText;
+        btnImport.disabled = false;
       }
+    }
 
-      // Restore button state
-      btnImport.innerText = originalText;
-      btnImport.disabled = false;
+    // ── DATA IMPORT LOGIC ──
+    btnImport.addEventListener('click', () => {
+      processImport();
     });
 
     // ── DATA CLEAR LOGIC ──
@@ -1952,41 +2113,65 @@
 
 
     // ── BACKUP & RESTORE LOGIC ──
-    btnBackupDb.addEventListener('click', async () => {
-      const originalText = btnBackupDb.innerText;
-      btnBackupDb.innerText = '⏳ Saving...';
-      btnBackupDb.disabled = true;
-      
-      const result = await window.electronAPI.backupDatabase();
-      if (result.success) {
-        showToast(`Backup Complete: Saved to ${result.path}`);
-      } else if (result.error !== 'CANCELLED') {
-        showToast(`Backup Failed: ${result.error}`, true);
-      }
-      
-      btnBackupDb.innerText = originalText;
-      btnBackupDb.disabled = false;
+    btnBackupDb.addEventListener('click', () => {
+      openCryptoModal(
+        'Encrypt Backup',
+        'Protect your database backup by entering an encryption password. Leave it blank to save the backup unencrypted.',
+        'Proceed',
+        async (password) => {
+          const originalText = btnBackupDb.innerText;
+          btnBackupDb.innerText = '⏳ Saving...';
+          btnBackupDb.disabled = true;
+
+          const result = await window.electronAPI.backupDatabase(password);
+          if (result.success) {
+            showToast(`Backup Complete: Saved to ${result.path}`);
+          } else if (result.error !== 'CANCELLED') {
+            showToast(`Backup Failed: ${result.error}`, true);
+          }
+
+          btnBackupDb.innerText = originalText;
+          btnBackupDb.disabled = false;
+        }
+      );
     });
 
-    btnRestoreDb.addEventListener('click', async () => {
-      const confirmRestore = confirm('Are you sure you want to restore the database from a backup? This will overwrite your current employee list.');
-      if (!confirmRestore) return;
-
+    async function processRestore(password = '', filePath = null) {
       const originalText = btnRestoreDb.innerText;
       btnRestoreDb.innerText = '⏳ Restoring...';
       btnRestoreDb.disabled = true;
-      
-      const result = await window.electronAPI.restoreDatabase();
+
+      const result = await window.electronAPI.restoreDatabase(password, filePath);
       if (result.success) {
         showToast('Restore Complete: Employee database has been restored.');
         resetForm();
         loadEmployees();
-      } else if (result.error !== 'CANCELLED') {
-        showToast(`Restore Failed: ${result.error}`, true);
+        btnRestoreDb.innerText = originalText;
+        btnRestoreDb.disabled = false;
+      } else if (result.needsPassword) {
+        btnRestoreDb.innerText = originalText;
+        btnRestoreDb.disabled = false;
+        openCryptoModal(
+          'Decrypt Backup',
+          'This database backup is encrypted. Please enter the password to decrypt and restore.',
+          'Decrypt',
+          (pass) => {
+            processRestore(pass, result.filePath);
+          }
+        );
+      } else {
+        if (result.error !== 'CANCELLED') {
+          showToast(`Restore Failed: ${result.error}`, true);
+        }
+        btnRestoreDb.innerText = originalText;
+        btnRestoreDb.disabled = false;
       }
-      
-      btnRestoreDb.innerText = originalText;
-      btnRestoreDb.disabled = false;
+    }
+
+    btnRestoreDb.addEventListener('click', () => {
+      const confirmRestore = confirm('Are you sure you want to restore the database from a backup? This will overwrite your current employee list.');
+      if (!confirmRestore) return;
+      processRestore();
     });
 
 
@@ -2776,17 +2961,18 @@
           <td style="text-align: center; vertical-align: middle;">
             <input type="checkbox" class="chk-employee" data-id="${escapeHtml(emp.emp_id)}" style="cursor: pointer; width: 14px; height: 14px;">
           </td>
-          <td class="emp-id-cell">${escapeHtml(emp.emp_id)}</td>
-          <td class="emp-name-cell">${escapeHtml(emp.name)}</td>
-          <td>${escapeHtml(emp.department || '—')}</td>
-          <td>${escapeHtml(emp.job_title || '—')}</td>
-          <td>
+          <td class="emp-id-cell col-emp_id">${escapeHtml(emp.emp_id)}</td>
+          <td class="emp-name-cell col-name">${escapeHtml(emp.name)}</td>
+          <td class="col-department">${escapeHtml(emp.department || '—')}</td>
+          <td class="col-job_title">${escapeHtml(emp.job_title || '—')}</td>
+          <td class="col-email">
             ${emp.email ? `<a href="javascript:openEmailPreview('${escapeHtml(emp.emp_id)}')" class="email-link" title="Preview and customize email wish">${emailIcon}${escapeHtml(emp.email)}</a>` : '—'}
           </td>
-          <td>${escapeHtml(emp.dob_display)}</td>
-          <td>${escapeHtml(emp.joining_date_display)}${badgesHTML}</td>
-          <td>${escapeHtml(emp.service_display || '—')}</td>
-          <td>
+          <td class="col-phone">${escapeHtml(emp.phone || '—')}</td>
+          <td class="col-dob">${escapeHtml(emp.dob_display)}</td>
+          <td class="col-joining_date">${escapeHtml(emp.joining_date_display)}${badgesHTML}</td>
+          <td class="col-service_display">${escapeHtml(emp.service_display || '—')}</td>
+          <td class="col-status">
             <span class="status-badge ${emp.status === 'Inactive' ? 'status-inactive' : 'status-active'}">${escapeHtml(emp.status || 'Active')}</span>
           </td>
           <td>
@@ -2808,6 +2994,7 @@
       const department   = deptInput.value.trim();
       const job_title    = jobTitleInput.value.trim();
       const email        = emailInput.value.trim();
+      const phone        = phoneInput.value.trim();
       const dob          = dobInput.value;
       const joining_date = joiningInput.value;
       const status       = statusInput.value || 'Active';
@@ -2851,10 +3038,10 @@
       let result;
       if (editOrigEmpId.value) {
         result = await window.electronAPI.updateEmployee({
-          original_emp_id: editOrigEmpId.value, emp_id, name, department, job_title, email, dob, joining_date, status
+          original_emp_id: editOrigEmpId.value, emp_id, name, department, job_title, email, phone, dob, joining_date, status
         });
       } else {
-        result = await window.electronAPI.addEmployee({ emp_id, name, department, job_title, email, dob, joining_date, status });
+        result = await window.electronAPI.addEmployee({ emp_id, name, department, job_title, email, phone, dob, joining_date, status });
       }
 
       if (result.success) {
@@ -2876,7 +3063,8 @@
     });
     deptInput.addEventListener('keydown',    (e) => { if (e.key !== 'Enter') return; e.preventDefault(); jobTitleInput.focus(); });
     jobTitleInput.addEventListener('keydown',(e) => { if (e.key !== 'Enter') return; e.preventDefault(); emailInput.focus(); });
-    emailInput.addEventListener('keydown',   (e) => { if (e.key !== 'Enter') return; e.preventDefault(); dobInput.focus(); });
+    emailInput.addEventListener('keydown',   (e) => { if (e.key !== 'Enter') return; e.preventDefault(); phoneInput.focus(); });
+    phoneInput.addEventListener('keydown',   (e) => { if (e.key !== 'Enter') return; e.preventDefault(); dobInput.focus(); });
     dobInput.addEventListener('keydown',     (e) => { if (e.key !== 'Enter') return; e.preventDefault(); joiningInput.focus(); });
     joiningInput.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); statusInput.focus(); });
     statusInput.addEventListener('keydown',  (e) => { if (e.key !== 'Enter') return; e.preventDefault(); validateAndSubmit(); });
@@ -2894,6 +3082,7 @@
       deptInput.value          = emp.department || '';
       jobTitleInput.value      = emp.job_title || '';
       emailInput.value         = emp.email || '';
+      phoneInput.value         = emp.phone || '';
       dobInput.value           = emp.dob || '';
       joiningInput.value       = emp.joining_date || '';
       statusInput.value        = emp.status || 'Active';
@@ -2902,7 +3091,7 @@
     function resetForm() {
       formPanelTitle.innerText = 'Add Employee';
       submitBtn.innerText      = 'Add Employee';
-      editOrigEmpId.value = idInput.value = nameInput.value = deptInput.value = jobTitleInput.value = emailInput.value = dobInput.value = joiningInput.value = '';
+      editOrigEmpId.value = idInput.value = nameInput.value = deptInput.value = jobTitleInput.value = emailInput.value = phoneInput.value = dobInput.value = joiningInput.value = '';
       statusInput.value        = 'Active';
     }
     async function deleteEmployee(emp_id) {
@@ -3082,6 +3271,93 @@
       btn.textContent = '↺ Refresh';
       btn.disabled = false;
       showToast('Data refreshed successfully.');
+    });
+
+    // ── CRYPTO MODAL HANDLERS ──
+    let cryptoModalCallback = null;
+
+    function openCryptoModal(title, desc, confirmLabel, callback) {
+      cryptoActionTitle.innerText = title;
+      cryptoModalDesc.innerText = desc;
+      btnConfirmCrypto.innerText = confirmLabel;
+      cryptoPassword.value = '';
+      
+      cryptoModalCallback = callback;
+      
+      cryptoModalOverlay.classList.add('open');
+      cryptoModal.classList.add('open');
+      cryptoPassword.focus();
+    }
+
+    function closeCryptoModal() {
+      cryptoModalOverlay.classList.remove('open');
+      cryptoModal.classList.remove('open');
+      cryptoModalCallback = null;
+    }
+
+    btnCancelCrypto.addEventListener('click', closeCryptoModal);
+    btnCloseCryptoModal.addEventListener('click', closeCryptoModal);
+    cryptoModalOverlay.addEventListener('click', closeCryptoModal);
+
+    btnConfirmCrypto.addEventListener('click', () => {
+      if (cryptoModalCallback) {
+        cryptoModalCallback(cryptoPassword.value);
+      }
+      closeCryptoModal();
+    });
+
+    cryptoPassword.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnConfirmCrypto.click();
+      }
+    });
+
+    // ── COLUMN HIDING LOGIC ──
+    const btnToggleColumns = document.getElementById('btn-toggle-columns');
+    const columnsDropdown = document.getElementById('columns-dropdown');
+    const tableEl = document.querySelector('.table-container table');
+
+    btnToggleColumns.addEventListener('click', (e) => {
+      e.stopPropagation();
+      columnsDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!columnsDropdown.contains(e.target) && e.target !== btnToggleColumns) {
+        columnsDropdown.classList.remove('open');
+      }
+    });
+
+    const columnsToToggle = ['emp_id', 'name', 'department', 'job_title', 'email', 'phone', 'dob', 'joining_date', 'service_display', 'status'];
+
+    // Load saved hidden columns
+    let hiddenCols = [];
+    try {
+      hiddenCols = JSON.parse(localStorage.getItem('staffping_hidden_columns')) || [];
+    } catch (e) {
+      hiddenCols = [];
+    }
+
+    // Initialize checkboxes and table class state
+    columnsToToggle.forEach(col => {
+      const chk = document.getElementById(`col-toggle-${col}`);
+      if (chk) {
+        chk.checked = !hiddenCols.includes(col);
+        if (hiddenCols.includes(col)) {
+          tableEl.classList.add(`hide-${col}`);
+        }
+        chk.addEventListener('change', () => {
+          if (!chk.checked) {
+            tableEl.classList.add(`hide-${col}`);
+            if (!hiddenCols.includes(col)) hiddenCols.push(col);
+          } else {
+            tableEl.classList.remove(`hide-${col}`);
+            hiddenCols = hiddenCols.filter(c => c !== col);
+          }
+          localStorage.setItem('staffping_hidden_columns', JSON.stringify(hiddenCols));
+        });
+      }
     });
 
     // Initialise settings and load data

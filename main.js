@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, Notification, shell, dialog, screen, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const APP_USER_MODEL_ID = 'com.staffping.app';
 const ICON_PATH = path.join(__dirname, 'fusion-logo.png');
@@ -235,8 +236,36 @@ function escapeCSVValue(val) {
   return `"${str}"`;
 }
 
+// ── File Encryption / Decryption Helpers (AES-256-CBC with scrypt Sync Key Derivation) ──
+const CRYPT_MAGIC = Buffer.from('STAFFPING_CRYPT_'); // 16 bytes
+
+function encryptBuffer(buffer, password) {
+  const salt = crypto.randomBytes(16);
+  const key = crypto.scryptSync(password, salt, 32);
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  const encrypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
+  return Buffer.concat([CRYPT_MAGIC, salt, iv, encrypted]);
+}
+
+function decryptBuffer(buffer, password) {
+  if (buffer.length < 48 || !buffer.subarray(0, 16).equals(CRYPT_MAGIC)) {
+    throw new Error('Invalid or unencrypted file format');
+  }
+  const salt = buffer.subarray(16, 32);
+  const iv = buffer.subarray(32, 48);
+  const encryptedData = buffer.subarray(48);
+  const key = crypto.scryptSync(password, salt, 32);
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  return Buffer.concat([decipher.update(encryptedData), decipher.final()]);
+}
+
+function isBufferEncrypted(buffer) {
+  return buffer.length >= 48 && buffer.subarray(0, 16).equals(CRYPT_MAGIC);
+}
+
 // ── Data Export Handler ──
-ipcMain.handle('export-data', async () => {
+ipcMain.handle('export-data', async (_, password) => {
   try {
     const employees = db.getAll();
     if (employees.length === 0) {
@@ -244,7 +273,7 @@ ipcMain.handle('export-data', async () => {
     }
 
     // 1. Construct the CSV Header
-    let csvContent = 'Employee ID,Full Name,Department,Job Title,Email,Date of Birth,Joining Date\n';
+    let csvContent = 'Employee ID,Full Name,Department,Job Title,Email,Phone Number,Date of Birth,Joining Date\n';
 
     // 2. Map the SQLite database rows into CSV format
     employees.forEach(emp => {
@@ -253,10 +282,11 @@ ipcMain.handle('export-data', async () => {
       const department = escapeCSVValue(emp.department || '');
       const jobTitle = escapeCSVValue(emp.job_title || '');
       const email = escapeCSVValue(emp.email || '');
+      const phone = escapeCSVValue(emp.phone || '');
       const dob = escapeCSVValue(emp.dob_display || '');
       const joining = escapeCSVValue(emp.joining_date_display || '');
       
-      csvContent += `${id},${name},${department},${jobTitle},${email},${dob},${joining}\n`;
+      csvContent += `${id},${name},${department},${jobTitle},${email},${phone},${dob},${joining}\n`;
     });
 
     // 3. Open the native OS "Save As" window
@@ -268,7 +298,11 @@ ipcMain.handle('export-data', async () => {
 
     // 4. If the user didn't cancel, write the file to their chosen path
     if (filePath) {
-      fs.writeFileSync(filePath, csvContent, 'utf8');
+      let writeBuffer = Buffer.from(csvContent, 'utf8');
+      if (password && password.trim() !== '') {
+        writeBuffer = encryptBuffer(writeBuffer, password);
+      }
+      fs.writeFileSync(filePath, writeBuffer);
       return { success: true, path: filePath };
     } else {
       return { success: false, error: 'CANCELLED' }; 
@@ -281,19 +315,35 @@ ipcMain.handle('export-data', async () => {
 });
 
 // ── Data Import Handler ──
-ipcMain.handle('import-data', async () => {
+ipcMain.handle('import-data', async (_, password, targetFilePath) => {
   try {
-    const { filePaths } = await dialog.showOpenDialog(win, {
-      title: 'Import Employee Data',
-      properties: ['openFile'],
-      filters: [{ name: 'CSV Data Files', extensions: ['csv'] }]
-    });
+    let filePath = targetFilePath;
+    if (!filePath) {
+      const { filePaths } = await dialog.showOpenDialog(win, {
+        title: 'Import Employee Data',
+        properties: ['openFile'],
+        filters: [{ name: 'CSV Data Files', extensions: ['csv'] }]
+      });
 
-    if (!filePaths || filePaths.length === 0) {
-      return { success: false, error: 'CANCELLED' };
+      if (!filePaths || filePaths.length === 0) {
+        return { success: false, error: 'CANCELLED' };
+      }
+      filePath = filePaths[0];
     }
 
-    const rawData = fs.readFileSync(filePaths[0], 'utf8');
+    let fileBuffer = fs.readFileSync(filePath);
+    if (isBufferEncrypted(fileBuffer)) {
+      if (!password) {
+        return { success: false, needsPassword: true, filePath };
+      }
+      try {
+        fileBuffer = decryptBuffer(fileBuffer, password);
+      } catch (e) {
+        return { success: false, error: 'Incorrect decryption password or corrupted file.' };
+      }
+    }
+
+    const rawData = fileBuffer.toString('utf8');
     const lines = rawData.split(/\r?\n/).filter(line => line.trim());
 
     if (lines.length <= 1) {
@@ -341,6 +391,7 @@ ipcMain.handle('import-data', async () => {
     const departmentIdx = headers.indexOf('department') !== -1 ? headers.indexOf('department') : (headers.indexOf('dept') !== -1 ? headers.indexOf('dept') : (headers.indexOf('dept.') !== -1 ? headers.indexOf('dept.') : -1));
     const jobTitleIdx = headers.indexOf('job title') !== -1 ? headers.indexOf('job title') : (headers.indexOf('title') !== -1 ? headers.indexOf('title') : -1);
     const emailIdx = headers.indexOf('email');
+    const phoneIdx = headers.indexOf('phone number') !== -1 ? headers.indexOf('phone number') : (headers.indexOf('phone') !== -1 ? headers.indexOf('phone') : -1);
     
     let dobIdx = headers.indexOf('date of birth') !== -1 ? headers.indexOf('date of birth') : -1;
     if (dobIdx === -1) dobIdx = headers.indexOf('dob') !== -1 ? headers.indexOf('dob') : 5; // default fallback if headers missing
@@ -387,6 +438,7 @@ ipcMain.handle('import-data', async () => {
           department: departmentIdx !== -1 ? cleanCSVValue(result[departmentIdx]) : '',
           job_title: jobTitleIdx !== -1 ? cleanCSVValue(result[jobTitleIdx]) : '',
           email: emailIdx !== -1 ? cleanCSVValue(result[emailIdx]) : '',
+          phone: phoneIdx !== -1 ? cleanCSVValue(result[phoneIdx]) : '',
           dob: result[dobIdx] ? parseDateForDB(cleanCSVValue(result[dobIdx])) : '',
           joining_date: result[joinIdx] ? parseDateForDB(cleanCSVValue(result[joinIdx])) : ''
         });
@@ -416,7 +468,7 @@ ipcMain.handle('import-data', async () => {
 });
 
 // ── Database Backup Handler ──
-ipcMain.handle('backup-database', async () => {
+ipcMain.handle('backup-database', async (_, password) => {
   try {
     const sqliteDbPath = path.join(app.getPath('userData'), 'employees.db');
     const { filePath } = await dialog.showSaveDialog(win, {
@@ -426,7 +478,13 @@ ipcMain.handle('backup-database', async () => {
     });
 
     if (filePath) {
-      fs.copyFileSync(sqliteDbPath, filePath);
+      if (password && password.trim() !== '') {
+        const buffer = fs.readFileSync(sqliteDbPath);
+        const encrypted = encryptBuffer(buffer, password);
+        fs.writeFileSync(filePath, encrypted);
+      } else {
+        fs.copyFileSync(sqliteDbPath, filePath);
+      }
       return { success: true, path: filePath };
     } else {
       return { success: false, error: 'CANCELLED' };
@@ -438,23 +496,43 @@ ipcMain.handle('backup-database', async () => {
 });
 
 // ── Database Restore Handler ──
-ipcMain.handle('restore-database', async () => {
+ipcMain.handle('restore-database', async (_, password, targetFilePath) => {
   try {
     const sqliteDbPath = path.join(app.getPath('userData'), 'employees.db');
-    const { filePaths } = await dialog.showOpenDialog(win, {
-      title: 'Restore Database',
-      properties: ['openFile'],
-      filters: [{ name: 'SQLite Database Files', extensions: ['db'] }]
-    });
+    let filePath = targetFilePath;
+    if (!filePath) {
+      const { filePaths } = await dialog.showOpenDialog(win, {
+        title: 'Restore Database',
+        properties: ['openFile'],
+        filters: [{ name: 'SQLite Database Files', extensions: ['db'] }]
+      });
 
-    if (!filePaths || filePaths.length === 0) {
-      return { success: false, error: 'CANCELLED' };
+      if (!filePaths || filePaths.length === 0) {
+        return { success: false, error: 'CANCELLED' };
+      }
+      filePath = filePaths[0];
+    }
+
+    let fileBuffer = fs.readFileSync(filePath);
+    if (isBufferEncrypted(fileBuffer)) {
+      if (!password) {
+        return { success: false, needsPassword: true, filePath };
+      }
+      try {
+        fileBuffer = decryptBuffer(fileBuffer, password);
+      } catch (e) {
+        return { success: false, error: 'Incorrect decryption password or corrupted file.' };
+      }
     }
 
     // Safe restore: Close DB first, copy file, reopen DB.
     db.reopen();
     try {
-      fs.copyFileSync(filePaths[0], sqliteDbPath);
+      if (isBufferEncrypted(fs.readFileSync(filePath))) {
+        fs.writeFileSync(sqliteDbPath, fileBuffer);
+      } else {
+        fs.copyFileSync(filePath, sqliteDbPath);
+      }
       try { fs.unlinkSync(sqliteDbPath + '-wal'); } catch(e){}
       try { fs.unlinkSync(sqliteDbPath + '-shm'); } catch(e){}
     } catch (err) {
