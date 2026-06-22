@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, shell, dialog, screen, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -28,10 +28,29 @@ function safeOpenExternal(url) {
   }
 }
 
+function forceWindowRelayout(browserWindow) {
+  if (!browserWindow || browserWindow.isDestroyed()) return;
+  const [w, h] = browserWindow.getContentSize();
+  browserWindow.webContents.executeJavaScript(
+    'window.dispatchEvent(new Event("resize"))',
+    true
+  ).catch(() => {});
+  browserWindow.setContentSize(w + 1, h);
+  browserWindow.setContentSize(w, h);
+}
+
 function createWindow() {
+  const { x, y, width, height } = screen.getPrimaryDisplay().workArea;
+  const indexPath = path.join(__dirname, 'index.html');
+
   win = new BrowserWindow({
-    width: 1100, height: 700,
-    minWidth: 800, minHeight: 550,
+    x,
+    y,
+    width,
+    height,
+    minWidth: 800,
+    minHeight: 550,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -40,12 +59,35 @@ function createWindow() {
     },
     backgroundColor: '#0d0f12',
   });
-  win.loadFile('index.html');
-  win.maximize(); // Open maximized (full screen) by default
 
-  // Reset zoom to 100% AFTER page loads — setting it before load is ignored by Electron
-  win.webContents.on('did-finish-load', () => {
+  win.webContents.setZoomLevel(0);
+  win.webContents.setZoomFactor(1.0);
+
+  win.loadFile(indexPath);
+
+  win.webContents.once('did-finish-load', () => {
+    win.maximize();
+    win.show();
     win.webContents.setZoomFactor(1.0);
+    forceWindowRelayout(win);
+    win.focus();
+
+    // Inject and run user's requested layout debugging script
+    setTimeout(() => {
+      win.webContents.executeJavaScript(`
+        (() => {
+          const el = document.querySelector('.app-viewport');
+          if (el) {
+            return [el.offsetWidth, el.offsetHeight, getComputedStyle(el).width, getComputedStyle(el).height, getComputedStyle(el).flex];
+          }
+          return ['Not Found'];
+        })()
+      `).then(res => {
+        console.log('DEVTOOLS_CONSOLE_OUTPUT:', res.join(' '));
+      }).catch(err => {
+        console.error('JS Error:', err);
+      });
+    }, 1000);
   });
 
 
@@ -68,10 +110,29 @@ function createWindow() {
   });
 
   // Handle Ctrl+= (zoom in), Ctrl+- (zoom out), Ctrl+0 (reset) keyboard shortcuts
+  // Also handle F5 / Ctrl+R (reload) and Ctrl+Shift+R (hard reload)
   win.webContents.on('before-input-event', (event, input) => {
-    if (!input.control) return;
     const current = win.webContents.getZoomFactor();
     if (input.type === 'keyDown') {
+      // F5 — soft reload (re-runs loadFile, preserving zoom)
+      if (input.key === 'F5' && !input.control && !input.shift) {
+        win.loadFile(path.join(__dirname, 'index.html'));
+        event.preventDefault();
+        return;
+      }
+      // Ctrl+R — soft reload
+      if (input.control && !input.shift && input.key === 'r') {
+        win.loadFile(path.join(__dirname, 'index.html'));
+        event.preventDefault();
+        return;
+      }
+      // Ctrl+Shift+R — hard reload (clears renderer cache)
+      if (input.control && input.shift && input.key === 'R') {
+        win.webContents.reloadIgnoringCache();
+        event.preventDefault();
+        return;
+      }
+      if (!input.control) return;
       if (input.key === '=' || input.key === '+') {
         win.webContents.setZoomFactor(Math.min(parseFloat((current + 0.1).toFixed(2)), 3.0));
         event.preventDefault();
@@ -104,6 +165,8 @@ function createWindow() {
 
 
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
+
   const { session } = require('electron');
   
   // Set permission request handler to deny geolocation, camera, etc. permissions inside the app

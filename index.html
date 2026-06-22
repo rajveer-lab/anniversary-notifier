@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;">
   <title>StaffPing — Fusion Global Business Solutions</title>
   <style>
@@ -28,12 +27,19 @@
       --accent-glow: rgba(214, 0, 28, 0.06);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
     body {
       font-family: var(--font-stack);
       background-color: var(--background);
       color: var(--text);
       letter-spacing: -0.01em;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -1186,6 +1192,17 @@
   </style>
 </head>
 <body>
+<script>
+  (function () {
+    function syncViewport() {
+      document.documentElement.style.width = '100%';
+      document.documentElement.style.height = '100%';
+      window.dispatchEvent(new Event('resize'));
+    }
+    syncViewport();
+    window.addEventListener('load', syncViewport);
+  })();
+</script>
 
   <!-- Splash Screen Overlay -->
   <div id="splash-screen" class="splash-screen">
@@ -1232,6 +1249,8 @@
     </div>
     <div class="header-actions">
       <button class="btn-control" id="theme-toggle">🌙 Dark Mode</button>
+
+      <button class="btn-control" id="btn-refresh" title="Refresh data (F5)">↺ Refresh</button>
 
       <button class="notif-bell-btn" id="notif-bell-btn" title="Notifications">
         <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
@@ -1350,9 +1369,6 @@
       <div class="view-header">
         <div class="counter-text" id="total-count-text">Total: <strong>0</strong> employees</div>
         <div style="display: flex; gap: 10px; align-items: center;">
-          <button class="btn-control btn-danger-control" id="btn-bulk-delete" style="display: none; border-color: rgba(214, 0, 28, 0.4) !important;" title="Delete selected employees">🗑️ Delete Selected (0)</button>
-          <button class="btn-control" id="btn-bulk-active" style="display: none;" title="Set status to Active for selected employees">🟢 Set Active (0)</button>
-          <button class="btn-control" id="btn-bulk-inactive" style="display: none;" title="Set status to Inactive for selected employees">⚪ Set Inactive (0)</button>
           <button class="btn-control" id="btn-import"> Import CSV</button>
           <button class="btn-control" id="btn-export"> Export CSV</button>
           <button class="btn-control btn-danger-control" id="btn-clear-data">Clear Data</button>
@@ -1435,6 +1451,14 @@
             </select>
           </div>
           <button class="btn-clear-filters" id="btn-clear-filters" title="Clear search and filters">✕ Clear</button>
+        </div>
+
+        <!-- Bulk Action Bar — shown only when rows are selected -->
+        <div id="bulk-action-bar" style="display: none; align-items: center; gap: 10px; background: var(--surface); border: 1px solid rgba(214,0,28,0.2); border-radius: 8px; padding: 10px 16px;">
+          <span style="font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-right: 4px;" id="bulk-selection-label">0 selected</span>
+          <button class="btn-control" id="btn-bulk-active" title="Set status to Active for selected employees">🟢 Set Active</button>
+          <button class="btn-control" id="btn-bulk-inactive" title="Set status to Inactive for selected employees">⚪ Set Inactive</button>
+          <button class="btn-control btn-danger-control" id="btn-bulk-delete" style="border-color: rgba(214, 0, 28, 0.4) !important;" title="Delete selected employees">🗑️ Delete Selected</button>
         </div>
 
         <div class="table-container">
@@ -2930,17 +2954,14 @@
     function updateBulkActionButtons() {
       const selectedCheckboxes = tableBody.querySelectorAll('.chk-employee:checked');
       const count = selectedCheckboxes.length;
+      const bulkBar = document.getElementById('bulk-action-bar');
+      const selLabel = document.getElementById('bulk-selection-label');
       if (count > 0) {
-        btnBulkDelete.textContent = `🗑️ Delete Selected (${count})`;
-        btnBulkDelete.style.display = 'inline-flex';
-        btnBulkActive.textContent = `🟢 Set Active (${count})`;
-        btnBulkActive.style.display = 'inline-flex';
-        btnBulkInactive.textContent = `⚪ Set Inactive (${count})`;
-        btnBulkInactive.style.display = 'inline-flex';
+        bulkBar.style.display = 'flex';
+        selLabel.textContent = `${count} employee${count !== 1 ? 's' : ''} selected`;
       } else {
-        btnBulkDelete.style.display = 'none';
-        btnBulkActive.style.display = 'none';
-        btnBulkInactive.style.display = 'none';
+        bulkBar.style.display = 'none';
+        selLabel.textContent = '0 selected';
       }
     }
 
@@ -3049,6 +3070,20 @@
       });
     });
     
+    // ── REFRESH BUTTON ──
+    document.getElementById('btn-refresh').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-refresh');
+      btn.textContent = '↺ Refreshing...';
+      btn.disabled = true;
+      await loadEmployees();
+      if (tabBtnInsights && tabBtnInsights.classList.contains('active')) {
+        loadInsightsScreen();
+      }
+      btn.textContent = '↺ Refresh';
+      btn.disabled = false;
+      showToast('Data refreshed successfully.');
+    });
+
     // Initialise settings and load data
     loadSettings();
     loadEmployees();

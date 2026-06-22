@@ -151,6 +151,12 @@ try {
   console.warn('Migration warning: Could not normalize all employee IDs to uppercase (likely due to pre-existing duplicates):', e.message);
 }
 
+// Strip hyphens and spaces for a "canonical" uniqueness comparison
+// e.g. "EMP-001", "EMP 001" and "EMP001" all normalize to "EMP001"
+function normalizeId(id) {
+  return String(id).trim().toUpperCase().replace(/[\s\-_]+/g, '');
+}
+
 module.exports = {
 
   getAll: () => {
@@ -281,8 +287,10 @@ module.exports = {
       }
     }
 
-    // Case-insensitive uniqueness check
-    const existingEmp = db.prepare('SELECT emp_id FROM employees WHERE LOWER(emp_id) = LOWER(?)').get(cleanId);
+    // Case-insensitive + hyphen/space-insensitive uniqueness check
+    const allRows = db.prepare('SELECT emp_id FROM employees').all();
+    const normalNew = normalizeId(cleanId);
+    const existingEmp = allRows.find(r => normalizeId(r.emp_id) === normalNew);
     if (existingEmp) {
       throw new Error(`Employee ID "${cleanId}" already exists (registered as "${existingEmp.emp_id}")`);
     }
@@ -325,8 +333,10 @@ module.exports = {
       }
     }
 
-    // Case-insensitive uniqueness check on other employees
-    const existingEmp = db.prepare('SELECT emp_id FROM employees WHERE LOWER(emp_id) = LOWER(?) AND LOWER(emp_id) != LOWER(?)').get(cleanId, cleanOrigId);
+    // Case-insensitive + hyphen/space-insensitive uniqueness check (excluding current employee)
+    const allRows = db.prepare('SELECT emp_id FROM employees WHERE LOWER(emp_id) != LOWER(?)').all(cleanOrigId);
+    const normalNew = normalizeId(cleanId);
+    const existingEmp = allRows.find(r => normalizeId(r.emp_id) === normalNew);
     if (existingEmp) {
       throw new Error(`Employee ID "${cleanId}" already exists (registered as "${existingEmp.emp_id}")`);
     }
