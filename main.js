@@ -71,23 +71,6 @@ function createWindow() {
     win.webContents.setZoomFactor(1.0);
     forceWindowRelayout(win);
     win.focus();
-
-    // Inject and run user's requested layout debugging script
-    setTimeout(() => {
-      win.webContents.executeJavaScript(`
-        (() => {
-          const el = document.querySelector('.app-viewport');
-          if (el) {
-            return [el.offsetWidth, el.offsetHeight, getComputedStyle(el).width, getComputedStyle(el).height, getComputedStyle(el).flex];
-          }
-          return ['Not Found'];
-        })()
-      `).then(res => {
-        console.log('DEVTOOLS_CONSOLE_OUTPUT:', res.join(' '));
-      }).catch(err => {
-        console.error('JS Error:', err);
-      });
-    }, 1000);
   });
 
 
