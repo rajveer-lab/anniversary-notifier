@@ -58,6 +58,23 @@
       position: relative;
       z-index: 100;
     }
+    .hamburger-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+      margin-right: -4px;
+    }
+    .hamburger-btn:hover {
+      background: var(--surface-hover);
+      color: var(--accent);
+    }
     .brand-container { display: flex; align-items: center; gap: 14px; }
     .brand-logo {
       height: 36px; width: auto; object-fit: contain;
@@ -365,6 +382,15 @@
       gap: 20px;
       overflow-y: auto;
       max-height: 100%;
+      transition: width 0.25s ease, padding 0.25s ease, opacity 0.2s ease, border-right 0.25s ease;
+    }
+    .sidebar-panel.collapsed {
+      width: 0;
+      padding: 0;
+      opacity: 0;
+      border-right: none;
+      pointer-events: none;
+      overflow: hidden;
     }
     .sidebar-panel::-webkit-scrollbar {
       width: 6px;
@@ -747,61 +773,6 @@
     .btn-clear-filters:hover {
       background: var(--border);
     }
-    
-    /* ── COLUMN TOGGLING ── */
-    .columns-dropdown-container {
-      position: relative;
-      align-self: flex-end;
-    }
-    .columns-dropdown {
-      position: absolute;
-      right: 0;
-      top: 44px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-      z-index: 1000;
-      min-width: 170px;
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .columns-dropdown.open {
-      display: flex;
-    }
-    .column-toggle-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text);
-      cursor: pointer;
-      user-select: none;
-    }
-    .column-toggle-item input[type="checkbox"] {
-      cursor: pointer;
-      accent-color: var(--accent);
-      width: 14px;
-      height: 14px;
-    }
-    .column-toggle-item label {
-      cursor: pointer;
-      flex: 1;
-    }
-    
-    table.hide-emp_id .col-emp_id { display: none; }
-    table.hide-name .col-name { display: none; }
-    table.hide-department .col-department { display: none; }
-    table.hide-job_title .col-job_title { display: none; }
-    table.hide-email .col-email { display: none; }
-    table.hide-phone .col-phone { display: none; }
-    table.hide-dob .col-dob { display: none; }
-    table.hide-joining_date .col-joining_date { display: none; }
-    table.hide-service_display .col-service_display { display: none; }
-    table.hide-status .col-status { display: none; }
    /* ── CUSTOM AUTO-HIDING SCROLLBAR ── */
     
     /* Firefox Support */
@@ -1299,19 +1270,22 @@
 
   <header>
     <div class="brand-container">
+      <button class="hamburger-btn" id="btn-toggle-sidebar" title="Toggle Sidebar">
+        <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; fill: currentColor;"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" /></svg>
+      </button>
       <img class="brand-logo" src="./fusion-logo.png" alt="Fusion Logo">
       <div class="brand-title">Staff<span>Ping</span></div>
     </div>
     <div class="header-actions">
       <button class="btn-control" id="theme-toggle">🌙 Dark Mode</button>
-
+ 
       <button class="btn-control" id="btn-refresh" title="Refresh data (F5)">↺ Refresh</button>
-
+ 
       <button class="notif-bell-btn" id="notif-bell-btn" title="Notifications">
         <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
         <span class="notif-badge" id="notif-badge">0</span>
       </button>
-
+ 
       <div class="date-badge" id="today-badge"></div>
     </div>
   </header>
@@ -1510,53 +1484,6 @@
             </select>
           </div>
           <button class="btn-clear-filters" id="btn-clear-filters" title="Clear search and filters">✕ Clear</button>
-          <div class="columns-dropdown-container">
-            <button class="btn-clear-filters" id="btn-toggle-columns" title="Toggle visibility of directory columns" style="gap: 6px;">
-              👁️ Columns
-            </button>
-            <div class="columns-dropdown" id="columns-dropdown">
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-emp_id" checked>
-                <label for="col-toggle-emp_id">Emp ID</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-name" checked>
-                <label for="col-toggle-name">Name</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-department" checked>
-                <label for="col-toggle-department">Department</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-job_title" checked>
-                <label for="col-toggle-job_title">Job Title</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-email" checked>
-                <label for="col-toggle-email">Email</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-phone" checked>
-                <label for="col-toggle-phone">Phone Number</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-dob" checked>
-                <label for="col-toggle-dob">Date of Birth</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-joining_date" checked>
-                <label for="col-toggle-joining_date">Joining Date</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-service_display" checked>
-                <label for="col-toggle-service_display">Service</label>
-              </div>
-              <div class="column-toggle-item">
-                <input type="checkbox" id="col-toggle-status" checked>
-                <label for="col-toggle-status">Status</label>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Bulk Action Bar — shown only when rows are selected -->
@@ -1572,16 +1499,16 @@
             <thead>
               <tr>
                 <th style="width: 40px; text-align: center; vertical-align: middle;"><input type="checkbox" id="chk-all-employees" style="cursor: pointer; width: 14px; height: 14px;"></th>
-                <th class="sortable-header col-emp_id" data-col="emp_id" style="cursor: pointer; user-select: none;">Emp ID <span class="sort-icon" id="sort-icon-emp_id"></span></th>
-                <th class="sortable-header col-name" data-col="name" style="cursor: pointer; user-select: none;">Name <span class="sort-icon" id="sort-icon-name"></span></th>
-                <th class="sortable-header col-department" data-col="department" style="cursor: pointer; user-select: none;">Department <span class="sort-icon" id="sort-icon-department"></span></th>
-                <th class="sortable-header col-job_title" data-col="job_title" style="cursor: pointer; user-select: none;">Job Title <span class="sort-icon" id="sort-icon-job_title"></span></th>
-                <th class="sortable-header col-email" data-col="email" style="cursor: pointer; user-select: none;">Email <span class="sort-icon" id="sort-icon-email"></span></th>
-                <th class="sortable-header col-phone" data-col="phone" style="cursor: pointer; user-select: none;">Phone Number <span class="sort-icon" id="sort-icon-phone"></span></th>
-                <th class="sortable-header col-dob" data-col="dob" style="cursor: pointer; user-select: none;">Date of Birth <span class="sort-icon" id="sort-icon-dob"></span></th>
-                <th class="sortable-header col-joining_date" data-col="joining_date" style="cursor: pointer; user-select: none;">Joining Date <span class="sort-icon" id="sort-icon-joining_date"></span></th>
-                <th class="sortable-header col-service_display" data-col="service_display" style="cursor: pointer; user-select: none;">Service <span class="sort-icon" id="sort-icon-service_display"></span></th>
-                <th class="sortable-header col-status" data-col="status" style="cursor: pointer; user-select: none;">Status <span class="sort-icon" id="sort-icon-status"></span></th>
+                <th class="sortable-header" data-col="emp_id" style="cursor: pointer; user-select: none;">Emp ID <span class="sort-icon" id="sort-icon-emp_id"></span></th>
+                <th class="sortable-header" data-col="name" style="cursor: pointer; user-select: none;">Name <span class="sort-icon" id="sort-icon-name"></span></th>
+                <th class="sortable-header" data-col="department" style="cursor: pointer; user-select: none;">Department <span class="sort-icon" id="sort-icon-department"></span></th>
+                <th class="sortable-header" data-col="job_title" style="cursor: pointer; user-select: none;">Job Title <span class="sort-icon" id="sort-icon-job_title"></span></th>
+                <th class="sortable-header" data-col="email" style="cursor: pointer; user-select: none;">Email <span class="sort-icon" id="sort-icon-email"></span></th>
+                <th class="sortable-header" data-col="phone" style="cursor: pointer; user-select: none;">Phone Number <span class="sort-icon" id="sort-icon-phone"></span></th>
+                <th class="sortable-header" data-col="dob" style="cursor: pointer; user-select: none;">Date of Birth <span class="sort-icon" id="sort-icon-dob"></span></th>
+                <th class="sortable-header" data-col="joining_date" style="cursor: pointer; user-select: none;">Joining Date <span class="sort-icon" id="sort-icon-joining_date"></span></th>
+                <th class="sortable-header" data-col="service_display" style="cursor: pointer; user-select: none;">Service <span class="sort-icon" id="sort-icon-service_display"></span></th>
+                <th class="sortable-header" data-col="status" style="cursor: pointer; user-select: none;">Status <span class="sort-icon" id="sort-icon-status"></span></th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -2961,18 +2888,18 @@
           <td style="text-align: center; vertical-align: middle;">
             <input type="checkbox" class="chk-employee" data-id="${escapeHtml(emp.emp_id)}" style="cursor: pointer; width: 14px; height: 14px;">
           </td>
-          <td class="emp-id-cell col-emp_id">${escapeHtml(emp.emp_id)}</td>
-          <td class="emp-name-cell col-name">${escapeHtml(emp.name)}</td>
-          <td class="col-department">${escapeHtml(emp.department || '—')}</td>
-          <td class="col-job_title">${escapeHtml(emp.job_title || '—')}</td>
-          <td class="col-email">
+          <td class="emp-id-cell">${escapeHtml(emp.emp_id)}</td>
+          <td class="emp-name-cell">${escapeHtml(emp.name)}</td>
+          <td>${escapeHtml(emp.department || '—')}</td>
+          <td>${escapeHtml(emp.job_title || '—')}</td>
+          <td>
             ${emp.email ? `<a href="javascript:openEmailPreview('${escapeHtml(emp.emp_id)}')" class="email-link" title="Preview and customize email wish">${emailIcon}${escapeHtml(emp.email)}</a>` : '—'}
           </td>
-          <td class="col-phone">${escapeHtml(emp.phone || '—')}</td>
-          <td class="col-dob">${escapeHtml(emp.dob_display)}</td>
-          <td class="col-joining_date">${escapeHtml(emp.joining_date_display)}${badgesHTML}</td>
-          <td class="col-service_display">${escapeHtml(emp.service_display || '—')}</td>
-          <td class="col-status">
+          <td>${escapeHtml(emp.phone || '—')}</td>
+          <td>${escapeHtml(emp.dob_display)}</td>
+          <td>${escapeHtml(emp.joining_date_display)}${badgesHTML}</td>
+          <td>${escapeHtml(emp.service_display || '—')}</td>
+          <td>
             <span class="status-badge ${emp.status === 'Inactive' ? 'status-inactive' : 'status-active'}">${escapeHtml(emp.status || 'Active')}</span>
           </td>
           <td>
@@ -3313,52 +3240,21 @@
       }
     });
 
-    // ── COLUMN HIDING LOGIC ──
-    const btnToggleColumns = document.getElementById('btn-toggle-columns');
-    const columnsDropdown = document.getElementById('columns-dropdown');
-    const tableEl = document.querySelector('.table-container table');
+    // ── SIDEBAR TOGGLE LOGIC ──
+    const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+    const sidebarPanel = document.querySelector('.sidebar-panel');
 
-    btnToggleColumns.addEventListener('click', (e) => {
-      e.stopPropagation();
-      columnsDropdown.classList.toggle('open');
+    btnToggleSidebar.addEventListener('click', () => {
+      sidebarPanel.classList.toggle('collapsed');
+      const isCollapsed = sidebarPanel.classList.contains('collapsed');
+      localStorage.setItem('staffping_sidebar_collapsed', isCollapsed);
     });
 
-    document.addEventListener('click', (e) => {
-      if (!columnsDropdown.contains(e.target) && e.target !== btnToggleColumns) {
-        columnsDropdown.classList.remove('open');
-      }
-    });
-
-    const columnsToToggle = ['emp_id', 'name', 'department', 'job_title', 'email', 'phone', 'dob', 'joining_date', 'service_display', 'status'];
-
-    // Load saved hidden columns
-    let hiddenCols = [];
-    try {
-      hiddenCols = JSON.parse(localStorage.getItem('staffping_hidden_columns')) || [];
-    } catch (e) {
-      hiddenCols = [];
+    // Check saved sidebar state on load
+    const savedSidebarState = localStorage.getItem('staffping_sidebar_collapsed');
+    if (savedSidebarState === 'true') {
+      sidebarPanel.classList.add('collapsed');
     }
-
-    // Initialize checkboxes and table class state
-    columnsToToggle.forEach(col => {
-      const chk = document.getElementById(`col-toggle-${col}`);
-      if (chk) {
-        chk.checked = !hiddenCols.includes(col);
-        if (hiddenCols.includes(col)) {
-          tableEl.classList.add(`hide-${col}`);
-        }
-        chk.addEventListener('change', () => {
-          if (!chk.checked) {
-            tableEl.classList.add(`hide-${col}`);
-            if (!hiddenCols.includes(col)) hiddenCols.push(col);
-          } else {
-            tableEl.classList.remove(`hide-${col}`);
-            hiddenCols = hiddenCols.filter(c => c !== col);
-          }
-          localStorage.setItem('staffping_hidden_columns', JSON.stringify(hiddenCols));
-        });
-      }
-    });
 
     // Initialise settings and load data
     loadSettings();

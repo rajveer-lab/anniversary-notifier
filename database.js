@@ -436,11 +436,27 @@ module.exports = {
     }
   },
 
-  reopen: () => {
+  close: () => {
     try {
       db.close();
     } catch (e) {
       console.error('Failed to close database:', e);
+    }
+  },
+
+  checkpoint: () => {
+    try {
+      db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+    } catch (e) {
+      console.error('Failed to checkpoint database:', e);
+    }
+  },
+
+  reopen: () => {
+    try {
+      db.close();
+    } catch (e) {
+      // ignore
     }
     db = new Database(dbPath);
     db.exec('PRAGMA journal_mode = WAL');

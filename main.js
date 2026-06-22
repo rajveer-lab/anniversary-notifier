@@ -470,6 +470,7 @@ ipcMain.handle('import-data', async (_, password, targetFilePath) => {
 // ── Database Backup Handler ──
 ipcMain.handle('backup-database', async (_, password) => {
   try {
+    db.checkpoint();
     const sqliteDbPath = path.join(app.getPath('userData'), 'employees.db');
     const { filePath } = await dialog.showSaveDialog(win, {
       title: 'Backup Database',
@@ -525,14 +526,10 @@ ipcMain.handle('restore-database', async (_, password, targetFilePath) => {
       }
     }
 
-    // Safe restore: Close DB first, copy file, reopen DB.
-    db.reopen();
+    // Safe restore: Close DB first, write file, reopen DB.
+    db.close();
     try {
-      if (isBufferEncrypted(fs.readFileSync(filePath))) {
-        fs.writeFileSync(sqliteDbPath, fileBuffer);
-      } else {
-        fs.copyFileSync(filePath, sqliteDbPath);
-      }
+      fs.writeFileSync(sqliteDbPath, fileBuffer);
       try { fs.unlinkSync(sqliteDbPath + '-wal'); } catch(e){}
       try { fs.unlinkSync(sqliteDbPath + '-shm'); } catch(e){}
     } catch (err) {
