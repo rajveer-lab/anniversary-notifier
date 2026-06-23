@@ -59,6 +59,7 @@ function decrypt(text) {
 }
 
 let db = new Database(dbPath);
+let decryptedCache = null;
 
 db.exec('PRAGMA journal_mode = WAL');
 
@@ -164,7 +165,6 @@ function normalizeId(id) {
 module.exports = {
 
   getAll: () => {
-    const rows = db.prepare('SELECT * FROM employees ORDER BY emp_id ASC').all();
     const today = new Date();
     const mm = today.getMonth();
     const dd = today.getDate();
@@ -182,9 +182,9 @@ module.exports = {
       return new Date(year, month - 1, day);
     };
 
-    return rows.map(row => {
-      // Decrypt all sensitive fields
-      const emp = {
+    if (!decryptedCache) {
+      const rows = db.prepare('SELECT * FROM employees ORDER BY emp_id ASC').all();
+      decryptedCache = rows.map(row => ({
         id: row.id,
         emp_id: row.emp_id, // kept as plaintext
         name: decrypt(row.name),
@@ -195,8 +195,10 @@ module.exports = {
         job_title: decrypt(row.job_title),
         status: decrypt(row.status) || 'Active',
         phone: decrypt(row.phone)
-      };
+      }));
+    }
 
+    return decryptedCache.map(emp => {
       let isBirthday = false;
       let isAnniversary = false;
 
@@ -240,6 +242,7 @@ module.exports = {
   },
 
   importData: (employees) => {
+    decryptedCache = null;
     // Uses UPSERT to overwrite existing records with the same emp_id to prevent crashes
     const insert = db.prepare(`
       INSERT INTO employees (emp_id, name, dob, joining_date, email, department, job_title, status, phone)
@@ -283,6 +286,7 @@ module.exports = {
   },
 
   add: ({ emp_id, name, dob, joining_date, email, department, job_title, status, phone }) => {
+    decryptedCache = null;
     const cleanId = emp_id.trim().toUpperCase();
     const statusVal = status || 'Active';
 
@@ -329,6 +333,7 @@ module.exports = {
 
   // Update by emp_id (the text ID the user controls), not the auto-increment integer
   update: ({ emp_id, original_emp_id, name, dob, joining_date, email, department, job_title, status, phone }) => {
+    decryptedCache = null;
     const cleanId = emp_id.trim().toUpperCase();
     const cleanOrigId = original_emp_id.trim().toUpperCase();
     const statusVal = status || 'Active';
@@ -378,10 +383,12 @@ module.exports = {
   },
 
   delete: (emp_id) => {
+    decryptedCache = null;
     db.prepare('DELETE FROM employees WHERE LOWER(emp_id) = LOWER(?)').run(emp_id.trim());
   },
 
   bulkDelete: (emp_ids) => {
+    decryptedCache = null;
     if (!Array.isArray(emp_ids) || emp_ids.length === 0) return;
     const stmt = db.prepare('DELETE FROM employees WHERE LOWER(emp_id) = LOWER(?)');
     db.exec('BEGIN TRANSACTION');
@@ -397,6 +404,7 @@ module.exports = {
   },
 
   bulkUpdateStatus: (emp_ids, status) => {
+    decryptedCache = null;
     if (!Array.isArray(emp_ids) || emp_ids.length === 0) return;
     const stmt = db.prepare('UPDATE employees SET status = ? WHERE LOWER(emp_id) = LOWER(?)');
     const encryptedStatus = encrypt(status);
@@ -413,6 +421,7 @@ module.exports = {
   },
 
   clearAll: () => {
+    decryptedCache = null;
     db.prepare('DELETE FROM employees').run();
   },
 
@@ -453,6 +462,7 @@ module.exports = {
   },
 
   reopen: () => {
+    decryptedCache = null;
     try {
       db.close();
     } catch (e) {

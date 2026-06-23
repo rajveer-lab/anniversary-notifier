@@ -1,147 +1,107 @@
-# StaffPing — Anniversary & Birthday Notifier
+# StaffPing — Premium HR Anniversary & Birthday Notifier
 
-> A lightweight desktop application for tracking employee birthdays and work anniversaries, with automatic daily desktop notifications.
+[![Platform](https://img.shields.io/badge/platform-Electron-rose.svg)](https://www.electronjs.org/)
+[![Database](https://img.shields.io/badge/database-node%3Asqlite-blue.svg)](https://nodejs.org/api/sqlite.html)
+[![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 
-Built with **Electron** + **SQLite** (`better-sqlite3`), StaffPing runs entirely offline — no server, no cloud, no accounts required.
-
----
-
-## Features
-
-- **Automatic daily reminders** — checks for birthdays and work anniversaries every hour and fires native OS desktop notifications
-- **Notification history panel** — a slide-in drawer showing all past pings, filterable by type (Birthday / Anniversary / Unread)
-- **Employee directory** — add, edit, delete, and search employees in a clean dark-themed table
-- **CSV export** — export your full staff directory via a native Save As dialog
-- **Light / Dark theme toggle**
-- **Windows notification shortcut** — auto-creates a Start Menu shortcut so Windows toast notifications work correctly
-- **Persistent notification state** — tracks which notifications have already fired today so you don't get duplicate pings across app restarts
+**StaffPing** is a premium, visual-centric desktop HR directory and reminder application built for **Fusion Global Business Solutions**. It acts as an offline utility for HR teams to track employee records, monitor milestones (birthdays and work anniversaries), configure custom communication templates, and generate secure passcode-protected reports.
 
 ---
 
-## Tech Stack
+## ✨ Key Features
 
-| Layer | Technology |
-|---|---|
-| Desktop shell | Electron |
-| Database | SQLite via `better-sqlite3` |
-| UI | Vanilla HTML/CSS/JS (single file) |
-| IPC | Electron contextBridge + ipcMain/ipcRenderer |
-| Notifications | Electron `Notification` API |
+### 📅 Milestone Celebrations & Analytics
+- **Today's Celebrations Banner:** A glowing gradient banner at the top of the workspace dynamically highlights today's birthdays and work anniversaries.
+- **Insights & Dashboard:** Features a clean monthly calendar of upcoming events and provides department breakdown stats (headcount share, tenure trends).
+- **Automated OS Notifications:** Automatically checks for milestones in the background and posts native Windows toast notifications at the exact scheduled hour.
+
+### 🔒 Secure Export & Import Engine
+- **Genuine Excel (XLSX):** Exports full directories directly into a native binary Excel sheet (`.xlsx`) with custom column formatting.
+- **Passcode Protected PDFs:** Generates PDF directory reports encrypted with standard PDF security dictionaries. Open them in Chrome or Adobe Acrobat, and you will be natively prompted for the password.
+- **Encrypted CSV Exports:** Secures your tabular backups using key derivation (scrypt Sync) and AES-256-CBC.
+- **Conflict-Resistant CSV Import:** Bulk-import employees from standard or encrypted CSV files. Employs `UPSERT` matching logic to prevent duplicate records and automatically pads numeric IDs (e.g. `001`).
+
+### 🛠 Settings & Template Customization
+- **Tabbed Drawer Panel:** Right slide-in drawer containing configurations for notification times, backups, themes, and details.
+- **Custom Template Editors:** Draft personalized birthday and work anniversary notifications using dynamic variables:
+  - `{name}` — Employee's name
+  - `{emp_id}` — Employee ID
+  - `{department}` — Department name
+  - `{title}` — Job title
+  - `{years}` — Calculated milestone service tenure
+- **Backup & Restore:** Manual database backups with option-based password encryption.
+
+### 🎨 Visual & Styling Highlights
+- **SaaS Dark Mode & Light Mode:** Tailored HSL themes utilizing rose/crimson accents, clean slate borders, and glassmorphic micro-shadows.
+- **Harmonized Department Tags:** Auto-assigns pastel color indicators matching the department name to organize the view.
+- **Bulk Actions:** Toggle status (Active/Inactive) or bulk-delete selected staff records in a single click.
 
 ---
 
-## Project Structure
+## 🛠 Tech Stack
+
+| Layer | Technology | Description |
+| --- | --- | --- |
+| **Desktop Shell** | Electron | Desktop container executing offline context isolation |
+| **Database** | SQLite (`node:sqlite`) | Node's native secure SQLite execution engine |
+| **Spreadsheets** | `xlsx` (SheetJS) | Native XML workbook writing library |
+| **PDF Encryption** | `@pdfsmaller/pdf-encrypt` | Cryptographic standard PDF security dictionaries |
+| **UI Styling** | HTML5 / Vanilla CSS3 | Custom property styling with smooth CSS transitions |
+
+---
+
+## 📂 Project Structure
 
 ```
 anniversary-notifier/
-├── main.js          # Electron main process — window, IPC handlers, reminder logic
-├── preload.js       # Context bridge — exposes safe API to renderer
-├── database.js      # SQLite setup, CRUD operations, date formatting
-├── index.html       # Entire UI (styles + layout + JavaScript)
-└── fusion-logo.png  # App icon used in notifications and window
+├── database.js          # Encrypted SQLite config and CRUD operations
+├── main.js              # Electron lifecycle, IPC handlers, background reminder cron
+├── preload.js           # Context bridge exposing secure Electron APIs
+├── index.html           # Core UI, styling stylesheets, and renderer logic
+├── PRODUCT_GUIDE.md     # Detailed features guide for project managers
+└── package.json         # Build configuration and dependency declarations
 ```
 
 ---
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
-
-- [Node.js](https://nodejs.org/) v18 or later
+- [Node.js](https://nodejs.org/) v22 or later (for native `node:sqlite` database capabilities)
 - npm
 
 ### Installation
-
-```bash
-git clone https://github.com/smrati/anniversary-notifier.git
-cd anniversary-notifier
-npm install
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/smrati/anniversary-notifier.git
+   cd anniversary-notifier
+   ```
+2. Install the offline dependencies:
+   ```bash
+   npm install
+   ```
 
 ### Run in Development
-
+Launch the Electron frame:
 ```bash
 npm start
 ```
 
-### Build / Package
-
+### Packaging for Release
+Build standalone Windows executable releases:
 ```bash
-npm run build
+npm run dist
 ```
-
-> Packaging requires `electron-builder` or `electron-forge` configured in `package.json`.
-
----
-
-## How It Works
-
-### Reminder Checks
-
-On launch, and then every **60 minutes**, the app:
-
-1. Fetches all employees from SQLite
-2. Compares each employee's date of birth and joining date against today's month and day
-3. Fires a native desktop notification for any match
-4. Persists a `notif-state.json` file in the user data directory to avoid re-notifying for the same event within the same calendar day
-
-### Data Storage
-
-The SQLite database (`employees.db`) and notification state file (`notif-state.json`) are stored in the OS user data directory:
-
-| OS | Path |
-|---|---|
-| Windows | `%APPDATA%\StaffPing\` |
-| macOS | `~/Library/Application Support/StaffPing/` |
-| Linux | `~/.config/StaffPing/` |
-
-### Employee Schema
-
-```sql
-CREATE TABLE employees (
-  id           INTEGER PRIMARY KEY AUTOINCREMENT,
-  emp_id       TEXT UNIQUE NOT NULL,
-  name         TEXT NOT NULL,
-  dob          TEXT,          -- ISO date: YYYY-MM-DD
-  joining_date TEXT           -- ISO date: YYYY-MM-DD
-);
-```
+Distributable installers will generate in the local `./dist/` directory.
 
 ---
 
-## Usage
-
-### Adding an Employee
-
-Fill in the **Employee ID**, **Full Name**, **Date of Birth**, and **Joining Date** fields in the left panel and click **Add Employee** (or press Enter to tab through fields).
-
-### Editing / Deleting
-
-Each row in the table has **Edit** and **Delete** buttons. Editing pre-fills the form; saving updates the record in place.
-
-### Searching
-
-Use the search bar above the table to filter by Employee ID or name in real time.
-
-### Exporting
-
-Click **Export CSV** in the header to save a copy of the directory as a `.csv` file via the native OS save dialog.
-
-### Notification Panel
-
-Click the 🔔 bell icon in the header to open the notification history drawer. You can:
-- Filter by **All**, **Unread**, **Birthday**, or **Anniversary**
-- Mark individual notifications as seen
-- Clear all notifications
+## 🛡 Security & Encryption Details
+- **Active DB:** Employee data is encrypted at the column level inside the local `employees.db` file using `aes-256-gcm` keys generated uniquely on first startup and persisted in the user folder (`db-key.enc`).
+- **Encrypted Backups:** Secured backups utilize scrypt Sync key derivation to transform the user's password into a 256-bit key, applying AES-256-CBC encryption over the payload. File signatures start with the `STAFFPING_CRYPT_` magic header.
+- **Standard PDF Security:** Encrypted PDF exports do not use a custom wrapper; instead, standard PDF security dictionaries are written directly to the document metadata, guaranteeing seamless integration with standard document viewers.
 
 ---
 
-## Windows Notes
-
-On Windows, the app automatically creates a Start Menu shortcut (`StaffPing.lnk`) on first launch. This is required for the Windows notification system to correctly attribute toast notifications to the app.
-
----
-
-## License
-
-See `LICENSE` for details.
+## 📄 License
+Licensed under the ISC License. See `LICENSE` for details.

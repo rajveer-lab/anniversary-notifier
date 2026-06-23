@@ -52,5 +52,10 @@
       "fusion-logo-square.png"
     ],
     "asar": true
+  },
+  "dependencies": {
+    "@pdfsmaller/pdf-encrypt": "^1.0.2",
+    "pdf-lib": "^1.17.1",
+    "xlsx": "^0.18.5"
   }
 }

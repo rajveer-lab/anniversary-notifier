@@ -61,6 +61,10 @@ function createWindow() {
     backgroundColor: '#0d0f12',
   });
 
+  win.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[Renderer Console] Line ${line}: ${message}`);
+  });
+
   win.webContents.setZoomLevel(0);
   win.webContents.setZoomFactor(1.0);
 
@@ -72,6 +76,10 @@ function createWindow() {
     win.webContents.setZoomFactor(1.0);
     forceWindowRelayout(win);
     win.focus();
+    
+    // Check reminders once the window has fully loaded and renderer is active
+    console.log('[main] Window loaded, checking startup reminders...');
+    checkTodayReminders();
   });
 
 
@@ -172,8 +180,8 @@ app.whenReady().then(() => {
   db = require('./database');
   ensureWindowsNotificationShortcut();
   createWindow();
-  checkTodayReminders();
-  setInterval(checkTodayReminders, 60 * 60 * 1000);
+  // checkTodayReminders(); // Moved to window 'did-finish-load' to prevent race condition
+  setInterval(checkTodayReminders, 60 * 1000);
 });
 
 // ── IPC Handlers ──
@@ -233,6 +241,70 @@ ipcMain.handle('clear-employees', () => {
   }
 });
 
+ipcMain.handle('get-setting', (_, key) => {
+  try { return { success: true, value: db.getSetting(key) }; }
+  catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('save-setting', (_, key, value) => {
+  try {
+    db.saveSetting(key, value);
+    checkTodayReminders();
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('export-pdf', async (event, htmlContent, password) => {
+  const printWin = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  });
+
+  try {
+    await printWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+    const options = {
+      marginsType: 0,
+      pageSize: 'A4',
+      printBackground: true,
+      landscape: false
+    };
+
+    const data = await printWin.webContents.printToPDF(options);
+    printWin.destroy();
+
+    const { filePath } = await dialog.showSaveDialog(win, {
+      title: 'Export PDF Report',
+      defaultPath: 'StaffPing_Directory_Report.pdf',
+      filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+    });
+
+    if (filePath) {
+      let writeBuffer = data;
+      if (password && password.trim() !== '') {
+        const { encryptPDF } = require('@pdfsmaller/pdf-encrypt');
+        const encryptedBytes = await encryptPDF(new Uint8Array(data), password);
+        writeBuffer = Buffer.from(encryptedBytes);
+      }
+      fs.writeFileSync(filePath, writeBuffer);
+      return { success: true, path: filePath };
+    }
+    return { success: false, error: 'CANCELLED' };
+  } catch (error) {
+    if (!printWin.isDestroyed()) {
+      printWin.destroy();
+    }
+    console.error('PDF export failed:', error);
+    return { success: false, error: error.message };
+  }
+});
+
 
 // Helper to prevent CSV injection (Formula Injection) in spreadsheet software
 function escapeCSVValue(val) {
@@ -276,40 +348,74 @@ function isBufferEncrypted(buffer) {
 }
 
 // ── Data Export Handler ──
-ipcMain.handle('export-data', async (_, password) => {
+ipcMain.handle('export-data', async (_, password, format = 'csv') => {
   try {
     const employees = db.getAll();
     if (employees.length === 0) {
       return { success: false, error: 'No employee data available to export.' };
     }
 
-    // 1. Construct the CSV Header
-    let csvContent = 'Employee ID,Full Name,Department,Job Title,Email,Phone Number,Date of Birth,Joining Date\n';
+    let writeBuffer;
+    let defaultFileName = 'Staff_Directory.csv';
+    let filters = [{ name: 'CSV Data Files', extensions: ['csv'] }];
 
-    // 2. Map the SQLite database rows into CSV format
-    employees.forEach(emp => {
-      const id = escapeCSVValue(emp.emp_id);
-      const name = escapeCSVValue(emp.name);
-      const department = escapeCSVValue(emp.department || '');
-      const jobTitle = escapeCSVValue(emp.job_title || '');
-      const email = escapeCSVValue(emp.email || '');
-      const phone = escapeCSVValue(emp.phone || '');
-      const dob = escapeCSVValue(emp.dob_display || '');
-      const joining = escapeCSVValue(emp.joining_date_display || '');
+    if (format === 'xlsx') {
+      defaultFileName = 'Staff_Directory.xlsx';
+      filters = [{ name: 'Excel Files', extensions: ['xlsx'] }];
       
-      csvContent += `${id},${name},${department},${jobTitle},${email},${phone},${dob},${joining}\n`;
-    });
+      const XLSX = require('xlsx');
+      const wb = XLSX.utils.book_new();
+      const rows = employees.map(emp => ({
+        'Employee ID': emp.emp_id,
+        'Full Name': emp.name,
+        'Department': emp.department || '',
+        'Job Title': emp.job_title || '',
+        'Email': emp.email || '',
+        'Phone Number': emp.phone || '',
+        'Date of Birth': emp.dob_display || '',
+        'Joining Date': emp.joining_date_display || '',
+        'Status': emp.status || 'Active'
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = [
+        { wch: 15 }, // Employee ID
+        { wch: 25 }, // Full Name
+        { wch: 20 }, // Department
+        { wch: 25 }, // Job Title
+        { wch: 30 }, // Email
+        { wch: 18 }, // Phone Number
+        { wch: 15 }, // Date of Birth
+        { wch: 15 }, // Joining Date
+        { wch: 12 }  // Status
+      ];
+      XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+      writeBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    } else {
+      let fileContent = 'Employee ID,Full Name,Department,Job Title,Email,Phone Number,Date of Birth,Joining Date,Status\n';
+      employees.forEach(emp => {
+        const id = escapeCSVValue(emp.emp_id);
+        const name = escapeCSVValue(emp.name);
+        const department = escapeCSVValue(emp.department || '');
+        const jobTitle = escapeCSVValue(emp.job_title || '');
+        const email = escapeCSVValue(emp.email || '');
+        const phone = escapeCSVValue(emp.phone || '');
+        const dob = escapeCSVValue(emp.dob_display || '');
+        const joining = escapeCSVValue(emp.joining_date_display || '');
+        const status = escapeCSVValue(emp.status || 'Active');
+        
+        const csvContent = `${id},${name},${department},${jobTitle},${email},${phone},${dob},${joining},${status}\n`;
+        fileContent += csvContent;
+      });
+      writeBuffer = Buffer.from(fileContent, 'utf8');
+    }
 
-    // 3. Open the native OS "Save As" window
     const { filePath } = await dialog.showSaveDialog(win, {
-      title: 'Export Employee Data',
-      defaultPath: 'Staff_Directory.csv',
-      filters: [{ name: 'CSV Data Files', extensions: ['csv'] }]
+      title: `Export Employee Data (${format.toUpperCase()})`,
+      defaultPath: defaultFileName,
+      filters: filters
     });
 
-    // 4. If the user didn't cancel, write the file to their chosen path
     if (filePath) {
-      let writeBuffer = Buffer.from(csvContent, 'utf8');
       if (password && password.trim() !== '') {
         writeBuffer = encryptBuffer(writeBuffer, password);
       }
@@ -363,12 +469,18 @@ ipcMain.handle('import-data', async (_, password, targetFilePath) => {
 
     const employeesToImport = [];
 
-    // Helper to clean CSV values (strips CSV injection escape quotes)
+    // Helper to clean CSV values (strips CSV injection escape quotes and wrapping double quotes)
     const cleanCSVValue = (val) => {
       if (val === undefined || val === null) return '';
       let str = String(val).trim();
+      if (str.startsWith('"') && str.endsWith('"')) {
+        str = str.slice(1, -1).trim();
+      }
       if (str.startsWith("'") && str.length > 1 && /^[=\+\-\@\t\r]/.test(str.slice(1))) {
         str = str.slice(1);
+      }
+      if (str.startsWith('"') && str.endsWith('"')) {
+        str = str.slice(1, -1).trim();
       }
       return str;
     };
@@ -449,7 +561,7 @@ ipcMain.handle('import-data', async (_, password, targetFilePath) => {
           department: departmentIdx !== -1 ? cleanCSVValue(result[departmentIdx]) : '',
           job_title: jobTitleIdx !== -1 ? cleanCSVValue(result[jobTitleIdx]) : '',
           email: emailIdx !== -1 ? cleanCSVValue(result[emailIdx]) : '',
-          phone: phoneIdx !== -1 ? cleanCSVValue(result[phoneIdx]) : '',
+          phone: phoneIdx !== -1 ? cleanCSVValue(result[phoneIdx]).replace(/"/g, '').trim() : '',
           dob: result[dobIdx] ? parseDateForDB(cleanCSVValue(result[dobIdx])) : '',
           joining_date: result[joinIdx] ? parseDateForDB(cleanCSVValue(result[joinIdx])) : ''
         });
@@ -564,6 +676,7 @@ ipcMain.handle('clear-notifications', () => {
       fs.writeFileSync(notifPath, JSON.stringify({ date: '', notifications: {} }, null, 2));
     }
     notifiedToday.clear();
+    checkTodayReminders(true); // Instantly trigger a fresh scan of today's reminders (bypassing time constraint)
     return { success: true };
   } catch (e) {
     console.error('Clear notifications failed:', e);
@@ -571,8 +684,33 @@ ipcMain.handle('clear-notifications', () => {
   }
 });
 
+function formatTemplate(template, emp) {
+  if (!template) return '';
+  let yearsVal = '0';
+  if (emp.joining_date) {
+    try {
+      const parts = emp.joining_date.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        if (!isNaN(year)) {
+          const currentYear = new Date().getFullYear();
+          yearsVal = String(Math.max(0, currentYear - year));
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing joining_date for template:', e);
+    }
+  }
+  return template
+    .replace(/{name}/g, emp.name || '')
+    .replace(/{emp_id}/g, emp.emp_id || '')
+    .replace(/{department}/g, emp.department || '')
+    .replace(/{title}/g, emp.job_title || '')
+    .replace(/{years}/g, yearsVal);
+}
+
 // ── Reminder logic ──
-function checkTodayReminders() {
+function checkTodayReminders(bypassTimeCheck = false) {
   try {
     const employees = db.getAll();
     const todayStr = new Date().toDateString();
@@ -592,11 +730,31 @@ function checkTodayReminders() {
 
     // Reset every new day
     if (notifState.date !== todayStr) {
+      console.log(`[Reminders] Date changed from ${notifState.date} to ${todayStr}. Resetting notification tracker.`);
       notifState = {
         date: todayStr,
         notifications: {}
       };
     }
+
+    if (!bypassTimeCheck) {
+      // Check if the configured reminder time has been reached today
+      const reminderTimeSetting = db.getSetting('reminder_time') || '09:00';
+      const [targetHour, targetMin] = reminderTimeSetting.split(':').map(Number);
+      const now = new Date();
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      const targetMins = targetHour * 60 + targetMin;
+
+      console.log(`[Reminders] Time check: Current is ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')} (${currentMins} mins), Target is ${reminderTimeSetting} (${targetMins} mins)`);
+
+      if (currentMins < targetMins) {
+        return; // Before scheduled time, skip reminder check
+      }
+    } else {
+      console.log('[Reminders] Bypassing scheduled time check (triggered by manual reset / import / save)');
+    }
+
+    console.log('[Reminders] Scanning employee records for today\'s milestones...');
 
     employees.forEach(emp => {
       if (emp.status === 'Inactive') return;
@@ -606,15 +764,21 @@ function checkTodayReminders() {
         const existing = notifState.notifications[key];
 
         if (!existing || !existing.handled) {
-          sendPing(
-            `Birthday — ${emp.name}`,
-            `${emp.name} (${emp.emp_id}) has a birthday today!`
-          );
+          console.log(`[Reminders] Triggering birthday notification for ${emp.name}`);
+          const rawSubject = db.getSetting('bday_subject') || 'Happy Birthday, {name}!';
+          const rawBody = db.getSetting('bday_body') || 'Birthday and a great year ahead!\n\nBest regards,\nHR Team';
+          
+          const subject = formatTemplate(rawSubject, emp);
+          const body = formatTemplate(rawBody, emp);
+
+          sendPing(subject, body);
 
           notifState.notifications[key] = {
             handled: true,
             timestamp: Date.now()
           };
+        } else {
+          console.log(`[Reminders] Skipped birthday notification for ${emp.name} (already sent today)`);
         }
       }
 
@@ -624,15 +788,21 @@ function checkTodayReminders() {
         const existing = notifState.notifications[key];
 
         if (!existing || !existing.handled) {
-          sendPing(
-            `Work Anniversary — ${emp.name}`,
-            `${emp.name} (${emp.emp_id}) joined on this day!`
-          );
+          console.log(`[Reminders] Triggering work anniversary notification for ${emp.name}`);
+          const rawSubject = db.getSetting('anniv_subject') || 'Happy Work Anniversary, {name}!';
+          const rawBody = db.getSetting('anniv_body') || 'Dear {name},\n\nCongratulations on your work anniversary! Thank you for all your hard work and dedication.\n\nBest regards,\nHR Team';
+          
+          const subject = formatTemplate(rawSubject, emp);
+          const body = formatTemplate(rawBody, emp);
+
+          sendPing(subject, body);
 
           notifState.notifications[key] = {
             handled: true,
             timestamp: Date.now()
           };
+        } else {
+          console.log(`[Reminders] Skipped work anniversary notification for ${emp.name} (already sent today)`);
         }
       }
     });
