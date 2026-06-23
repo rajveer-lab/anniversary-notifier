@@ -79,10 +79,6 @@ function createWindow() {
   //   win.webContents.openDevTools();
   // }
 
-  // ── Enable full bidirectional zoom (Ctrl+scroll, pinch-to-zoom) ──
-  // Allow zoom between 25% and 300%
-  win.webContents.setVisualZoomLevelLimits(0.25, 3);
-
   // Handle Ctrl+scroll / trackpad pinch zoom
   win.webContents.on('zoom-changed', (event, zoomDirection) => {
     const current = win.webContents.getZoomFactor();
@@ -149,6 +145,21 @@ function createWindow() {
 
 
 app.whenReady().then(() => {
+  // Clear Chromium's persisted zoom levels before creating the window
+  const prefPath = path.join(app.getPath('userData'), 'Preferences');
+  try {
+    if (fs.existsSync(prefPath)) {
+      const prefs = JSON.parse(fs.readFileSync(prefPath, 'utf8'));
+      if (prefs && prefs.partition && prefs.partition.per_host_zoom_levels) {
+        prefs.partition.per_host_zoom_levels = {};
+        fs.writeFileSync(prefPath, JSON.stringify(prefs, null, 2));
+        console.log('[main] Cleared persisted zoom levels');
+      }
+    }
+  } catch (e) {
+    console.error('[main] Could not clear zoom prefs:', e);
+  }
+
   Menu.setApplicationMenu(null);
 
   const { session } = require('electron');
