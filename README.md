@@ -4,22 +4,22 @@
 [![Database](https://img.shields.io/badge/database-node%3Asqlite-blue.svg)](https://nodejs.org/api/sqlite.html)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 
-**StaffPing** is a premium, visual-centric desktop HR directory and reminder application built for **Fusion Global Business Solutions**. It acts as an offline utility for HR teams to track employee records, monitor milestones (birthdays and work anniversaries), configure custom communication templates, and generate secure passcode-protected reports.
+**StaffPing** is a premium, visual-centric desktop HR directory and milestone reminder application built for **Fusion Global Business Solutions**. It acts as an offline utility for HR teams to track employee records, monitor milestones (birthdays and work anniversaries), configure custom communication templates, and generate secure passcode-protected reports.
 
 ---
 
 ## ✨ Key Features
 
 ### 📅 Milestone Celebrations & Analytics
-- **Today's Celebrations Banner:** A glowing gradient banner at the top of the workspace dynamically highlights today's birthdays and work anniversaries.
+- **Today's Celebrations Banner:** A glowing gradient banner at the top of the directory view dynamically highlights today's birthdays and work anniversaries.
 - **Insights & Dashboard:** Features a clean monthly calendar of upcoming events and provides department breakdown stats (headcount share, tenure trends).
 - **Automated OS Notifications:** Automatically checks for milestones in the background and posts native Windows toast notifications at the exact scheduled hour.
 
-### 🔒 Secure Export & Import Engine
-- **Genuine Excel (XLSX):** Exports full directories directly into a native binary Excel sheet (`.xlsx`) with custom column formatting.
+### ⬆️ ⬇️ Dynamic Data Import & Export Dropdowns
+- **Genuine Excel (XLSX) & CSV Exports:** Exports the directory via the `⬇ Export ▾` dropdown on the home screen into a native binary Excel sheet (`.xlsx`) or standard CSV.
+- **Genuine Excel (XLSX) & CSV Imports:** Bulk-import employees via the `⬆ Import ▾` dropdown on the home screen from CSV or Excel files. Employs `UPSERT` matching logic to prevent duplicate records and automatically pads numeric IDs (e.g. `001`).
 - **Passcode Protected PDFs:** Generates PDF directory reports encrypted with standard PDF security dictionaries. Open them in Chrome or Adobe Acrobat, and you will be natively prompted for the password.
-- **Encrypted CSV Exports:** Secures your tabular backups using key derivation (scrypt Sync) and AES-256-CBC.
-- **Conflict-Resistant CSV Import:** Bulk-import employees from standard or encrypted CSV files. Employs `UPSERT` matching logic to prevent duplicate records and automatically pads numeric IDs (e.g. `001`).
+- **Encrypted Imports:** Auto-detects if the imported file is encrypted (detecting the `STAFFPING_CRYPT_` header) and prompts the user for a passcode to decrypt and parse the data on-the-fly.
 
 ### 🛠 Settings & Template Customization
 - **Tabbed Drawer Panel:** Right slide-in drawer containing configurations for notification times, backups, themes, and details.
@@ -44,7 +44,7 @@
 | --- | --- | --- |
 | **Desktop Shell** | Electron | Desktop container executing offline context isolation |
 | **Database** | SQLite (`node:sqlite`) | Node's native secure SQLite execution engine |
-| **Spreadsheets** | `xlsx` (SheetJS) | Native XML workbook writing library |
+| **Spreadsheets** | `xlsx` (SheetJS) | Native XML workbook reading and writing library |
 | **PDF Encryption** | `@pdfsmaller/pdf-encrypt` | Cryptographic standard PDF security dictionaries |
 | **UI Styling** | HTML5 / Vanilla CSS3 | Custom property styling with smooth CSS transitions |
 

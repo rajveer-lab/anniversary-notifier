@@ -38,7 +38,7 @@ Enables HR to select multiple employees using checkboxes on the grid and perform
 - **Bulk Status Toggle:** Switch the status of all selected employees to Active or Inactive simultaneously.
 
 ### 🎊 6. Milestones Analytics Banner
-A slim, glowing crimson-to-purple gradient banner at the top of the directory view ("*4 celebrations today 🎉 — click to view*") dynamically alerts HR of today's milestones. Clicking this banner instantly shifts the viewport to the calendar insights tab.
+A slim, glowing crimson-to-purple gradient banner at the top of the directory view ("*4 celebrations today 🎉 — click to view*") dynamically reminds HR of today's milestones. Clicking this banner instantly shifts the viewport to the calendar insights tab.
 
 ### 📅 7. Annual Milestone Calendar
 A monthly grid checklist inside the *Celebrations & Insights* tab compiling all employee birthdays and anniversaries for the current calendar month, sorted by date.
@@ -64,11 +64,11 @@ Generates PDF directory reports. When passcode protection is selected, standard 
 ### 🔐 12. Secure Database Backups & Restore
 HR can manually backup the entire SQLite database (`employees.db`) to a chosen directory. Backups can be encrypted using scrypt Sync key derivation and AES-256-CBC encryption to protect stored data.
 
-### 🛡️ 13. CSV Import Conflict Protection
+### 📦 13. CSV/XLSX Import Conflict Protection
 Bulk-import engine uses SQLite `UPSERT` conflict handling to update existing profiles or insert new ones seamlessly based on their unique Employee ID.
 
-### 📦 14. Encrypted CSV Import Auto-Detection
-The import engine automatically checks if the selected CSV backup is encrypted (detecting the `STAFFPING_CRYPT_` header) and prompts the user for a passcode to decrypt and parse the data on-the-fly.
+### 🔒 14. Encrypted CSV/XLSX Import Auto-Detection
+The import engine automatically checks if the selected CSV/XLSX backup is encrypted (detecting the `STAFFPING_CRYPT_` header) and prompts the user for a passcode to decrypt and parse the data on-the-fly.
 
 ### 📊 15. XLSX Workbook Spreadsheet Export
 Converts the employee directory into a genuine binary Excel sheet (`.xlsx`) using SheetJS, applying optimal default column widths to ensure labels and numbers are fully readable.
@@ -101,5 +101,17 @@ The application design is optimized for high visual impact and comfortable long-
 
 ---
 
-## 4. Administrative Security Notice
+## 4. Future Enhancements
+
+The following roadmap items represent potential feature additions to expand the utility of **StaffPing**:
+- **Automatic SMTP Email & Slack Integrations:** Send milestone greetings directly to employees via corporate email servers or corporate Slack channels.
+- **Active Directory & LDAP Syncing:** Synchronize employee records directly with directory servers automatically, removing the need for manual imports.
+- **Dynamic Department Management:** Settings UI to visually add, delete, rename, or color-customize department tags in the main view.
+- **Advanced Graphical Insights:** Embed visual charts (e.g., demographic graphs, hiring wave analytics, department charts) directly into the Insights tab.
+- **Collaborative Database Sync:** Set database paths to custom shared directories (e.g. network share) to allow multiple HR admins to work off the same file.
+- **Custom Milestones:** Add custom milestone triggers beyond birth dates and join dates (e.g., training dates, certifications, performance review alerts).
+
+---
+
+## 5. Administrative Security Notice
 Database backups and export CSV/XLSX sheets encrypted via StaffPing use a custom file signature starting with `STAFFPING_CRYPT_` (16 bytes magic header) followed by a 16-byte salt, 16-byte IV, and the encrypted content. These files can be safely decrypted using the app's standard **Restore Database** or **Import CSV** utility when the appropriate passcode is provided.

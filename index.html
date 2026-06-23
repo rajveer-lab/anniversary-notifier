@@ -1483,6 +1483,13 @@
         <div style="display: flex; gap: 10px; align-items: center;">
           <button class="btn-primary" id="btn-open-add-modal" style="margin-top: 0; width: auto; font-size: 0.8rem; padding: 8px 14px;">+ Add Employee</button>
           <div class="dropdown">
+            <button class="btn-control dropdown-toggle" id="btn-import-dropdown-toggle">⬆ Import ▾</button>
+            <div class="dropdown-menu">
+              <button class="dropdown-item" id="import-opt-csv">📥 Import CSV File</button>
+              <button class="dropdown-item" id="import-opt-xlsx">📊 Import Excel (XLSX) File</button>
+            </div>
+          </div>
+          <div class="dropdown">
             <button class="btn-control dropdown-toggle" id="btn-export-dropdown-toggle">⬇ Export ▾</button>
             <div class="dropdown-menu">
               <button class="dropdown-item" id="export-opt-pdf">📄 PDF Report</button>
@@ -1787,12 +1794,6 @@
           <button class="btn-control" id="btn-restore-db-settings" title="Restore SQLite database from file">📂 Restore DB</button>
         </div>
         <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
-        <div class="panel-title" style="margin-bottom: -4px;">CSV Operations</div>
-        <div class="backup-restore-group">
-          <button class="btn-control" id="btn-import-settings">📥 Import CSV</button>
-          <button class="btn-control" id="btn-export-settings">📤 Export CSV</button>
-        </div>
-        <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
         <button class="btn-control btn-danger-control" id="btn-clear-data-settings">🗑️ Clear All Employee Data</button>
       </div>
 
@@ -1974,8 +1975,6 @@
     const toastBodyEl    = document.getElementById('toast-body-text');
     const toastIconEl    = document.getElementById('toast-icon-el');
     const todayBadge     = document.getElementById('today-badge');
-    const btnExport      = document.getElementById('btn-export-settings'); 
-    const btnImport      = document.getElementById('btn-import-settings');
     const btnClearData   = document.getElementById('btn-clear-data-settings');
     const btnClearForm   = document.getElementById('btn-clear-form');
     const statusInput    = document.getElementById('status');
@@ -2089,37 +2088,17 @@
     });
 
 
-    // ── DATA EXPORT LOGIC ──
-    btnExport.addEventListener('click', () => {
-      openCryptoModal(
-        'Encrypt Export',
-        'Protect your exported data by entering an encryption password. Leave it blank to export as a standard unencrypted CSV.',
-        'Proceed',
-        async (password) => {
-          const originalText = btnExport.innerText;
-          btnExport.innerText = '⏳ Exporting...';
-          btnExport.disabled = true;
+    // ── DATA IMPORT LOGIC ──
+    async function processImport(format = 'csv', password = '', filePath = null) {
+      const optEl = format === 'xlsx' 
+        ? document.getElementById('import-opt-xlsx') 
+        : document.getElementById('import-opt-csv');
+      
+      const originalText = optEl.innerHTML;
+      optEl.innerHTML = '⏳ Importing...';
+      optEl.disabled = true;
 
-          const result = await window.electronAPI.exportData(password);
-
-          if (result.success) {
-            showToast(`Export Complete: Saved to ${result.path}`);
-          } else if (result.error !== 'CANCELLED') {
-            showToast(`Export Failed: ${result.error}`, true);
-          }
-
-          btnExport.innerText = originalText;
-          btnExport.disabled = false;
-        }
-      );
-    });
-
-    async function processImport(password = '', filePath = null) {
-      const originalText = btnImport.innerText;
-      btnImport.innerText = '⏳ Importing...';
-      btnImport.disabled = true;
-
-      const result = await window.electronAPI.importData(password, filePath);
+      const result = await window.electronAPI.importData(password, filePath, format);
 
       if (result.success) {
         localStorage.removeItem(NOTIF_KEY);
@@ -2127,32 +2106,27 @@
         renderNotifPanel();
         showToast(`Import Complete: Successfully updated ${result.count} records.`);
         loadEmployees(); // Instantly refresh the data table
-        btnImport.innerText = originalText;
-        btnImport.disabled = false;
+        optEl.innerHTML = originalText;
+        optEl.disabled = false;
       } else if (result.needsPassword) {
-        btnImport.innerText = originalText;
-        btnImport.disabled = false;
+        optEl.innerHTML = originalText;
+        optEl.disabled = false;
         openCryptoModal(
           'Decrypt File',
           'This import file is encrypted. Please enter the password to decrypt and import the records.',
           'Decrypt',
           (pass) => {
-            processImport(pass, result.filePath);
+            processImport(format, pass, result.filePath);
           }
         );
       } else {
         if (result.error !== 'CANCELLED') {
           showToast(`Import Failed: ${result.error}`, true);
         }
-        btnImport.innerText = originalText;
-        btnImport.disabled = false;
+        optEl.innerHTML = originalText;
+        optEl.disabled = false;
       }
     }
-
-    // ── DATA IMPORT LOGIC ──
-    btnImport.addEventListener('click', () => {
-      processImport();
-    });
 
     // ── DATA CLEAR LOGIC ──
     btnClearData.addEventListener('click', async () => {
@@ -4041,6 +4015,20 @@
             optExportXlsx.disabled = false;
           }
         );
+      });
+    }
+
+    const optImportCsv = document.getElementById('import-opt-csv');
+    if (optImportCsv) {
+      optImportCsv.addEventListener('click', () => {
+        processImport('csv');
+      });
+    }
+
+    const optImportXlsx = document.getElementById('import-opt-xlsx');
+    if (optImportXlsx) {
+      optImportXlsx.addEventListener('click', () => {
+        processImport('xlsx');
       });
     }
 

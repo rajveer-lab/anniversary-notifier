@@ -432,14 +432,18 @@ ipcMain.handle('export-data', async (_, password, format = 'csv') => {
 });
 
 // ── Data Import Handler ──
-ipcMain.handle('import-data', async (_, password, targetFilePath) => {
+ipcMain.handle('import-data', async (_, password, targetFilePath, format = 'csv') => {
   try {
     let filePath = targetFilePath;
     if (!filePath) {
+      const filters = format === 'xlsx'
+        ? [{ name: 'Excel Files', extensions: ['xlsx'] }]
+        : [{ name: 'CSV Data Files', extensions: ['csv'] }];
+
       const { filePaths } = await dialog.showOpenDialog(win, {
-        title: 'Import Employee Data',
+        title: `Import Employee Data (${format.toUpperCase()})`,
         properties: ['openFile'],
-        filters: [{ name: 'CSV Data Files', extensions: ['csv'] }]
+        filters: filters
       });
 
       if (!filePaths || filePaths.length === 0) {
@@ -458,13 +462,6 @@ ipcMain.handle('import-data', async (_, password, targetFilePath) => {
       } catch (e) {
         return { success: false, error: 'Incorrect decryption password or corrupted file.' };
       }
-    }
-
-    const rawData = fileBuffer.toString('utf8');
-    const lines = rawData.split(/\r?\n/).filter(line => line.trim());
-
-    if (lines.length <= 1) {
-      return { success: false, error: 'File is empty or contains no employee data.' };
     }
 
     const employeesToImport = [];
@@ -486,92 +483,131 @@ ipcMain.handle('import-data', async (_, password, targetFilePath) => {
     };
 
     // Helper to safely convert exported text dates back into DB format (YYYY-MM-DD)
-    // Uses Date.parse carefully: for "DD Mon YYYY" or ISO formats, parse then extract local parts
     const parseDateForDB = (dStr) => {
       if (!dStr || dStr === '—') return '';
-      // Try to parse the date string
       const d = new Date(dStr);
       if (isNaN(d.getTime())) return '';
-      // Use UTC methods if the string looks like YYYY-MM-DD (ISO), else local
       if (/^\d{4}-\d{2}-\d{2}$/.test(dStr.trim())) {
-        // ISO string — read UTC values to avoid timezone day-shift
         const year  = d.getUTCFullYear();
         const month = String(d.getUTCMonth() + 1).padStart(2, '0');
         const day   = String(d.getUTCDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
       }
-      // For human-readable strings like "08 Apr 1997", use local values
       const year  = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const day   = String(d.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
 
-    // Dynamically parse CSV headers to determine index mappings
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
-    const idIdx = headers.indexOf('employee id') !== -1 ? headers.indexOf('employee id') : 0;
-    const nameIdx = headers.indexOf('full-name') !== -1 ? headers.indexOf('full-name') : (headers.indexOf('full name') !== -1 ? headers.indexOf('full name') : 1);
-    const departmentIdx = headers.indexOf('department') !== -1 ? headers.indexOf('department') : (headers.indexOf('dept') !== -1 ? headers.indexOf('dept') : (headers.indexOf('dept.') !== -1 ? headers.indexOf('dept.') : -1));
-    const jobTitleIdx = headers.indexOf('job title') !== -1 ? headers.indexOf('job title') : (headers.indexOf('title') !== -1 ? headers.indexOf('title') : -1);
-    const emailIdx = headers.indexOf('email');
-    const phoneIdx = headers.indexOf('phone number') !== -1 ? headers.indexOf('phone number') : (headers.indexOf('phone') !== -1 ? headers.indexOf('phone') : -1);
-    
-    let dobIdx = headers.indexOf('date of birth') !== -1 ? headers.indexOf('date of birth') : -1;
-    if (dobIdx === -1) dobIdx = headers.indexOf('dob') !== -1 ? headers.indexOf('dob') : 5; // default fallback if headers missing
-    
-    let joinIdx = headers.indexOf('joining date') !== -1 ? headers.indexOf('joining date') : -1;
-    if (joinIdx === -1) joinIdx = headers.indexOf('joining') !== -1 ? headers.indexOf('joining') : 6; // default fallback if headers missing
+    const isXlsx = filePath.endsWith('.xlsx');
 
-    // Custom CSV parser to handle quotes accurately
-    for (let i = 1; i < lines.length; i++) {
-      const result = [];
-      let current = '';
-      let inQuotes = false;
-      const line = lines[i];
+    if (isXlsx) {
+      const XLSX = require('xlsx');
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // 2D array
 
-      for (let j = 0; j < line.length; j++) {
-        const char = line[j];
-        if (char === '"' && line[j+1] === '"') {
-          current += '"';
-          j++; // Skip escaped quote
-        } else if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          result.push(current.trim());
-          current = '';
-        } else {
-          current += char;
+      if (jsonData.length <= 1) {
+        return { success: false, error: 'Excel sheet is empty or contains no data.' };
+      }
+
+      const headers = jsonData[0].map(h => String(h || '').trim().toLowerCase());
+      
+      const idIdx = headers.indexOf('employee id') !== -1 ? headers.indexOf('employee id') : 0;
+      const nameIdx = headers.indexOf('full name') !== -1 ? headers.indexOf('full name') : (headers.indexOf('full-name') !== -1 ? headers.indexOf('full-name') : 1);
+      const departmentIdx = headers.indexOf('department') !== -1 ? headers.indexOf('department') : -1;
+      const jobTitleIdx = headers.indexOf('job title') !== -1 ? headers.indexOf('job title') : -1;
+      const emailIdx = headers.indexOf('email');
+      const phoneIdx = headers.indexOf('phone number') !== -1 ? headers.indexOf('phone number') : (headers.indexOf('phone') !== -1 ? headers.indexOf('phone') : -1);
+      const dobIdx = headers.indexOf('date of birth') !== -1 ? headers.indexOf('date of birth') : -1;
+      const joinIdx = headers.indexOf('joining date') !== -1 ? headers.indexOf('joining date') : -1;
+      const statusIdx = headers.indexOf('status') !== -1 ? headers.indexOf('status') : -1;
+
+      for (let i = 1; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        if (row && row.length > Math.max(idIdx, nameIdx) && row[idIdx]) {
+          let rawId = cleanCSVValue(row[idIdx]);
+          if (rawId && !isNaN(rawId)) {
+            rawId = rawId.padStart(3, '0');
+          }
+          
+          employeesToImport.push({
+            emp_id: rawId,
+            name: cleanCSVValue(row[nameIdx]),
+            department: departmentIdx !== -1 ? cleanCSVValue(row[departmentIdx]) : '',
+            job_title: jobTitleIdx !== -1 ? cleanCSVValue(row[jobTitleIdx]) : '',
+            email: emailIdx !== -1 ? cleanCSVValue(row[emailIdx]) : '',
+            phone: phoneIdx !== -1 ? cleanCSVValue(row[phoneIdx]) : '',
+            dob: dobIdx !== -1 ? parseDateForDB(cleanCSVValue(row[dobIdx])) : '',
+            joining_date: joinIdx !== -1 ? parseDateForDB(cleanCSVValue(row[joinIdx])) : '',
+            status: statusIdx !== -1 ? cleanCSVValue(row[statusIdx]) : 'Active'
+          });
         }
       }
-      result.push(current.trim());
+    } else {
+      const rawData = fileBuffer.toString('utf8');
+      const lines = rawData.split(/\r?\n/).filter(line => line.trim());
 
-      // Ensure at least ID and Name exist before pushing
-      if (result.length > Math.max(idIdx, nameIdx) && result[idIdx]) { 
-        let rawId = cleanCSVValue(result[idIdx]);
+      if (lines.length <= 1) {
+        return { success: false, error: 'File is empty or contains no employee data.' };
+      }
 
-        // Auto-pad numeric IDs with leading zeros (e.g., "2" becomes "002")
-        // This ignores alphanumeric IDs like "EMP-001" to keep them safe.
-        if (rawId && !isNaN(rawId)) {
-          rawId = rawId.padStart(3, '0');
+      const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+      const idIdx = headers.indexOf('employee id') !== -1 ? headers.indexOf('employee id') : 0;
+      const nameIdx = headers.indexOf('full-name') !== -1 ? headers.indexOf('full-name') : (headers.indexOf('full name') !== -1 ? headers.indexOf('full name') : 1);
+      const departmentIdx = headers.indexOf('department') !== -1 ? headers.indexOf('department') : -1;
+      const jobTitleIdx = headers.indexOf('job title') !== -1 ? headers.indexOf('job title') : -1;
+      const emailIdx = headers.indexOf('email');
+      const phoneIdx = headers.indexOf('phone number') !== -1 ? headers.indexOf('phone number') : (headers.indexOf('phone') !== -1 ? headers.indexOf('phone') : -1);
+      const dobIdx = headers.indexOf('date of birth') !== -1 ? headers.indexOf('date of birth') : -1;
+      const joinIdx = headers.indexOf('joining date') !== -1 ? headers.indexOf('joining date') : -1;
+
+      for (let i = 1; i < lines.length; i++) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        const line = lines[i];
+
+        for (let j = 0; j < line.length; j++) {
+          const char = line[j];
+          if (char === '"' && line[j+1] === '"') {
+            current += '"';
+            j++;
+          } else if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
         }
+        result.push(current.trim());
 
-        employeesToImport.push({
-          emp_id: rawId,
-          name: cleanCSVValue(result[nameIdx]),
-          department: departmentIdx !== -1 ? cleanCSVValue(result[departmentIdx]) : '',
-          job_title: jobTitleIdx !== -1 ? cleanCSVValue(result[jobTitleIdx]) : '',
-          email: emailIdx !== -1 ? cleanCSVValue(result[emailIdx]) : '',
-          phone: phoneIdx !== -1 ? cleanCSVValue(result[phoneIdx]).replace(/"/g, '').trim() : '',
-          dob: result[dobIdx] ? parseDateForDB(cleanCSVValue(result[dobIdx])) : '',
-          joining_date: result[joinIdx] ? parseDateForDB(cleanCSVValue(result[joinIdx])) : ''
-        });
+        if (result.length > Math.max(idIdx, nameIdx) && result[idIdx]) { 
+          let rawId = cleanCSVValue(result[idIdx]);
+          if (rawId && !isNaN(rawId)) {
+            rawId = rawId.padStart(3, '0');
+          }
+
+          employeesToImport.push({
+            emp_id: rawId,
+            name: cleanCSVValue(result[nameIdx]),
+            department: departmentIdx !== -1 ? cleanCSVValue(result[departmentIdx]) : '',
+            job_title: jobTitleIdx !== -1 ? cleanCSVValue(result[jobTitleIdx]) : '',
+            email: emailIdx !== -1 ? cleanCSVValue(result[emailIdx]) : '',
+            phone: phoneIdx !== -1 ? cleanCSVValue(result[phoneIdx]).replace(/"/g, '').trim() : '',
+            dob: dobIdx !== -1 ? parseDateForDB(cleanCSVValue(result[dobIdx])) : '',
+            joining_date: joinIdx !== -1 ? parseDateForDB(cleanCSVValue(result[joinIdx])) : '',
+            status: 'Active'
+          });
+        }
       }
     }
 
     db.importData(employeesToImport);
 
-    // Reset notification state so fresh today-reminders fire for the new dataset
-    // without this, the dedup logic would suppress all new notifications
     const notifPath = path.join(app.getPath('userData'), 'notif-state.json');
     try {
       fs.writeFileSync(notifPath, JSON.stringify({ date: '', notifications: {} }, null, 2));
@@ -580,7 +616,7 @@ ipcMain.handle('import-data', async (_, password, targetFilePath) => {
       console.error('Failed to reset notification state after import:', e);
     }
 
-    checkTodayReminders(); // Fire fresh notifications for the newly imported data
+    checkTodayReminders();
 
     return { success: true, count: employeesToImport.length };
 
@@ -704,8 +740,12 @@ function formatTemplate(template, emp) {
   return template
     .replace(/{name}/g, emp.name || '')
     .replace(/{emp_id}/g, emp.emp_id || '')
+    .replace(/{employeeId}/g, emp.emp_id || '')
     .replace(/{department}/g, emp.department || '')
     .replace(/{title}/g, emp.job_title || '')
+    .replace(/{jobTitle}/g, emp.job_title || '')
+    .replace(/{email}/g, emp.email || '')
+    .replace(/{joiningDate}/g, emp.joining_date_display || '')
     .replace(/{years}/g, yearsVal);
 }
 
