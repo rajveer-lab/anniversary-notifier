@@ -2183,6 +2183,12 @@
       templateBdayBody.value = (bdayBodyRes.success && bdayBodyRes.value) || DEFAULT_BDAY_BODY;
       templateAnnivSub.value = (annivSubRes.success && annivSubRes.value) || DEFAULT_ANNIV_SUBJECT;
       templateAnnivBody.value = (annivBodyRes.success && annivBodyRes.value) || DEFAULT_ANNIV_BODY;
+
+      // Sync loaded values into localStorage so getCompiledEmailDraft can use them
+      localStorage.setItem(BDAY_SUBJECT_KEY, templateBdaySub.value);
+      localStorage.setItem(BDAY_BODY_KEY, templateBdayBody.value);
+      localStorage.setItem(ANNIV_SUBJECT_KEY, templateAnnivSub.value);
+      localStorage.setItem(ANNIV_BODY_KEY, templateAnnivBody.value);
       
       const clearNotifsVal = localStorage.getItem(CLEAR_NOTIFS_SETTINGS_KEY);
       chkClearNotifs.checked = clearNotifsVal === null ? true : clearNotifsVal === 'true';
@@ -2849,8 +2855,9 @@
         subjectTemplate = localStorage.getItem(ANNIV_SUBJECT_KEY) || DEFAULT_ANNIV_SUBJECT;
         bodyTemplate = localStorage.getItem(ANNIV_BODY_KEY) || DEFAULT_ANNIV_BODY;
       } else {
-        subjectTemplate = 'StaffPing Connect';
-        bodyTemplate = 'Hi {name},\n\nBest regards,';
+        // Default to birthday template so the user always sees their configured template
+        subjectTemplate = localStorage.getItem(BDAY_SUBJECT_KEY) || DEFAULT_BDAY_SUBJECT;
+        bodyTemplate = localStorage.getItem(BDAY_BODY_KEY) || DEFAULT_BDAY_BODY;
       }
       
       // Helper to compile placeholders
