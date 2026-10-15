@@ -12,8 +12,6 @@ if (process.platform === 'win32') {
 
 let win;
 let db;
-let lastCheckedDate = null;
-let notifiedToday = new Set();
 
 // Safely open external web links by strictly enforcing allowed protocols (HTTP/HTTPS/MAILTO)
 function safeOpenExternal(url) {
@@ -239,6 +237,36 @@ ipcMain.handle('clear-employees', () => {
   } catch (e) {
     return { success: false, error: e.message };
   }
+});
+
+ipcMain.handle('get-departments', () => {
+  try { return { success: true, data: db.listDepartments() }; }
+  catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('add-department', (_, name) => {
+  try { db.addDepartment(name); return { success: true }; }
+  catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('rename-department', (_, deptId, newName) => {
+  try { return { success: true, data: db.renameDepartment(deptId, newName) }; }
+  catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('delete-department', (_, deptId) => {
+  try { db.deleteDepartment(deptId); return { success: true }; }
+  catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('get-employee-history', (_, emp_id) => {
+  try { return { success: true, data: db.getHistory(emp_id) }; }
+  catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('get-database-info', () => {
+  try { return { success: true, data: db.getDatabaseInfo() }; }
+  catch (e) { return { success: false, error: e.message }; }
 });
 
 ipcMain.handle('get-setting', (_, key) => {
@@ -615,14 +643,7 @@ ipcMain.handle('import-data', async (_, password, targetFilePath, format = 'csv'
 
     db.importData(employeesToImport);
 
-    const notifPath = path.join(app.getPath('userData'), 'notif-state.json');
-    try {
-      fs.writeFileSync(notifPath, JSON.stringify({ date: '', notifications: {} }, null, 2));
-      notifiedToday.clear();
-    } catch (e) {
-      console.error('Failed to reset notification state after import:', e);
-    }
-
+    // People who were already greeted today keep their notification_log row, so only newcomers are pinged.
     checkTodayReminders();
 
     return { success: true, count: employeesToImport.length };
@@ -714,11 +735,7 @@ ipcMain.handle('restore-database', async (_, password, targetFilePath) => {
 // ── Clear Notification State Handler ──
 ipcMain.handle('clear-notifications', () => {
   try {
-    const notifPath = path.join(app.getPath('userData'), 'notif-state.json');
-    if (fs.existsSync(notifPath)) {
-      fs.writeFileSync(notifPath, JSON.stringify({ date: '', notifications: {} }, null, 2));
-    }
-    notifiedToday.clear();
+    db.clearRemindersOn(localDateISO());
     checkTodayReminders(true); // Instantly trigger a fresh scan of today's reminders (bypassing time constraint)
     return { success: true };
   } catch (e) {
@@ -756,33 +773,15 @@ function formatTemplate(template, emp) {
     .replace(/{years}/g, yearsVal);
 }
 
+function localDateISO(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
 // ── Reminder logic ──
 function checkTodayReminders(bypassTimeCheck = false) {
   try {
     const employees = db.getAll();
-    const todayStr = new Date().toDateString();
-
-    // Read notification history from renderer localStorage-compatible file
-    const notifPath = path.join(app.getPath('userData'), 'notif-state.json');
-
-    let notifState = {};
-
-    if (fs.existsSync(notifPath)) {
-      try {
-        notifState = JSON.parse(fs.readFileSync(notifPath, 'utf8'));
-      } catch {
-        notifState = {};
-      }
-    }
-
-    // Reset every new day
-    if (notifState.date !== todayStr) {
-      console.log(`[Reminders] Date changed from ${notifState.date} to ${todayStr}. Resetting notification tracker.`);
-      notifState = {
-        date: todayStr,
-        notifications: {}
-      };
-    }
+    const year = new Date().getFullYear();
 
     if (!bypassTimeCheck) {
       // Check if the configured reminder time has been reached today
@@ -803,61 +802,34 @@ function checkTodayReminders(bypassTimeCheck = false) {
 
     console.log('[Reminders] Scanning employee records for today\'s milestones...');
 
+    // claimReminder inserts into notification_log; its primary key (employee, kind, year) rejects a second
+    // insert, so only the first scan of the year sends each greeting.
     employees.forEach(emp => {
       if (emp.status === 'Inactive') return;
       // ── BIRTHDAY ──
       if (emp.isBirthday) {
-        const key = `bday-${emp.emp_id}`;
-        const existing = notifState.notifications[key];
-
-        if (!existing || !existing.handled) {
+        if (db.claimReminder(emp.id, 'birthday', year)) {
           console.log(`[Reminders] Triggering birthday notification for ${emp.name}`);
           const rawSubject = db.getSetting('bday_subject') || 'Happy Birthday, {name}!';
           const rawBody = db.getSetting('bday_body') || 'Birthday and a great year ahead!\n\nBest regards,\nHR Team';
-          
-          const subject = formatTemplate(rawSubject, emp);
-          const body = formatTemplate(rawBody, emp);
-
-          sendPing(subject, body);
-
-          notifState.notifications[key] = {
-            handled: true,
-            timestamp: Date.now()
-          };
+          sendPing(formatTemplate(rawSubject, emp), formatTemplate(rawBody, emp));
         } else {
-          console.log(`[Reminders] Skipped birthday notification for ${emp.name} (already sent today)`);
+          console.log(`[Reminders] Skipped birthday notification for ${emp.name} (already sent this year)`);
         }
       }
 
       // ── ANNIVERSARY ──
       if (emp.isAnniversary) {
-        const key = `anniv-${emp.emp_id}`;
-        const existing = notifState.notifications[key];
-
-        if (!existing || !existing.handled) {
+        if (db.claimReminder(emp.id, 'anniversary', year)) {
           console.log(`[Reminders] Triggering work anniversary notification for ${emp.name}`);
           const rawSubject = db.getSetting('anniv_subject') || 'Happy Work Anniversary, {name}!';
           const rawBody = db.getSetting('anniv_body') || 'Dear {name},\n\nCongratulations on your work anniversary! Thank you for all your hard work and dedication.\n\nBest regards,\nHR Team';
-          
-          const subject = formatTemplate(rawSubject, emp);
-          const body = formatTemplate(rawBody, emp);
-
-          sendPing(subject, body);
-
-          notifState.notifications[key] = {
-            handled: true,
-            timestamp: Date.now()
-          };
+          sendPing(formatTemplate(rawSubject, emp), formatTemplate(rawBody, emp));
         } else {
-          console.log(`[Reminders] Skipped work anniversary notification for ${emp.name} (already sent today)`);
+          console.log(`[Reminders] Skipped work anniversary notification for ${emp.name} (already sent this year)`);
         }
       }
     });
-
-    fs.writeFileSync(
-      notifPath,
-      JSON.stringify(notifState, null, 2)
-    );
 
   } catch (e) {
     console.error('Reminder check failed:', e);
