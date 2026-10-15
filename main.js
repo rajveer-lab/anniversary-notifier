@@ -4,7 +4,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 
 const APP_USER_MODEL_ID = 'com.staffping.app';
-const ICON_PATH = path.join(__dirname, 'fusion-logo.png');
+const ICON_PATH = path.join(__dirname, 'staffping-logo.png');
 
 if (process.platform === 'win32') {
   app.setAppUserModelId(APP_USER_MODEL_ID);

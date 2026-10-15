@@ -4,7 +4,7 @@
 [![Database](https://img.shields.io/badge/database-node%3Asqlite-blue.svg)](https://nodejs.org/api/sqlite.html)
 [![License](https://img.shields.io/badge/license-ISC-green.svg)](LICENSE)
 
-**StaffPing** is a premium, visual-centric desktop HR directory and milestone reminder application built for **Fusion Global Business Solutions**. It acts as an offline utility for HR teams to track employee records, monitor milestones (birthdays and work anniversaries), configure custom communication templates, and generate secure passcode-protected reports.
+**StaffPing** is a premium, visual-centric desktop HR directory and milestone reminder application built for **StaffPing**. It acts as an offline utility for HR teams to track employee records, monitor milestones (birthdays and work anniversaries), configure custom communication templates, and generate secure passcode-protected reports.
 
 ---
 

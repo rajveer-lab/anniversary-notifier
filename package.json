@@ -34,7 +34,7 @@
           ]
         }
       ],
-      "icon": "fusion-logo-square.png"
+      "icon": "staffping-logo-square.png"
     },
     "nsis": {
       "oneClick": true,
@@ -48,8 +48,8 @@
       "main.js",
       "preload.js",
       "index.html",
-      "fusion-logo.png",
-      "fusion-logo-square.png"
+      "staffping-logo.png",
+      "staffping-logo-square.png"
     ],
     "asar": true
   },
