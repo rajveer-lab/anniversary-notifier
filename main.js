@@ -562,6 +562,13 @@ ipcMain.handle('import-data', async (_, password, targetFilePath, format = 'csv'
       const phoneIdx = headers.indexOf('phone number') !== -1 ? headers.indexOf('phone number') : (headers.indexOf('phone') !== -1 ? headers.indexOf('phone') : -1);
       const dobIdx = headers.indexOf('date of birth') !== -1 ? headers.indexOf('date of birth') : -1;
       const joinIdx = headers.indexOf('joining date') !== -1 ? headers.indexOf('joining date') : -1;
+      const statusIdx = headers.indexOf('status') !== -1 ? headers.indexOf('status') : -1;
+
+      // Only 'Active' / 'Inactive' are valid; anything else (incl. missing or empty) falls back to 'Active'
+      const parseStatus = (val) => {
+        const s = cleanCSVValue(val).toLowerCase();
+        return s === 'inactive' ? 'Inactive' : 'Active';
+      };
 
       for (let i = 1; i < lines.length; i++) {
         const result = [];
@@ -600,7 +607,7 @@ ipcMain.handle('import-data', async (_, password, targetFilePath, format = 'csv'
             phone: phoneIdx !== -1 ? cleanCSVValue(result[phoneIdx]).replace(/"/g, '').trim() : '',
             dob: dobIdx !== -1 ? parseDateForDB(cleanCSVValue(result[dobIdx])) : '',
             joining_date: joinIdx !== -1 ? parseDateForDB(cleanCSVValue(result[joinIdx])) : '',
-            status: 'Active'
+            status: statusIdx !== -1 ? parseStatus(result[statusIdx]) : 'Active'
           });
         }
       }
