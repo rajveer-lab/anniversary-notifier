@@ -3,35 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <title>StaffPing — Fusion Global Business Solutions</title>
+  <title>StaffPing</title>
   <style>
+    /* Quiet palette: warm neutrals do the work; the StaffPing red is kept for "today" and unread signals only. */
     :root {
-      --background: #090d16; /* Deep corporate slate-navy background */
-      --surface: #111827; /* Rich dark panel container */
-      --surface-hover: #1e293b; /* Softer, blue-grey hover */
-      --text: #f8fafc;
-      --muted: #94a3b8; /* Slate-400 for secondary text */
-      --border: rgba(241, 245, 249, 0.08);
-      --accent: #e11d48; /* Vibrant SaaS Crimson/Rose */
-      --accent-hover: #f43f5e;
-      --accent-glow: rgba(225, 29, 72, 0.12);
-      --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --background: #131211;
+      --surface: #1a1918;
+      --surface-hover: #232220;
+      --surface-sunken: #161514;
+      --text: #ecebe8;
+      --muted: #a29e98;
+      --border: rgba(236, 235, 232, 0.09);
+      --border-strong: rgba(236, 235, 232, 0.16);
+      --accent: #d98a84;
+      --accent-hover: #e4a09b;
+      --accent-glow: rgba(217, 138, 132, 0.12);
+      --ring: rgba(217, 138, 132, 0.22);
+      --selection: rgba(217, 138, 132, 0.28);
+      --ink: #ecebe8;
+      --ink-text: #1a1918;
+      --ink-hover: #ffffff;
+      --positive: #8fbf9f;
+      --danger: #e58f86;
+      --danger-soft: rgba(229, 143, 134, 0.1);
+      --scrim: rgba(8, 8, 7, 0.55);
+      --float-edge: rgba(236, 235, 232, 0.1);
+      --shadow-float: 0 12px 32px rgba(0, 0, 0, 0.45);
+      --shadow-menu: 0 6px 16px rgba(0, 0, 0, 0.35);
+      --font-stack: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color-scheme: dark;
     }
     body.light-theme {
-      --background: #f8fafc;
+      --background: #f6f5f3;
       --surface: #ffffff;
-      --surface-hover: #f1f5f9;
-      --text: #0f172a;
-      --muted: #64748b;
-      --border: rgba(15, 23, 42, 0.06);
-      --accent: #be123c; /* Elegant deep Rose */
-      --accent-hover: #e11d48;
-      --accent-glow: rgba(190, 18, 60, 0.06);
+      --surface-hover: #f1f0ed;
+      --surface-sunken: #faf9f7;
+      --text: #1f1d1b;
+      --muted: #6b6762;
+      --border: rgba(31, 29, 27, 0.09);
+      --border-strong: rgba(31, 29, 27, 0.17);
+      --accent: #a3413f;
+      --accent-hover: #8c3634;
+      --accent-glow: rgba(163, 65, 63, 0.08);
+      --ring: rgba(163, 65, 63, 0.16);
+      --selection: rgba(163, 65, 63, 0.16);
+      --ink: #1f1d1b;
+      --ink-text: #ffffff;
+      --ink-hover: #3a3734;
+      --positive: #3f7a5a;
+      --danger: #a8332c;
+      --danger-soft: rgba(168, 51, 44, 0.07);
+      --scrim: rgba(31, 29, 27, 0.32);
+      --float-edge: transparent;
+      --shadow-float: 0 12px 32px rgba(31, 29, 27, 0.14);
+      --shadow-menu: 0 6px 16px rgba(31, 29, 27, 0.1);
+      color-scheme: light;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: thin; }
     html {
       width: 100%;
       height: 100%;
@@ -41,255 +69,203 @@
       font-family: var(--font-stack);
       background-color: var(--background);
       color: var(--text);
-      letter-spacing: -0.011em;
       width: 100%;
       height: 100%;
       min-height: 100%;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      scrollbar-color: var(--border-strong) transparent;
+      caret-color: var(--text);
       transition: background-color 0.2s, color 0.2s;
     }
+    ::selection { background: var(--selection); color: var(--text); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    input[type="checkbox"] { accent-color: var(--ink); }
 
-    /* ── HEADER & NAVBAR ── */
+    /* ── HEADER ── */
     header {
       background-color: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 0 32px;
+      padding: 0 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 70px; /* Generous breathing room */
+      height: 56px;
+      flex-shrink: 0;
       position: relative;
       z-index: 100;
-      box-shadow: 0 4px 30px -4px rgba(0, 0, 0, 0.25), 0 2px 10px -2px rgba(0, 0, 0, 0.15); /* Premium depth shadow */
-      transition: all 0.2s ease;
     }
-    body.light-theme header {
-      box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.04), 0 1px 6px -1px rgba(15, 23, 42, 0.02);
-    }
-    .hamburger-btn {
-      background: transparent;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      margin-right: -4px;
-    }
-    .hamburger-btn:hover {
-      background: var(--surface-hover);
-      color: var(--accent);
-    }
-    .brand-container { display: flex; align-items: center; gap: 12px; }
-    .brand-logo {
-      height: 34px; width: auto; object-fit: contain;
-      filter: invert(1) drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.15));
-      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .brand-logo:hover {
-      transform: scale(1.08) rotate(-2deg);
-    }
-    body.light-theme .brand-logo { filter: invert(0) drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.05)); }
-    .brand-title { font-size: 1.4rem; font-weight: 700; color: var(--text); letter-spacing: -0.03em; }
-    .brand-title span { color: var(--accent); }
-    .header-actions { display: flex; align-items: center; gap: 12px; }
-    
+    .brand-container { display: flex; align-items: center; }
+    .brand-logo { height: 28px; width: auto; object-fit: contain; filter: invert(1); opacity: 0.92; }
+    body.light-theme .brand-logo { filter: none; opacity: 1; }
+    .header-actions { display: flex; align-items: center; gap: 4px; }
+
     .btn-control {
-      background: var(--surface-hover);
-      border: 1px solid var(--border);
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
       color: var(--text);
       font-family: var(--font-stack);
       font-size: 0.8rem;
       font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 8px; /* Slightly softer corner radius */
+      line-height: 1.25;
+      padding: 7px 12px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
+      white-space: nowrap;
     }
-    .btn-control:hover {
-      background: var(--border);
-      border-color: var(--muted);
-      transform: translateY(-1px);
-    }
-    .btn-control:active {
-      transform: translateY(0);
-    }
-    .btn-danger-control {
-      border-color: rgba(225, 29, 72, 0.3) !important;
-      color: #fda4af !important;
-    }
-    .btn-danger-control:hover {
-      background: rgba(225, 29, 72, 0.15) !important;
-      border-color: rgba(225, 29, 72, 0.6) !important;
-    }
-    body.light-theme .btn-danger-control {
-      color: #be123c !important;
-      border-color: rgba(225, 29, 72, 0.3) !important;
-    }
-    body.light-theme .btn-danger-control:hover {
-      background: rgba(225, 29, 72, 0.08) !important;
-      border-color: rgba(225, 29, 72, 0.6) !important;
-    }
+    .btn-control:hover { background: var(--surface-hover); }
+    .btn-control:disabled { opacity: 0.55; cursor: default; }
+    .btn-danger-control { color: var(--danger); }
+    .btn-danger-control:hover { background: var(--danger-soft); border-color: var(--danger); }
     .date-badge {
-      background: var(--surface-hover);
-      color: var(--text);
-      border: 1px solid var(--border);
+      color: var(--muted);
       font-size: 0.8rem;
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 8px;
+      padding-left: 12px;
+      margin-left: 6px;
+      border-left: 1px solid var(--border);
+      line-height: 20px;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
-    /* ── NOTIFICATION BELL BUTTON ── */
+    /* ── ICON BUTTONS (theme, notifications, settings) ── */
     .notif-bell-btn {
       position: relative;
-      background: var(--surface-hover);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 1.05rem;
-      width: 38px; height: 38px;
-      border-radius: 8px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      width: 34px; height: 34px;
+      border-radius: 6px;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease, color 0.15s ease;
       flex-shrink: 0;
     }
-    .notif-bell-btn:hover { background: var(--border); border-color: rgba(225, 29, 72, 0.3); transform: translateY(-1px); }
-    .notif-bell-btn:active { transform: translateY(0); }
-    .notif-bell-btn.has-unread { border-color: rgba(225, 29, 72, 0.4); }
+    .notif-bell-btn:hover { background: var(--surface-hover); color: var(--text); }
+    .notif-bell-btn.has-unread { color: var(--text); }
     .notif-badge {
       position: absolute;
-      top: -4px; right: -4px;
+      top: 2px; right: 1px;
       background: var(--accent);
-      color: #fff;
-      font-size: 0.65rem;
-      font-weight: 700;
+      color: var(--surface);
+      font-size: 0.6rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
       min-width: 16px; height: 16px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      padding: 0 3px;
+      border-radius: 8px;
       border: 2px solid var(--surface);
+      padding: 0 3px;
       display: none;
-      box-shadow: 0 2px 6px rgba(225, 29, 72, 0.4);
+      align-items: center; justify-content: center;
     }
     .notif-badge.visible { display: flex; }
 
-    /* ── NOTIFICATION PANEL (slide-in drawer) ── */
+    /* ── SIDE DRAWERS (notifications, settings) ── */
     .notif-overlay {
       position: fixed; inset: 0;
-      background: rgba(9, 13, 22, 0.4);
-      backdrop-filter: blur(4px);
+      background: var(--scrim);
       z-index: 900;
       opacity: 0; pointer-events: none;
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.25s ease;
     }
     .notif-overlay.open { opacity: 1; pointer-events: all; }
 
     .notif-panel {
       position: fixed;
       top: 0; right: 0;
-      width: 420px; /* Expanded for more clean settings layout */
+      width: 400px;
+      max-width: 100vw;
       height: 100vh;
       background: var(--surface);
       border-left: 1px solid var(--border);
       z-index: 950;
       display: flex; flex-direction: column;
       transform: translateX(100%);
-      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
     }
-    .notif-panel.open { transform: translateX(0); }
+    .notif-panel.open { transform: translateX(0); box-shadow: -12px 0 32px rgba(0, 0, 0, 0.18); }
 
     .notif-panel-header {
-      padding: 20px 24px;
+      padding: 14px 16px 14px 20px;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
       flex-shrink: 0;
     }
-    .notif-panel-title {
-      font-size: 0.95rem; font-weight: 700; color: var(--text);
-      display: flex; align-items: center; gap: 8px;
-    }
-    .notif-panel-title span { font-size: 1rem; }
-    .notif-panel-actions { display: flex; align-items: center; gap: 8px; }
+    .notif-panel-title { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+    .notif-panel-actions { display: flex; align-items: center; gap: 2px; }
 
     .btn-notif-action {
       background: transparent;
-      border: 1px solid var(--border);
+      border: none;
       color: var(--muted);
       font-family: var(--font-stack);
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 6px 8px;
       border-radius: 6px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background-color 0.15s, color 0.15s;
     }
-    .btn-notif-action:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.15); }
-    body.light-theme .btn-notif-action:hover { border-color: rgba(15, 23, 42, 0.15); }
-    .btn-notif-action.danger:hover { color: #f87171; border-color: rgba(220, 38, 38, 0.4); }
+    .btn-notif-action:hover { color: var(--text); background: var(--surface-hover); }
+    .btn-notif-action.danger:hover { color: var(--danger); background: var(--danger-soft); }
 
-    .btn-close-panel {
+    .btn-close-panel, .btn-close-modal {
       background: transparent;
       border: none;
       color: var(--muted);
-      font-size: 1.2rem;
       cursor: pointer;
-      padding: 6px;
-      line-height: 1;
+      width: 30px; height: 30px;
+      display: inline-flex; align-items: center; justify-content: center;
       border-radius: 6px;
-      transition: all 0.15s;
+      flex-shrink: 0;
+      transition: background-color 0.15s, color 0.15s;
     }
-    .btn-close-panel:hover { color: var(--text); background: var(--surface-hover); }
+    .btn-close-panel:hover, .btn-close-modal:hover { color: var(--text); background: var(--surface-hover); }
 
-    /* Filter tabs */
+    /* Tabs: drawers and the main view switcher share one style */
     .notif-tabs {
       display: flex;
       border-bottom: 1px solid var(--border);
       padding: 0 20px;
-      gap: 8px;
+      gap: 20px;
       flex-shrink: 0;
     }
+    .view-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border); }
     .notif-tab {
       background: transparent;
       border: none;
-      color: var(--muted);
-      font-family: var(--font-stack);
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 12px 14px;
-      cursor: pointer;
       border-bottom: 2px solid transparent;
       margin-bottom: -1px;
-      transition: all 0.15s ease;
-      text-transform: none;
-      letter-spacing: 0;
+      color: var(--muted);
+      font-family: var(--font-stack);
+      font-size: 0.84rem;
+      font-weight: 500;
+      padding: 11px 0;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color 0.15s ease, border-color 0.15s ease;
     }
     .notif-tab:hover { color: var(--text); }
-    .notif-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .notif-tab.active { color: var(--text); border-bottom-color: var(--text); }
 
     /* Notification list */
     .notif-list {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 12px 16px 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
-    .notif-list::-webkit-scrollbar { width: 4px; }
-    .notif-list::-webkit-scrollbar-track { background: transparent; }
-    .notif-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
     .notif-empty {
       flex: 1;
       display: flex; flex-direction: column;
@@ -299,44 +275,38 @@
       padding: 40px 20px;
       text-align: center;
     }
-    .notif-empty-icon { font-size: 2.5rem; opacity: 0.4; }
+    .notif-empty-icon { opacity: 0.6; }
     .notif-empty-text { font-size: 0.82rem; line-height: 1.5; }
 
-    /* Individual notification card */
     .notif-card {
-      background: var(--surface-hover);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      transition: border-color 0.15s;
-      animation: slideIn 0.2s ease;
+      gap: 10px;
+      animation: slideIn 0.2s ease-out;
     }
     @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-6px); }
+      from { opacity: 0; transform: translateY(-4px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .notif-card.unread { border-color: rgba(214, 0, 28, 0.2); }
+    .notif-card.unread { border-color: var(--border-strong); }
     .notif-card-top { display: flex; align-items: flex-start; gap: 10px; }
-    .notif-card-icon {
-      font-size: 1.3rem;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
+    .notif-card-icon { flex-shrink: 0; color: var(--muted); margin-top: 1px; }
     .notif-card-body { flex: 1; min-width: 0; }
     .notif-card-title {
-      font-size: 0.85rem;
+      font-size: 0.86rem;
       font-weight: 600;
       color: var(--text);
-      line-height: 1.3;
-      margin-bottom: 4px;
+      line-height: 1.35;
+      margin-bottom: 3px;
     }
     .notif-card-msg {
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       color: var(--muted);
-      line-height: 1.45;
+      line-height: 1.5;
       word-break: break-word;
     }
     .notif-card-unread-dot {
@@ -344,192 +314,80 @@
       background: var(--accent);
       border-radius: 50%;
       flex-shrink: 0;
-      margin-top: 5px;
+      margin-top: 6px;
     }
-    .notif-card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .notif-card-time {
-      font-size: 0.7rem;
-      color: var(--muted);
-      opacity: 0.7;
-    }
-    .notif-card-actions { display: flex; gap: 6px; }
-    .btn-seen {
+    .notif-card-footer { display: flex; align-items: center; justify-content: space-between; }
+    .notif-card-time { font-size: 0.72rem; color: var(--muted); }
+    .notif-card-actions { display: flex; gap: 2px; }
+    .btn-seen, .btn-dismiss {
       background: transparent;
-      border: 1px solid var(--border);
+      border: none;
       color: var(--muted);
       font-family: var(--font-stack);
-      font-size: 0.68rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 4px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: all 0.15s;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      transition: background-color 0.15s, color 0.15s;
     }
-    .btn-seen:hover { color: #10b981; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); }
-    .btn-dismiss {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-family: var(--font-stack);
-      font-size: 0.68rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.15s;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-    .btn-dismiss:hover { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.05); }
-
+    .btn-seen:hover { color: var(--text); background: var(--surface-hover); }
+    .btn-dismiss:hover { color: var(--danger); background: var(--danger-soft); }
     .notif-type-pill {
-      display: inline-flex; align-items: center;
-      font-size: 0.62rem; font-weight: 700;
-      padding: 3px 8px; border-radius: 4px;
-      text-transform: uppercase; letter-spacing: 0.05em;
-      margin-bottom: 4px;
+      display: inline-block;
+      font-size: 0.74rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 2px;
     }
-    .pill-birthday  { background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
-    .pill-anniversary { background: var(--accent-glow); color: #fda4af; border: 1px solid rgba(225,29,72,0.25); }
-    .pill-system    { background: rgba(245,158,11,0.1); color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
-    body.light-theme .pill-birthday { color: #1d4ed8; background: rgba(59,130,246,0.08); }
-    body.light-theme .pill-anniversary { color: #be123c; background: rgba(190,18,60,0.08); border-color: rgba(190, 18, 60, 0.2); }
-    body.light-theme .pill-system { color: #b45309; background: rgba(245,158,11,0.08); }
 
     /* ── LAYOUT ── */
-    .app-viewport { display: flex; flex: 1; height: calc(100vh - 64px); overflow: hidden; }
-    .sidebar-panel {
-      width: 290px;
-      background-color: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 24px;
-      display: flex; flex-direction: column;
-      gap: 20px;
-      overflow-y: auto;
-      max-height: 100%;
-      transition: width 0.25s ease, padding 0.25s ease, opacity 0.2s ease, border-right 0.25s ease;
-    }
-    .sidebar-panel.collapsed {
-      width: 0;
-      padding: 0;
-      opacity: 0;
-      border-right: none;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .sidebar-panel::-webkit-scrollbar {
-      width: 6px;
-    }
-    .sidebar-panel::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .sidebar-panel::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 3px;
-    }
-    .variables-desc {
-      font-size: 0.72rem;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-    .backup-restore-group {
-      display: flex;
-      gap: 12px;
-    }
-    .backup-restore-group button {
-      flex: 1;
-    }
+    .app-viewport { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    .variables-desc { font-size: 0.76rem; color: var(--muted); line-height: 1.5; }
+    .backup-restore-group { display: flex; gap: 8px; }
+    .backup-restore-group button { flex: 1; }
     .checkbox-group {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.78rem;
-      font-weight: 600;
+      font-size: 0.8rem;
       color: var(--text);
       cursor: pointer;
       user-select: none;
     }
-    .checkbox-group input {
-      cursor: pointer;
-      accent-color: var(--accent);
-      width: 15px;
-      height: 15px;
-    }
+    .checkbox-group input { cursor: pointer; width: 15px; height: 15px; }
 
-    /* ── CELEBRATIONS BANNER ── */
+    /* ── TODAY'S CELEBRATIONS NOTICE ── */
     .celebrations-banner {
       display: none;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(135deg, rgba(225, 29, 72, 0.14) 0%, rgba(147, 51, 234, 0.05) 100%);
-      border: 1px solid rgba(225, 29, 72, 0.2);
-      border-left: 5px solid var(--accent);
-      padding: 14px 24px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.08), 0 8px 16px -6px rgba(0, 0, 0, 0.2);
-      animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 10px 9px 16px;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      backdrop-filter: blur(8px);
+      transition: background-color 0.15s ease;
     }
-    .celebrations-banner:hover {
-      background: linear-gradient(135deg, rgba(225, 29, 72, 0.22) 0%, rgba(147, 51, 234, 0.1) 100%);
-      border-color: rgba(225, 29, 72, 0.35);
-      transform: translateY(-2px);
-      box-shadow: 0 14px 30px -4px rgba(225, 29, 72, 0.12), 0 10px 20px -5px rgba(0, 0, 0, 0.3);
-    }
-    body.light-theme .celebrations-banner {
-      background: linear-gradient(135deg, rgba(225, 29, 72, 0.06) 0%, rgba(147, 51, 234, 0.02) 100%);
-      border-color: rgba(225, 29, 72, 0.15);
-      box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.04), 0 8px 16px -6px rgba(15, 23, 42, 0.03);
-    }
-    body.light-theme .celebrations-banner:hover {
-      background: linear-gradient(135deg, rgba(225, 29, 72, 0.1) 0%, rgba(147, 51, 234, 0.04) 100%);
-      border-color: rgba(225, 29, 72, 0.25);
-      box-shadow: 0 14px 30px -4px rgba(225, 29, 72, 0.06), 0 10px 20px -5px rgba(15, 23, 42, 0.05);
-    }
-    .celebrations-banner-icon-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      background: rgba(225, 29, 72, 0.15);
-      border-radius: 50%;
-      border: 1px solid rgba(225, 29, 72, 0.3);
-      flex-shrink: 0;
-    }
+    .celebrations-banner:hover { background: var(--surface-hover); }
     .celebrations-banner-content {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 0.88rem;
-      font-weight: 600;
+      gap: 10px;
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: var(--text);
     }
-    .celebrations-banner-icon {
-      font-size: 1.15rem;
-      animation: waveIcon 1.5s ease infinite alternate;
-      display: inline-block;
+    .celebrations-banner-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
     }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes waveIcon {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(15deg); }
-    }
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
+
+    /* ── DROPDOWNS ── */
+    .dropdown { position: relative; display: inline-block; }
     .dropdown::after {
       content: '';
       position: absolute;
@@ -547,543 +405,323 @@
       top: 100%;
       margin-top: 6px;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      box-shadow: var(--shadow-menu);
       z-index: 1000;
-      min-width: 180px;
-      overflow: hidden;
-      animation: fadeInDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    body.light-theme .dropdown-menu {
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      min-width: 190px;
+      padding: 4px;
+      animation: fadeInDropdown 0.15s ease-out;
     }
     .dropdown:hover .dropdown-menu,
-    .dropdown-menu.show {
-      display: block;
-    }
+    .dropdown-menu.show { display: block; }
     .dropdown-item {
       display: flex;
       align-items: center;
-      gap: 8px;
       width: 100%;
-      padding: 10px 16px;
+      padding: 8px 10px;
       background: transparent;
       border: none;
+      border-radius: 5px;
       color: var(--text);
       text-align: left;
       font-family: var(--font-stack);
       font-size: 0.82rem;
-      font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.15s, color 0.15s;
+      transition: background-color 0.12s;
     }
-    .dropdown-item:hover {
-      background-color: var(--surface-hover);
-      color: var(--accent-hover);
-    }
-    body.light-theme .dropdown-item:hover {
-      color: var(--accent);
-    }
+    .dropdown-item:hover { background-color: var(--surface-hover); }
     @keyframes fadeInDropdown {
-      from { opacity: 0; transform: translateY(5px); }
+      from { opacity: 0; transform: translateY(-2px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+    .chevron { width: 12px; height: 12px; margin-right: -2px; color: var(--muted); }
 
-    /* ── DEPARTMENT TAGS ── */
-    .dept-tag {
-      background-color: var(--dept-bg);
-      color: var(--dept-fg);
-      border: 1px solid var(--dept-border);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      text-transform: uppercase;
-    }
-    body.light-theme .dept-tag {
-      background-color: var(--dept-light-bg);
-      color: var(--dept-light-fg);
-      border-color: var(--dept-light-border);
-    }
+    .nowrap { white-space: nowrap; }
 
-    /* ── TEXT NOWRAP UTILITY ── */
-    .nowrap {
-      white-space: nowrap;
-    }
-
-    /* ── VARIABLE CHIPS ── */
-    .variable-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
+    /* ── TEMPLATE VARIABLE CHIPS ── */
+    .variable-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .var-chip {
-      font-size: 0.7rem;
-      font-weight: 600;
-      background: rgba(255, 255, 255, 0.04);
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.74rem;
+      background: var(--surface-hover);
       border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 4px 10px;
-      border-radius: 12px;
+      color: var(--text);
+      padding: 3px 8px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: border-color 0.15s ease;
       user-select: none;
     }
-    .var-chip:hover {
-      background: var(--surface-hover);
-      color: var(--text);
-      border-color: var(--muted);
-    }
-    body.light-theme .var-chip {
-      background: rgba(15, 23, 42, 0.04);
-    }
+    .var-chip:hover { border-color: var(--border-strong); }
+    .template-card { display: flex; flex-direction: column; gap: 8px; }
+    .template-card-title { font-size: 0.86rem; font-weight: 600; color: var(--text); }
 
     /* ── MODALS ── */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(11, 15, 25, 0.6);
-      backdrop-filter: blur(4px);
+      background: var(--scrim);
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
     }
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: all;
-    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
     .modal-dialog {
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%) scale(0.95);
+      transform: translate(-50%, -48%);
       width: 540px;
       max-width: 90%;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--float-edge);
+      border-radius: 10px;
+      box-shadow: var(--shadow-float);
       z-index: 1050;
       opacity: 0;
       pointer-events: none;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease;
       display: flex;
       flex-direction: column;
     }
     .modal-dialog.open {
-      transform: translate(-50%, -50%) scale(1);
+      transform: translate(-50%, -50%);
       opacity: 1;
       pointer-events: all;
     }
     .modal-header {
-      padding: 20px 24px;
+      padding: 14px 16px 14px 20px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .modal-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .btn-close-modal {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 1.25rem;
-      cursor: pointer;
-      line-height: 1;
-      padding: 6px;
-      border-radius: 6px;
-      transition: all 0.15s;
-    }
-    .btn-close-modal:hover {
-      color: var(--text);
-      background: var(--surface-hover);
-    }
+    .modal-title { font-size: 0.95rem; font-weight: 600; color: var(--text); }
 
-    .panel-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
-    
-    .main-content { 
-      flex: 1; 
-      padding: 32px 40px; 
-      overflow-y: auto; 
-      display: flex; 
-      flex-direction: column; 
-      gap: 24px; 
+    .panel-title { font-size: 0.84rem; font-weight: 600; color: var(--text); }
+
+    /* ── MAIN VIEW ── */
+    .main-content {
+      flex: 1;
+      padding: 24px 32px 40px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
-    .view-header { display: flex; align-items: center; justify-content: space-between; }
-    .counter-text { font-size: 0.95rem; color: var(--muted); }
-    .counter-text strong { color: var(--text); font-weight: 700; }
-    
+    .view-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .view-actions { display: flex; gap: 8px; align-items: center; }
+    .counter-text { font-size: 0.9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .counter-text strong { color: var(--text); font-weight: 600; }
+
+    /* ── FORMS ── */
     .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-    .form-group label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-    
+    .form-group label { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+
     input[type="text"], input[type="date"], select, input[type="time"], input[type="password"], textarea {
-      background-color: rgba(0, 0, 0, 0.15);
-      border: 1px solid var(--border);
+      background-color: var(--surface-sunken);
+      border: 1px solid var(--border-strong);
       color: var(--text);
       font-family: var(--font-stack);
-      font-size: 0.88rem;
-      padding: 10px 14px;
-      border-radius: 8px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      padding: 8px 11px;
+      border-radius: 6px;
       width: 100%;
       outline: none;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    select option {
-      background-color: var(--surface);
-      color: var(--text);
+    input[type="text"], input[type="date"], select, input[type="time"], input[type="password"] {
+      height: 36px;
+      padding-top: 0;
+      padding-bottom: 0;
     }
-    body.light-theme select option {
-      background-color: #ffffff;
-      color: #0f172a;
+    input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+    select option { background-color: var(--surface); color: var(--text); }
+    input[type="text"]:focus, input[type="date"]:focus, select:focus, input[type="time"]:focus, input[type="password"]:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--ring);
     }
-    input[type="text"]:focus, input[type="date"]:focus, select:focus, input[type="time"]:focus, input[type="password"]:focus, textarea:focus { 
-      border-color: var(--accent); 
-      background-color: rgba(0, 0, 0, 0.2);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-    body.light-theme input[type="text"], body.light-theme input[type="date"], body.light-theme select, body.light-theme input[type="time"], body.light-theme input[type="password"], body.light-theme textarea { 
-      background-color: #f8fafc; 
-      border-color: rgba(15, 23, 42, 0.1);
-      color: #0f172a; 
-    }
-    body.light-theme input[type="text"]:focus, body.light-theme input[type="date"]:focus, body.light-theme select:focus, body.light-theme input[type="time"]:focus, body.light-theme input[type="password"]:focus, body.light-theme textarea:focus {
-      background-color: #ffffff;
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-    
+
     .btn-primary {
-      background-color: var(--accent);
-      color: #fff;
+      background-color: var(--ink);
+      color: var(--ink-text);
       font-family: var(--font-stack);
-      font-weight: 600;
-      font-size: 0.85rem;
-      padding: 11px 18px;
-      border: none;
+      font-weight: 500;
+      font-size: 0.82rem;
+      line-height: 1.25;
+      padding: 8px 14px;
+      border: 1px solid var(--ink);
       border-radius: 6px;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease, border-color 0.15s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2);
+      white-space: nowrap;
     }
-    .btn-primary:hover { 
-      background-color: var(--accent-hover); 
-      transform: translateY(-1px);
-      box-shadow: 0 6px 14px rgba(220, 38, 38, 0.3);
-    }
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-    body.light-theme .btn-primary {
-      box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);
-    }
-    body.light-theme .btn-primary:hover {
-      box-shadow: 0 6px 14px rgba(220, 38, 38, 0.25);
-    }
-    .search-container { width: 260px; }
-    
+    .btn-primary:hover { background-color: var(--ink-hover); border-color: var(--ink-hover); }
+    .btn-primary:disabled { opacity: 0.55; cursor: default; }
+
     /* ── FILTER ROW ── */
     .filter-row {
       display: flex;
-      gap: 16px;
-      align-items: center;
-      background-color: var(--surface);
-      border: 1px solid var(--border);
-      padding: 16px 20px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s ease;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
     }
-    body.light-theme .filter-row {
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
-    }
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .filter-group.search {
-      flex: 1;
-    }
-    .filter-group.date {
-      width: 190px;
-    }
-    .filter-group label {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-    }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-group.search { flex: 1; min-width: 220px; }
+    .filter-group.date { width: 170px; }
+    .filter-group label { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
     .btn-clear-filters {
-      align-self: flex-end;
-      height: 40px;
-      background: var(--surface-hover);
-      border: 1px solid var(--border);
-      color: var(--text);
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
       font-family: var(--font-stack);
       font-size: 0.82rem;
-      font-weight: 600;
-      padding: 0 18px;
+      font-weight: 500;
+      line-height: 1.4;
+      padding: 8px 10px;
       border-radius: 6px;
       cursor: pointer;
-      transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      transition: background-color 0.15s ease, color 0.15s ease;
     }
-    .btn-clear-filters:hover {
-      background: var(--border);
-      border-color: var(--muted);
-      transform: translateY(-1px);
-    }
-    .btn-clear-filters:active {
-      transform: translateY(0);
-    }
+    .btn-clear-filters:hover { background: var(--surface-hover); color: var(--text); }
 
-    /* ── CUSTOM AUTO-HIDING SCROLLBAR ── */
+    /* ── BULK ACTION BAR ── */
+    .bulk-action-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 8px 10px 8px 16px;
+    }
+    .bulk-selection-label { font-size: 0.82rem; font-weight: 500; color: var(--text); margin-right: auto; font-variant-numeric: tabular-nums; }
+
+    /* ── TABLES ── */
     .table-container {
-      scrollbar-width: thin;
-      scrollbar-color: transparent transparent; 
       border-radius: 8px;
       border: 1px solid var(--border);
       overflow: auto;
       background: var(--surface);
     }
-    .table-container:hover {
-      scrollbar-color: var(--border) transparent;
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
     }
-    .table-container::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .table-container::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .table-container::-webkit-scrollbar-thumb {
-      background: transparent; 
-      border-radius: 4px;
-    }
-    .table-container:hover::-webkit-scrollbar-thumb {
-      background: var(--border); 
-    }
-    .table-c    /* ── TABLE STYLING ── */
-    table { 
-      width: 100%; 
-      border-collapse: separate; 
-      border-spacing: 0; 
-      text-align: left; 
-    }
-    th { 
-      background: #111827; 
-      color: var(--muted); 
-      font-size: 0.75rem; 
-      font-weight: 500; 
-      text-transform: uppercase; 
-      letter-spacing: 0.06em;
-      padding: 14px 20px; 
-      border-bottom: 1.5px solid var(--border);
+    th {
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-strong);
       position: sticky;
       top: 0;
       z-index: 10;
       white-space: nowrap;
     }
-    body.light-theme th { 
-      background: #f8fafc; 
-      border-bottom: 1.5px solid rgba(15, 23, 42, 0.08);
-    }
-    .sortable-header {
-      transition: all 0.15s ease;
-    }
-    .sortable-header:hover {
-      background: var(--surface-hover) !important;
+    .sortable-header { cursor: pointer; user-select: none; transition: color 0.15s ease; }
+    .sortable-header:hover { color: var(--text); }
+    .sort-icon { font-size: 0.62rem; margin-left: 4px; display: inline-block; vertical-align: middle; }
+    tbody tr { transition: background-color 0.12s ease; }
+    tbody tr:hover, tbody tr:has(.chk-employee:checked) { background-color: var(--surface-hover); }
+    td {
+      padding: 11px 14px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      border-bottom: 1px solid var(--border);
       color: var(--text);
-    }
-    .sort-icon {
-      font-size: 0.68rem;
-      margin-left: 6px;
-      opacity: 0.7;
-      display: inline-block;
       vertical-align: middle;
     }
-    tbody tr {
-      transition: background-color 0.2s ease;
-    }
-    tbody tr:hover {
-      background-color: var(--surface-hover);
-    }
-    td { 
-      padding: 14px 20px; 
-      font-size: 0.85rem; 
-      border-bottom: 1px solid var(--border); 
-      color: var(--text); 
-      vertical-align: middle;
-    }
-    body.light-theme td {
-      border-bottom: 1px solid rgba(15, 23, 42, 0.04);
-    }
-    .emp-id-cell { font-family: monospace; color: var(--muted); font-weight: 500; font-size: 0.8rem; }
-    .emp-name-cell { font-weight: 500; }
-    body:not(.light-theme) .emp-name-cell { color: #ffffff; }
-    body.light-theme .emp-name-cell { color: #0f172a; }
-    
+    tbody tr:last-child td { border-bottom: none; }
+    .emp-id-cell { color: var(--muted); font-size: 0.82rem; }
+    .emp-name-cell { font-weight: 500; white-space: nowrap; }
+
     .email-link {
-      color: var(--muted);
+      color: var(--text);
       text-decoration: none;
-      transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-weight: 500;
     }
-    .email-link:hover {
-      color: var(--accent-hover);
-    }
-    body.light-theme .email-link:hover {
-      color: var(--accent);
-    }
-    
-    .actions-cell { display: flex; gap: 8px; }
-    .btn-table { 
-      padding: 6px 12px; 
-      font-size: 0.75rem; 
-      font-weight: 500; 
-      border-radius: 6px; 
-      cursor: pointer; 
-      font-family: var(--font-stack); 
-      background: transparent; 
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .btn-edit { 
-      border: 1px solid rgba(148, 163, 184, 0.25); 
-      color: var(--text); 
-    }
-    .btn-edit:hover {
-      background: var(--surface-hover);
-      border-color: var(--muted);
-      transform: translateY(-1px);
-    }
-    .btn-edit:active {
-      transform: translateY(0);
-    }
-    .btn-table.btn-delete { 
-      border: 1px solid rgba(225, 29, 72, 0.25); 
-      color: #fb7185; 
-    }
-    .btn-table.btn-delete:hover {
-      background: rgba(225, 29, 72, 0.12);
-      border-color: var(--accent);
-      transform: translateY(-1px);
-    }
-    .btn-table.btn-delete:active {
-      transform: translateY(0);
-    }
-    body.light-theme .btn-table.btn-delete {
-      color: #be123c;
-    }
+    .email-link:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
 
-    .badge { 
-      display: inline-flex; 
-      align-items: center; 
-      gap: 4px; 
-      padding: 4px 8px; 
-      border-radius: 6px; 
-      font-size: 0.7rem; 
-      font-weight: 600; 
-      text-transform: uppercase; 
-      letter-spacing: 0.02em;
+    /* Edit / Delete stay reachable when the directory scrolls sideways */
+    .actions-col {
+      position: sticky;
+      right: 0;
+      background: var(--surface);
+      box-shadow: inset 1px 0 0 var(--border);
+      transition: background-color 0.12s ease;
     }
-    .badge-anniversary { background: var(--accent-glow); color: #fda4af; border: 1px solid rgba(225, 29, 72, 0.25); }
-    body.light-theme .badge-anniversary { color: #be123c; background: rgba(190, 18, 60, 0.08); border-color: rgba(190, 18, 60, 0.2); }
-    .badge-birthday { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
-    body.light-theme .badge-birthday { color: #1d4ed8; background: rgba(59, 130, 246, 0.08); }
+    th.actions-col { z-index: 11; }
+    tbody tr:hover td.actions-col, tbody tr:has(.chk-employee:checked) td.actions-col { background: var(--surface-hover); }
+    .actions-cell { display: flex; gap: 2px; }
+    .btn-table {
+      padding: 4px 9px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: var(--font-stack);
+      background: transparent;
+      border: none;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .btn-edit { color: var(--text); }
+    .btn-edit:hover { background: var(--surface-hover); }
+    .btn-table.btn-delete { color: var(--muted); }
+    .btn-table.btn-delete:hover { background: var(--danger-soft); color: var(--danger); }
+
+    /* "Today" markers: the one place the brand red shows up in the directory */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 8px;
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 0.74rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-glow);
+      white-space: nowrap;
+    }
 
     .status-badge {
       display: inline-flex;
       align-items: center;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      gap: 7px;
+      font-size: 0.84rem;
+      color: var(--text);
     }
-    .status-active {
-      background: rgba(16, 185, 129, 0.1);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.2);
+    .status-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--positive);
+      flex-shrink: 0;
     }
-    body.light-theme .status-active {
-      color: #047857;
-      background: rgba(16, 185, 129, 0.08);
-      border-color: rgba(16, 185, 129, 0.2);
-    }
-    .status-inactive {
-      background: rgba(107, 114, 128, 0.1);
-      color: #a1a1aa;
-      border: 1px solid rgba(107, 114, 128, 0.15);
-    }
-    body.light-theme .status-inactive {
-      color: #71717a;
-      background: rgba(107, 114, 128, 0.06);
-      border-color: rgba(107, 114, 128, 0.12);
-    }
+    .status-inactive { color: var(--muted); }
+    .status-inactive::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
 
-    #btn-bulk-active {
-      border-color: rgba(16, 185, 129, 0.4) !important;
-      color: #34d399 !important;
-    }
-    #btn-bulk-active:hover {
-      background: rgba(16, 185, 129, 0.15) !important;
-      border-color: rgba(16, 185, 129, 0.6) !important;
-    }
-    body.light-theme #btn-bulk-active {
-      color: #047857 !important;
-      border-color: rgba(16, 185, 129, 0.3) !important;
-    }
-    body.light-theme #btn-bulk-active:hover {
-      background: rgba(16, 185, 129, 0.08) !important;
-      border-color: rgba(16, 185, 129, 0.6) !important;
-    }
-
-    #btn-bulk-inactive {
-      border-color: rgba(148, 163, 184, 0.4) !important;
-      color: #94a3b8 !important;
-    }
-    #btn-bulk-inactive:hover {
-      background: rgba(148, 163, 184, 0.15) !important;
-      border-color: rgba(148, 163, 184, 0.6) !important;
-    }
-    body.light-theme #btn-bulk-inactive {
-      color: #4b5563 !important;
-      border-color: rgba(148, 163, 184, 0.3) !important;
-    }
-    body.light-theme #btn-bulk-inactive:hover {
-      background: rgba(148, 163, 184, 0.08) !important;
-      border-color: rgba(148, 163, 184, 0.6) !important;
-    }
-
-    /* Month grid for Insights view */
+    /* ── INSIGHTS ── */
     .month-grid {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
-      gap: 8px;
-      margin-bottom: 4px;
+      gap: 2px;
+      padding: 3px;
+      background: var(--surface-hover);
+      border-radius: 8px;
     }
     @media (max-width: 1000px) {
       .month-grid { grid-template-columns: repeat(6, 1fr); }
@@ -1092,39 +730,30 @@
       .month-grid { grid-template-columns: repeat(3, 1fr); }
     }
     .btn-month {
-      background: var(--surface-hover);
-      border: 1px solid var(--border);
+      background: transparent;
+      border: none;
       color: var(--muted);
       font-family: var(--font-stack);
-      font-weight: 700;
-      font-size: 0.72rem;
-      padding: 10px 4px;
+      font-weight: 500;
+      font-size: 0.8rem;
+      padding: 7px 4px;
       border-radius: 6px;
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      transition: background-color 0.15s ease, color 0.15s ease;
     }
-    .btn-month:hover {
-      background: var(--border);
-      color: var(--text);
-    }
+    .btn-month:hover { color: var(--text); }
     .btn-month.active {
-      background: var(--accent-glow);
-      color: #f43f5e;
-      border-color: var(--accent);
-    }
-    body.light-theme .btn-month.active {
-      color: #dc2626;
-      background: rgba(220, 38, 38, 0.08);
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--border);
     }
 
-    /* Insight columns */
     .insights-grid {
       display: grid;
       grid-template-columns: 1.1fr 0.9fr;
-      gap: 24px;
+      gap: 20px;
     }
     @media (max-width: 900px) {
       .insights-grid { grid-template-columns: 1fr; }
@@ -1133,136 +762,102 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 24px;
+      padding: 18px 20px 20px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    body.light-theme .insights-card {
-      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+      gap: 14px;
     }
     .insights-card-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      font-size: 0.92rem;
+      font-weight: 600;
       color: var(--text);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
     }
+    .insights-count { font-size: 0.8rem; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
     .insights-stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
-    .stat-box {
-      background: var(--surface-hover);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 18px 14px;
-      text-align: center;
-      transition: all 0.2s ease;
-    }
-    .stat-box:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    body.light-theme .stat-box:hover {
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
-    }
+    .stat-box { padding: 14px 0; }
+    .stat-box + .stat-box { padding-left: 20px; border-left: 1px solid var(--border); }
     .stat-val {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--text);
-    }
-    .stat-lbl {
-      font-size: 0.72rem;
-      color: var(--muted);
-      text-transform: uppercase;
+      font-size: 1.5rem;
       font-weight: 600;
-      margin-top: 4px;
-      letter-spacing: 0.04em;
+      line-height: 1.2;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
     }
+    .stat-lbl { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
 
-    /* Department visual bars */
-    .dept-bar-container {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .dept-bar-item {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .dept-bar-container { display: flex; flex-direction: column; gap: 12px; }
+    .dept-bar-item { display: flex; flex-direction: column; gap: 5px; }
     .dept-bar-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.82rem;
       color: var(--text);
     }
-    .dept-bar-track {
-      background: var(--surface-hover);
-      height: 8px;
-      border-radius: 4px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-    }
+    .dept-bar-meta span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .dept-bar-track { background: var(--surface-hover); height: 4px; border-radius: 2px; overflow: hidden; }
     .dept-bar-fill {
-      background: var(--accent);
+      background: var(--muted);
       height: 100%;
-      border-radius: 4px;
-      transition: width 0.4s ease;
+      border-radius: 2px;
+      transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    body.light-theme .dept-bar-fill {
-      background: #d6001c;
+
+    .celebration-list { display: flex; flex-direction: column; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+    .celebration-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
     }
+    .celebration-row:last-child { border-bottom: none; }
+    .celebration-row-title {
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .celebration-row-title .svg-icon { color: var(--muted); }
+    .celebration-row-meta { font-size: 0.78rem; color: var(--muted); margin-top: 3px; padding-left: 22px; }
+    .empty-note { color: var(--muted); font-size: 0.82rem; text-align: center; padding: 32px 10px; }
 
     /* ── TOAST ── */
     .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: rgba(17, 24, 39, 0.85); 
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(220, 38, 38, 0.3); 
+      position: fixed; bottom: 20px; right: 20px;
+      background: var(--surface);
+      border: 1px solid var(--float-edge);
       border-radius: 8px;
-      padding: 16px 20px; 
-      color: var(--text); 
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-      transform: translateX(120%); 
-      opacity: 0; 
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-      z-index: 9999; 
-      display: flex; 
-      align-items: center; 
-      gap: 14px;
+      padding: 12px 16px;
+      color: var(--text);
+      box-shadow: var(--shadow-float);
+      transform: translateY(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+      z-index: 9999;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
       max-width: 360px;
     }
-    body.light-theme .toast { 
-      background: rgba(255, 255, 255, 0.95); 
-      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.15); 
-    }
-    .toast.show { transform: translateX(0); opacity: 1; }
-    .toast-icon { 
-      background: var(--accent-glow); 
-      color: #f87171; 
-      padding: 8px; 
-      border-radius: 6px; 
-      display: inline-flex; 
-      align-items: center; 
-      justify-content: center; 
-      flex-shrink: 0; 
-    }
-    body.light-theme .toast-icon { color: #dc2626; }
+    .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    .toast-icon { display: inline-flex; flex-shrink: 0; margin-top: 2px; color: var(--positive); }
+    .toast-icon.is-error { color: var(--danger); }
     .toast-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .toast-title { font-weight: 700; font-size: 0.88rem; }
-    body:not(.light-theme) .toast-title { color: #ffffff; }
-    body.light-theme .toast-title { color: #0f172a; }
-    .toast-body { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+    .toast-title { font-weight: 600; font-size: 0.86rem; color: var(--text); }
+    .toast-body { font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
 
     /* ── SVG ICONS ── */
     .svg-icon {
@@ -1273,51 +868,45 @@
       vertical-align: middle;
       flex-shrink: 0;
     }
-    .svg-icon-inline {
-      margin-right: 6px;
+    .icon-stroke {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
-    .svg-icon-lg {
-      width: 18px;
-      height: 18px;
-    }
-    .svg-icon-xl {
-      width: 24px;
-      height: 24px;
-    }
+    .svg-icon-inline { margin-right: 6px; }
+    .svg-icon-lg { width: 18px; height: 18px; }
+    .svg-icon-xl { width: 24px; height: 24px; }
 
-    /* ── SCROLL TO TOP BUTTON ── */
+    /* ── SCROLL TO TOP ── */
     .scroll-top-btn {
       position: fixed;
-      bottom: 28px;
-      right: 28px;
-      width: 38px;
-      height: 38px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      font-size: 1.1rem;
+      bottom: 24px;
+      right: 24px;
+      width: 36px;
+      height: 36px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 16px rgba(220, 38, 38, 0.45);
+      box-shadow: var(--shadow-menu);
       z-index: 8000;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease, background 0.15s;
-      transform: translateY(10px);
+      transform: translateY(6px);
+      transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.15s;
     }
-    .scroll-top-btn.visible {
-      opacity: 1;
-      pointer-events: all;
-      transform: translateY(0);
-    }
-    .scroll-top-btn:hover {
-      background: var(--accent-hover);
-      box-shadow: 0 6px 20px rgba(220, 38, 38, 0.65);
-    }
+    .scroll-top-btn.visible { opacity: 1; pointer-events: all; transform: translateY(0); }
+    .scroll-top-btn:hover { background: var(--surface-hover); }
 
+    /* ── ABOUT ── */
+    .about-logo { height: 40px; width: auto; margin-bottom: 12px; filter: invert(1); opacity: 0.9; }
+    body.light-theme .about-logo { filter: none; opacity: 1; }
 
     /* ── SPLASH SCREEN ── */
     .splash-screen {
@@ -1331,7 +920,7 @@
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      transition: opacity 0.4s ease, visibility 0.4s ease;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
       opacity: 1;
       visibility: visible;
     }
@@ -1340,65 +929,37 @@
       visibility: hidden;
       pointer-events: none;
     }
-    .splash-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-    }
+    .splash-content { display: flex; flex-direction: column; align-items: center; gap: 24px; }
     .splash-logo {
-      max-width: 280px;
+      width: 200px;
       height: auto;
+      filter: invert(1);
       opacity: 0;
-      transform: scale(0.92);
-      animation: logoFadeInUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: fadeIn 0.6s ease forwards;
     }
+    body.light-theme .splash-logo { filter: none; }
     .splash-loader {
-      width: 160px;
-      height: 3px;
+      width: 120px;
+      height: 2px;
       background: var(--border);
-      border-radius: 2px;
+      border-radius: 1px;
       overflow: hidden;
       position: relative;
       opacity: 0;
       animation: fadeIn 0.4s ease forwards 0.3s;
     }
     .splash-loader-bar {
-      width: 60px;
+      width: 48px;
       height: 100%;
-      background: var(--accent);
+      background: var(--muted);
       position: absolute;
-      left: -60px;
-      border-radius: 2px;
+      left: -48px;
       animation: loadingProgress 1.4s infinite ease-in-out;
     }
-    @keyframes logoFadeInUp {
-      0% {
-        opacity: 0;
-        transform: scale(0.85) translateY(12px);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
-    }
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-      }
-    }
+    @keyframes fadeIn { to { opacity: 1; } }
     @keyframes loadingProgress {
-      0% {
-        left: -60px;
-      }
-      50% {
-        left: 100%;
-        width: 80px;
-      }
-      100% {
-        left: 100%;
-        width: 60px;
-      }
+      0% { left: -48px; }
+      100% { left: 100%; }
     }
   </style>
 </head>
@@ -1418,7 +979,7 @@
   <!-- Splash Screen Overlay -->
   <div id="splash-screen" class="splash-screen">
     <div class="splash-content">
-      <img src="./fusion-logo.png" alt="Fusion Logo" class="splash-logo">
+      <img src="./staffping-logo.png" alt="StaffPing Logo" class="splash-logo">
       <div class="splash-loader">
         <div class="splash-loader-bar"></div>
       </div>
@@ -1429,25 +990,19 @@
 
   <div class="notif-panel" id="notif-panel">
     <div class="notif-panel-header">
-      <div class="notif-panel-title" style="display: flex; align-items: center; gap: 6px;">
-        <svg class="svg-icon svg-icon-lg" style="color: var(--accent);" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg> Notifications
-      </div>
+      <div class="notif-panel-title">Notifications</div>
       <div class="notif-panel-actions">
         <button class="btn-notif-action" id="btn-mark-all-seen">Mark all seen</button>
         <button class="btn-notif-action danger" id="btn-clear-all">Clear all</button>
-        <button class="btn-close-panel" id="btn-close-panel">✕</button>
+        <button class="btn-close-panel" id="btn-close-panel" title="Close" aria-label="Close notifications"><svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
       </div>
     </div>
 
     <div class="notif-tabs">
       <button class="notif-tab active" data-tab="all">All</button>
       <button class="notif-tab" data-tab="unread">Unread</button>
-      <button class="notif-tab" data-tab="birthday" style="display: inline-flex; align-items: center; gap: 4px;">
-        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg> Birthdays
-      </button>
-      <button class="notif-tab" data-tab="anniversary" style="display: inline-flex; align-items: center; gap: 4px;">
-        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg> Anniversaries
-      </button>
+      <button class="notif-tab" data-tab="birthday">Birthdays</button>
+      <button class="notif-tab" data-tab="anniversary">Anniversaries</button>
     </div>
 
     <div class="notif-list" id="notif-list"></div>
@@ -1455,23 +1010,22 @@
 
   <header>
     <div class="brand-container">
-      <img class="brand-logo" src="./fusion-logo.png" alt="Fusion Logo" style="margin-left: 6px;">
-      <div class="brand-title">Staff<span>Ping</span></div>
+      <img class="brand-logo" src="./staffping-logo.png" alt="StaffPing">
     </div>
     <div class="header-actions">
-      <button class="btn-control" id="theme-toggle">🌙 Dark Mode</button>
- 
-      <button class="btn-control" id="btn-refresh" title="Refresh data (F5)">↺ Refresh</button>
- 
-      <button class="notif-bell-btn" id="notif-bell-btn" title="Notifications">
-        <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
+      <button class="btn-control" id="btn-refresh" title="Refresh data (F5)" style="margin-right: 6px;">Refresh</button>
+
+      <button class="notif-bell-btn" id="theme-toggle" title="Switch to light theme" aria-label="Switch to light theme"></button>
+
+      <button class="notif-bell-btn" id="notif-bell-btn" title="Notifications" aria-label="Notifications">
+        <svg class="svg-icon svg-icon-lg icon-stroke" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
         <span class="notif-badge" id="notif-badge">0</span>
       </button>
 
-      <button class="notif-bell-btn" id="settings-bell-btn" title="Settings">
-        <svg class="svg-icon svg-icon-lg" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/></svg>
+      <button class="notif-bell-btn" id="settings-bell-btn" title="Settings" aria-label="Settings">
+        <svg class="svg-icon svg-icon-lg icon-stroke" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
       </button>
- 
+
       <div class="date-badge" id="today-badge"></div>
     </div>
   </header>
@@ -1480,97 +1034,91 @@
     <main class="main-content">
       <div class="view-header">
         <div class="counter-text" id="total-count-text">Total: <strong>0</strong> employees</div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <button class="btn-primary" id="btn-open-add-modal" style="margin-top: 0; width: auto; font-size: 0.8rem; padding: 8px 14px;">+ Add Employee</button>
+        <div class="view-actions">
           <div class="dropdown">
-            <button class="btn-control dropdown-toggle" id="btn-import-dropdown-toggle">⬆ Import ▾</button>
+            <button class="btn-control dropdown-toggle" id="btn-import-dropdown-toggle">Import <svg class="svg-icon icon-stroke chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
             <div class="dropdown-menu">
-              <button class="dropdown-item" id="import-opt-csv">📥 Import CSV File</button>
-              <button class="dropdown-item" id="import-opt-xlsx">📊 Import Excel (XLSX) File</button>
+              <button class="dropdown-item" id="import-opt-csv">CSV file</button>
+              <button class="dropdown-item" id="import-opt-xlsx">Excel file (.xlsx)</button>
             </div>
           </div>
           <div class="dropdown">
-            <button class="btn-control dropdown-toggle" id="btn-export-dropdown-toggle">⬇ Export ▾</button>
+            <button class="btn-control dropdown-toggle" id="btn-export-dropdown-toggle">Export <svg class="svg-icon icon-stroke chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
             <div class="dropdown-menu">
-              <button class="dropdown-item" id="export-opt-pdf">📄 PDF Report</button>
-              <button class="dropdown-item" id="export-opt-csv">📥 CSV Data File</button>
-              <button class="dropdown-item" id="export-opt-xlsx">📊 Excel (XLSX) File</button>
+              <button class="dropdown-item" id="export-opt-pdf">PDF report</button>
+              <button class="dropdown-item" id="export-opt-csv">CSV file</button>
+              <button class="dropdown-item" id="export-opt-xlsx">Excel file (.xlsx)</button>
             </div>
           </div>
+          <button class="btn-primary" id="btn-open-add-modal">Add employee</button>
         </div>
       </div>
 
       <!-- Main Tab Bar Navigator -->
-      <div style="display: flex; border-bottom: 1px solid var(--border); gap: 12px; margin-bottom: 4px;">
-        <button class="notif-tab active" id="tab-btn-directory" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 6px;">
-          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 10H6v-2h8v2zm4-4H6v-2h12v2z" fill="currentColor"/></svg> Employee Directory
-        </button>
-        <button class="notif-tab" id="tab-btn-insights" style="font-size: 0.82rem; font-weight: 700; padding: 12px 18px; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 6px;">
-          <svg class="svg-icon" viewBox="0 0 24 24"><path d="M5 19h14v2H5v-2zm2-6h3v5H7v-5zm4-6h3v11h-3V7zm4-4h3v15h-3V3z" fill="currentColor"/></svg> Celebrations &amp; Insights
-        </button>
+      <div class="view-tabs">
+        <button class="notif-tab active" id="tab-btn-directory">Employee directory</button>
+        <button class="notif-tab" id="tab-btn-insights">Celebrations &amp; insights</button>
       </div>
 
       <!-- ── DIRECTORY SCREEN ── -->
-      <div id="directory-view-container" style="display: flex; flex-direction: column; gap: 20px;">
-        <!-- Celebrations Dashboard Banner -->
+      <div id="directory-view-container" style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Today's celebrations notice -->
         <div class="celebrations-banner" id="celebrations-banner">
           <div class="celebrations-banner-content">
-            <div class="celebrations-banner-icon-wrapper">
-              <span class="celebrations-banner-icon">🎉</span>
-            </div>
-            <span class="celebrations-banner-text" id="celebrations-banner-text">0 celebrations today — click to view</span>
+            <span class="celebrations-banner-dot"></span>
+            <span class="celebrations-banner-text" id="celebrations-banner-text">0 celebrations today</span>
           </div>
-          <button class="btn-control" id="btn-view-celebrations" style="font-size: 0.75rem; padding: 6px 12px; border-radius: 6px;">View Details</button>
+          <button class="btn-control" id="btn-view-celebrations">View details</button>
         </div>
 
         <div class="filter-row">
           <div class="filter-group search">
-            <label for="search-input">Search Name or ID</label>
-            <input type="text" id="search-input" placeholder="Search name or ID...">
+            <label for="search-input">Search</label>
+            <input type="text" id="search-input" placeholder="Name or employee ID">
           </div>
           <div class="filter-group date">
-            <label for="filter-start-date">Start Date</label>
+            <label for="filter-start-date">Start date</label>
             <input type="date" id="filter-start-date">
           </div>
           <div class="filter-group date">
-            <label for="filter-end-date">End Date</label>
+            <label for="filter-end-date">End date</label>
             <input type="date" id="filter-end-date">
           </div>
-          <div class="filter-group status" style="width: 140px;">
+          <div class="filter-group status" style="width: 150px;">
             <label for="filter-status">Status</label>
             <select id="filter-status" style="cursor: pointer;">
-              <option value="All">All Statuses</option>
-              <option value="Active">Active Only</option>
-              <option value="Inactive">Inactive Only</option>
+              <option value="All">All statuses</option>
+              <option value="Active">Active only</option>
+              <option value="Inactive">Inactive only</option>
             </select>
           </div>
-          <button class="btn-clear-filters" id="btn-clear-filters" title="Clear search and filters">✕ Clear</button>
+          <button class="btn-clear-filters" id="btn-clear-filters" title="Clear search and filters">Clear filters</button>
         </div>
 
         <!-- Bulk Action Bar — shown only when rows are selected -->
-        <div id="bulk-action-bar" style="display: none; align-items: center; gap: 10px; background: var(--surface); border: 1px solid rgba(214,0,28,0.2); border-radius: 8px; padding: 10px 16px;">
-          <span style="font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-right: 4px;" id="bulk-selection-label">0 selected</span>
-          <button class="btn-control" id="btn-bulk-active" title="Set status to Active for selected employees">🟢 Set Active</button>
-          <button class="btn-control" id="btn-bulk-inactive" title="Set status to Inactive for selected employees">⚪ Set Inactive</button>
-          <button class="btn-control btn-danger-control" id="btn-bulk-delete" style="border-color: rgba(214, 0, 28, 0.4) !important;" title="Delete selected employees">🗑️ Delete Selected</button>
+        <div id="bulk-action-bar" class="bulk-action-bar" style="display: none;">
+          <span class="bulk-selection-label" id="bulk-selection-label">0 selected</span>
+          <button class="btn-control" id="btn-bulk-active" title="Set status to Active for selected employees">Set active</button>
+          <button class="btn-control" id="btn-bulk-inactive" title="Set status to Inactive for selected employees">Set inactive</button>
+          <button class="btn-control btn-danger-control" id="btn-bulk-delete" title="Delete selected employees">Delete selected</button>
         </div>
 
         <div class="table-container">
           <table>
             <thead>
               <tr>
-                <th style="width: 40px; text-align: center; vertical-align: middle;"><input type="checkbox" id="chk-all-employees" style="cursor: pointer; width: 14px; height: 14px;"></th>
-                <th class="sortable-header" data-col="emp_id" style="cursor: pointer; user-select: none;">Emp ID <span class="sort-icon" id="sort-icon-emp_id"></span></th>
-                <th class="sortable-header" data-col="name" style="cursor: pointer; user-select: none;">Name <span class="sort-icon" id="sort-icon-name"></span></th>
-                <th class="sortable-header" data-col="department" style="cursor: pointer; user-select: none;">Department <span class="sort-icon" id="sort-icon-department"></span></th>
-                <th class="sortable-header" data-col="job_title" style="cursor: pointer; user-select: none;">Job Title <span class="sort-icon" id="sort-icon-job_title"></span></th>
-                <th class="sortable-header" data-col="email" style="cursor: pointer; user-select: none;">Email <span class="sort-icon" id="sort-icon-email"></span></th>
-                <th class="sortable-header" data-col="phone" style="cursor: pointer; user-select: none;">Phone Number <span class="sort-icon" id="sort-icon-phone"></span></th>
-                <th class="sortable-header" data-col="dob" style="cursor: pointer; user-select: none;">Date of Birth <span class="sort-icon" id="sort-icon-dob"></span></th>
-                <th class="sortable-header" data-col="joining_date" style="cursor: pointer; user-select: none;">Joining Date <span class="sort-icon" id="sort-icon-joining_date"></span></th>
-                <th class="sortable-header" data-col="service_display" style="cursor: pointer; user-select: none;">Service <span class="sort-icon" id="sort-icon-service_display"></span></th>
-                <th class="sortable-header" data-col="status" style="cursor: pointer; user-select: none;">Status <span class="sort-icon" id="sort-icon-status"></span></th>
-                <th>Actions</th>
+                <th style="width: 40px; text-align: center; vertical-align: middle;"><input type="checkbox" id="chk-all-employees" aria-label="Select all employees" style="cursor: pointer; width: 14px; height: 14px;"></th>
+                <th class="sortable-header" data-col="emp_id">Emp ID <span class="sort-icon" id="sort-icon-emp_id"></span></th>
+                <th class="sortable-header" data-col="name">Name <span class="sort-icon" id="sort-icon-name"></span></th>
+                <th class="sortable-header" data-col="department">Department <span class="sort-icon" id="sort-icon-department"></span></th>
+                <th class="sortable-header" data-col="job_title">Job title <span class="sort-icon" id="sort-icon-job_title"></span></th>
+                <th class="sortable-header" data-col="email">Email <span class="sort-icon" id="sort-icon-email"></span></th>
+                <th class="sortable-header" data-col="phone">Phone <span class="sort-icon" id="sort-icon-phone"></span></th>
+                <th class="sortable-header" data-col="dob">Date of birth <span class="sort-icon" id="sort-icon-dob"></span></th>
+                <th class="sortable-header" data-col="joining_date">Joining date <span class="sort-icon" id="sort-icon-joining_date"></span></th>
+                <th class="sortable-header" data-col="service_display">Service <span class="sort-icon" id="sort-icon-service_display"></span></th>
+                <th class="sortable-header" data-col="status">Status <span class="sort-icon" id="sort-icon-status"></span></th>
+                <th class="actions-col"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Actions</span></th>
               </tr>
             </thead>
             <tbody id="employee-table-body"></tbody>
@@ -1581,7 +1129,7 @@
       <!-- ── CELEBRATIONS & INSIGHTS SCREEN ── -->
       <div id="insights-view-container" style="display: none; flex-direction: column; gap: 20px;">
         <div class="insights-card">
-          <div class="insights-card-title">Select Calendar Month</div>
+          <div class="insights-card-title">Month</div>
           <div class="month-grid">
             <button class="btn-month active" data-month="0">Jan</button>
             <button class="btn-month" data-month="1">Feb</button>
@@ -1602,30 +1150,30 @@
           <!-- Left panel: celebrations list -->
           <div class="insights-card" style="min-height: 380px;">
             <div class="insights-card-title">
-              <span id="insights-month-name">January Celebrations</span>
-              <span style="font-size: 0.7rem; background: var(--border); padding: 3px 8px; border-radius: 4px;" id="insights-month-count">0 Events</span>
+              <span id="insights-month-name">January celebrations</span>
+              <span class="insights-count" id="insights-month-count">0 events</span>
             </div>
-            <div id="insights-celebrations-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 4px;">
+            <div id="insights-celebrations-list" class="celebration-list">
               <!-- Javascript populates events dynamically -->
             </div>
           </div>
 
           <!-- Right panel: analytics charts -->
           <div class="insights-card">
-            <div class="insights-card-title">Company Staff Insights</div>
+            <div class="insights-card-title">Staff overview</div>
             <div class="insights-stats-grid">
               <div class="stat-box">
                 <div class="stat-val" id="stat-total-staff">0</div>
-                <div class="stat-lbl">Total Active</div>
+                <div class="stat-lbl">Active staff</div>
               </div>
               <div class="stat-box">
                 <div class="stat-val" id="stat-avg-tenure">0 Yr</div>
-                <div class="stat-lbl">Avg. Tenure</div>
+                <div class="stat-lbl">Average tenure</div>
               </div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
-              <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em;">Department Distribution</div>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 4px;">
+              <div class="panel-title">By department</div>
               <div id="insights-dept-bars" class="dept-bar-container" style="max-height: 220px; overflow-y: auto; padding-right: 4px;">
                 <!-- Javascript populates department chart bars dynamically -->
               </div>
@@ -1634,21 +1182,21 @@
         </div>
 
         <!-- Department Breakdown Report Card -->
-        <div class="insights-card" style="margin-top: 10px;">
+        <div class="insights-card">
           <div class="insights-card-title">
-            <span>🏢 Department Breakdown Report</span>
-            <button class="btn-control" id="btn-export-dept-pdf" title="Export Department Report as PDF" style="font-size: 0.75rem; padding: 4px 10px;">📄 Export Dept PDF</button>
+            <span>Department breakdown</span>
+            <button class="btn-control" id="btn-export-dept-pdf" title="Export department report as PDF">Export PDF</button>
           </div>
           <div class="table-container" style="max-height: 300px; overflow-y: auto;">
             <table>
               <thead>
                 <tr>
                   <th>Department</th>
-                  <th>Total Staff</th>
-                  <th>Active Staff</th>
-                  <th>Inactive Staff</th>
-                  <th>Upcoming Birthdays (30D)</th>
-                  <th>Upcoming Anniversaries (30D)</th>
+                  <th>Total staff</th>
+                  <th>Active</th>
+                  <th>Inactive</th>
+                  <th>Birthdays, next 30 days</th>
+                  <th>Anniversaries, next 30 days</th>
                 </tr>
               </thead>
               <tbody id="insights-dept-table-body">
@@ -1662,11 +1210,11 @@
   </div>
 
   <!-- Scroll to Top Button -->
-  <button class="scroll-top-btn" id="scroll-top-btn" title="Back to top">↑</button>
+  <button class="scroll-top-btn" id="scroll-top-btn" title="Back to top" aria-label="Back to top"><svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 
   <div class="toast" id="toast-notification">
     <div class="toast-icon" id="toast-icon-el">
-      <svg class="svg-icon" style="color: #4ade80" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/></svg>
+      <svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
     </div>
     <div class="toast-content">
       <div class="toast-title" id="toast-title-text">Notification</div>
@@ -1678,22 +1226,21 @@
   <div class="modal-overlay" id="crypto-modal-overlay"></div>
   <div class="modal-dialog" id="crypto-modal">
     <div class="modal-header">
-      <div class="modal-title" id="crypto-modal-title" style="display: flex; align-items: center; gap: 6px;">
-        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" fill="currentColor"/></svg>
+      <div class="modal-title" id="crypto-modal-title">
         <span id="crypto-action-title">Encrypt Export</span>
       </div>
-      <button class="btn-close-modal" id="btn-close-crypto-modal" title="Close">✕</button>
+      <button class="btn-close-modal" id="btn-close-crypto-modal" title="Close" aria-label="Close"><svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <p id="crypto-modal-desc" style="font-size: 0.82rem; color: var(--muted); line-height: 1.45;"></p>
       <div class="form-group" style="margin-bottom: 0;">
         <label for="crypto-password" id="crypto-password-label">Password</label>
-        <input type="password" id="crypto-password" placeholder="Enter password..." style="background-color: var(--surface-hover);">
+        <input type="password" id="crypto-password" placeholder="Password">
       </div>
     </div>
-    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--border);">
+    <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border);">
       <button type="button" class="btn-control" id="btn-cancel-crypto">Cancel</button>
-      <button type="button" class="btn-primary" id="btn-confirm-crypto" style="width: auto; margin-top: 0;">Confirm</button>
+      <button type="button" class="btn-primary" id="btn-confirm-crypto">Confirm</button>
     </div>
   </div>
 
@@ -1701,41 +1248,36 @@
   <div class="modal-overlay" id="email-preview-overlay"></div>
   <div class="modal-dialog" id="email-preview-modal">
     <div class="modal-header">
-      <div class="modal-title" style="display: flex; align-items: center; gap: 6px;">
-        <svg class="svg-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/></svg>
-        Edit Email Draft
-      </div>
-      <button class="btn-close-modal" id="btn-close-preview-modal" title="Close">✕</button>
+      <div class="modal-title">Edit email draft</div>
+      <button class="btn-close-modal" id="btn-close-preview-modal" title="Close" aria-label="Close"><svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px;">
       <div class="form-group" style="margin-bottom: 0;">
         <label for="preview-to">To</label>
-        <input type="text" id="preview-to" readonly style="background-color: var(--surface-hover); opacity: 0.85;">
+        <input type="text" id="preview-to" readonly style="background-color: var(--surface-hover); color: var(--muted);">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
         <label for="preview-subject">Subject</label>
-        <input type="text" id="preview-subject" placeholder="Enter subject...">
+        <input type="text" id="preview-subject" placeholder="Subject">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
         <label for="preview-body">Body</label>
-        <textarea id="preview-body" style="min-height: 180px; resize: vertical;" placeholder="Enter email body..."></textarea>
+        <textarea id="preview-body" style="min-height: 180px; resize: vertical;" placeholder="Message"></textarea>
       </div>
     </div>
-    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--border);">
+    <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border);">
       <button type="button" class="btn-control" id="btn-cancel-preview">Cancel</button>
-      <button type="button" class="btn-primary" id="btn-send-outlook" style="width: auto; margin-top: 0;">Open in Outlook</button>
+      <button type="button" class="btn-primary" id="btn-send-outlook">Open in Outlook</button>
     </div>
   </div>
   <!-- Settings Panel Right-Drawer -->
   <div class="notif-panel" id="settings-panel">
     <div class="notif-panel-header">
-      <div class="notif-panel-title" style="display: flex; align-items: center; gap: 6px;">
-        <svg class="svg-icon svg-icon-lg" style="color: var(--accent);" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/></svg> Settings
-      </div>
-      <button class="btn-close-panel" id="btn-close-settings" title="Close Settings">✕</button>
+      <div class="notif-panel-title">Settings</div>
+      <button class="btn-close-panel" id="btn-close-settings" title="Close settings" aria-label="Close settings"><svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
 
-    <div class="notif-tabs" style="justify-content: space-around;">
+    <div class="notif-tabs">
       <button class="notif-tab active" data-settings-tab="notifications">Notifications</button>
       <button class="notif-tab" data-settings-tab="backup">Backup &amp; CSV</button>
       <button class="notif-tab" data-settings-tab="appearance">Appearance</button>
@@ -1746,35 +1288,35 @@
       <!-- Notifications Tab -->
       <div id="settings-tab-content-notifications" class="settings-tab-content" style="display: flex; flex-direction: column; gap: 14px;">
         <div class="form-group" style="margin-bottom: 0;">
-          <label for="reminder-time-input">Daily Reminder Time</label>
+          <label for="reminder-time-input">Daily reminder time</label>
           <input type="time" id="reminder-time-input" style="cursor: pointer;">
           <span class="variables-desc" style="margin-top: 4px;">Set the time when today's birthday &amp; anniversary notifications are triggered.</span>
         </div>
         <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
         <div class="template-card">
-          <div class="template-card-title">🎂 Birthday Wish Template</div>
+          <div class="template-card-title">Birthday message</div>
           <div class="form-group" style="margin-bottom: 6px;">
-            <label for="template-bday-subject" style="font-size: 0.68rem;">Subject</label>
-            <input type="text" id="template-bday-subject" style="font-size: 0.8rem; padding: 6px 10px;">
+            <label for="template-bday-subject">Subject</label>
+            <input type="text" id="template-bday-subject">
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label for="template-bday-body" style="font-size: 0.68rem;">Body</label>
+            <label for="template-bday-body">Body</label>
             <textarea id="template-bday-body" style="min-height: 80px; resize: vertical;"></textarea>
           </div>
         </div>
         <div class="template-card">
-          <div class="template-card-title">🎉 Anniversary Wish Template</div>
+          <div class="template-card-title">Work anniversary message</div>
           <div class="form-group" style="margin-bottom: 6px;">
-            <label for="template-anniv-subject" style="font-size: 0.68rem;">Subject</label>
-            <input type="text" id="template-anniv-subject" style="font-size: 0.8rem; padding: 6px 10px;">
+            <label for="template-anniv-subject">Subject</label>
+            <input type="text" id="template-anniv-subject">
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label for="template-anniv-body" style="font-size: 0.68rem;">Body</label>
+            <label for="template-anniv-body">Body</label>
             <textarea id="template-anniv-body" style="min-height: 80px; resize: vertical;"></textarea>
           </div>
         </div>
         <div class="variables-desc">
-          Click variable to insert:
+          Click a variable to insert it:
           <div class="variable-chips">
             <span class="var-chip" data-val="{name}">{name}</span>
             <span class="var-chip" data-val="{department}">{department}</span>
@@ -1783,34 +1325,34 @@
             <span class="var-chip" data-val="{joiningDate}">{joiningDate}</span>
           </div>
         </div>
-        <button class="btn-primary" id="btn-save-templates">Save Templates</button>
+        <button class="btn-primary" id="btn-save-templates">Save templates</button>
       </div>
 
       <!-- Backup & CSV Tab -->
       <div id="settings-tab-content-backup" class="settings-tab-content" style="display: none; flex-direction: column; gap: 12px;">
-        <div class="panel-title" style="margin-bottom: -4px;">Database Operations</div>
+        <div class="panel-title" style="margin-bottom: -4px;">Database</div>
         <div class="backup-restore-group">
-          <button class="btn-control" id="btn-backup-db-settings" title="Save an encrypted backup copy of SQLite database">💾 Backup DB</button>
-          <button class="btn-control" id="btn-restore-db-settings" title="Restore SQLite database from file">📂 Restore DB</button>
+          <button class="btn-control" id="btn-backup-db-settings" title="Save an encrypted backup copy of SQLite database">Back up database</button>
+          <button class="btn-control" id="btn-restore-db-settings" title="Restore SQLite database from file">Restore database</button>
         </div>
         <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
-        <button class="btn-control btn-danger-control" id="btn-clear-data-settings">🗑️ Clear All Employee Data</button>
+        <button class="btn-control btn-danger-control" id="btn-clear-data-settings">Clear all employee data</button>
       </div>
 
       <!-- Appearance Tab -->
       <div id="settings-tab-content-appearance" class="settings-tab-content" style="display: none; flex-direction: column; gap: 16px;">
         <div class="form-group" style="margin-bottom: 0;">
-          <label>Theme Style</label>
-          <button class="btn-control" id="theme-toggle-settings" style="text-align: left; width: 100%; padding: 10px 12px; font-weight: 600;">🌙 Toggle Light/Dark Mode</button>
+          <label>Theme</label>
+          <button class="btn-control" id="theme-toggle-settings" style="justify-content: flex-start; width: 100%;">Switch light / dark theme</button>
         </div>
         <div class="checkbox-group" style="padding: 4px 0; display: flex; align-items: flex-start; gap: 8px;">
           <input type="checkbox" id="chk-clear-notifs-on-clear-data-settings" checked style="margin-top: 3px; cursor: pointer;">
-          <label for="chk-clear-notifs-on-clear-data-settings" style="font-size: 0.78rem; line-height: 1.4; color: var(--muted); cursor: pointer;">Clear Notifications When Clearing Employee Data</label>
+          <label for="chk-clear-notifs-on-clear-data-settings" style="font-size: 0.78rem; line-height: 1.4; color: var(--muted); cursor: pointer;">Also clear notifications when clearing employee data</label>
         </div>
         <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
         <div class="form-group" style="margin-bottom: 0;">
-          <label>Notification History</label>
-          <button class="btn-control btn-danger-control" id="btn-clear-notifications" style="text-align: left; width: 100%; padding: 10px 12px;">🔔 Reset Notification History</button>
+          <label>Notification history</label>
+          <button class="btn-control btn-danger-control" id="btn-clear-notifications" style="justify-content: flex-start; width: 100%;">Reset notification history</button>
           <span class="variables-desc" style="margin-top: 4px;">Clears logged alert states so today's birthday/anniversary notifications can fire again.</span>
         </div>
       </div>
@@ -1818,13 +1360,13 @@
       <!-- About Tab -->
       <div id="settings-tab-content-about" class="settings-tab-content" style="display: none; flex-direction: column; gap: 8px;">
         <div style="text-align: center; padding: 16px 0;">
-          <img src="./fusion-logo.png" alt="StaffPing Logo" style="height: 54px; filter: invert(1); margin-bottom: 12px; opacity: 0.85;" id="about-logo">
-          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text);">StaffPing</h3>
+          <img src="./staffping-logo.png" alt="StaffPing" class="about-logo" id="about-logo">
+          <h3 style="font-size: 1rem; font-weight: 600; color: var(--text);">StaffPing</h3>
           <p style="font-size: 0.8rem; color: var(--muted); margin-top: 4px;">Version 1.0.0</p>
         </div>
         <div style="border-top: 1px solid var(--border); margin: 8px 0;"></div>
         <p style="font-size: 0.8rem; color: var(--muted); line-height: 1.5; text-align: center;">
-          Anniversary and Birthday notification dashboard for corporate directory management. Developed for Fusion Global Business Solutions.
+          Anniversary and Birthday notification dashboard for corporate directory management. Developed for StaffPing.
         </p>
         <p style="font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 12px;">
           Licensed under ISC License.
@@ -1835,22 +1377,19 @@
 
   <!-- Add/Edit Employee Modal -->
   <div class="modal-overlay" id="employee-modal-overlay"></div>
-  <div class="modal-dialog" id="employee-modal" style="width: 500px;">
+  <div class="modal-dialog" id="employee-modal" style="width: 580px;">
     <div class="modal-header">
-      <div class="modal-title" style="display: flex; align-items: center; gap: 6px;">
-        <svg class="svg-icon" viewBox="0 0 24 24" style="width: 18px; height: 18px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg>
-        <span id="form-panel-title">Add Employee</span>
-      </div>
-      <button class="btn-close-modal" id="btn-close-employee-modal" title="Close">✕</button>
+      <div class="modal-title"><span id="form-panel-title">Add employee</span></div>
+      <button class="btn-close-modal" id="btn-close-employee-modal" title="Close" aria-label="Close"><svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-    <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px; padding: 20px; max-height: 70vh; overflow-y: auto;">
+    <div class="modal-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; padding: 20px; max-height: 70vh; overflow-y: auto;">
       <input type="hidden" id="edit-original-emp-id">
       <div class="form-group" style="margin-bottom: 0;">
         <label for="emp-id">Employee ID</label>
         <input type="text" id="emp-id" placeholder="e.g. EMP-001" tabindex="1">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
-        <label for="full-name">Full Name</label>
+        <label for="full-name">Full name</label>
         <input type="text" id="full-name" placeholder="e.g. Rajveer Singh" tabindex="2">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
@@ -1858,23 +1397,23 @@
         <input type="text" id="department" placeholder="e.g. Sales" tabindex="3">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
-        <label for="job-title">Job Title</label>
+        <label for="job-title">Job title</label>
         <input type="text" id="job-title" placeholder="e.g. Senior Specialist" tabindex="4">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
-        <label for="email">Email Address</label>
+        <label for="email">Email</label>
         <input type="text" id="email" placeholder="e.g. employee@company.com" tabindex="5">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
-        <label for="phone">Phone Number</label>
+        <label for="phone">Phone</label>
         <input type="text" id="phone" placeholder="e.g. +1 234 567 890" tabindex="6">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
-        <label for="dob">Date of Birth</label>
+        <label for="dob">Date of birth</label>
         <input type="date" id="dob" tabindex="7">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
-        <label for="joining-date">Joining Date</label>
+        <label for="joining-date">Joining date</label>
         <input type="date" id="joining-date" tabindex="8">
       </div>
       <div class="form-group" style="margin-bottom: 0;">
@@ -1885,9 +1424,9 @@
         </select>
       </div>
     </div>
-    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--border);">
-      <button type="button" class="btn-control" id="btn-clear-form">Clear Form</button>
-      <button type="button" class="btn-primary" id="add-employee-btn" style="width: auto; margin-top: 0;" tabindex="10">Add Employee</button>
+    <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border);">
+      <button type="button" class="btn-control" id="btn-clear-form">Clear form</button>
+      <button type="button" class="btn-primary" id="add-employee-btn" tabindex="10">Add employee</button>
     </div>
   </div>
 
@@ -2374,6 +1913,9 @@
     });
 
     function loadInsightsScreen() {
+      document.querySelectorAll('.btn-month').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.month, 10) === selectedInsightsMonth);
+      });
       const activeEmployees = globalEmployeesList.filter(emp => emp.status !== 'Inactive');
       // 1. Total active staff
       const totalStaff = activeEmployees.length;
@@ -2423,7 +1965,7 @@
       
       const sortedDepts = Object.entries(deptCounts).sort((a,b) => b[1] - a[1]);
       if (sortedDepts.length === 0) {
-        deptContainer.innerHTML = `<div style="color: var(--muted); font-size: 0.8rem; text-align: center; margin-top: 10px;">No departments found</div>`;
+        deptContainer.innerHTML = `<div class="empty-note">No departments yet</div>`;
       } else {
         sortedDepts.forEach(([dept, count]) => {
           const pct = totalStaff > 0 ? Math.round((count / totalStaff) * 100) : 0;
@@ -2460,7 +2002,7 @@
 
       // 4. Populate selected month events list
       const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      document.getElementById('insights-month-name').textContent = `${months[selectedInsightsMonth]} Celebrations`;
+      document.getElementById('insights-month-name').textContent = `${months[selectedInsightsMonth]} celebrations`;
 
       const monthEvents = [];
       activeEmployees.forEach(emp => {
@@ -2472,8 +2014,8 @@
               emp,
               type: 'birthday',
               day: dobDate.getDate(),
-              title: `${escapeHtml(emp.name)}'s Birthday`,
-              subtitle: `Date: ${dobDate.getDate()} ${months[selectedInsightsMonth].slice(0,3)} (${emp.dob_display})`
+              title: `${escapeHtml(emp.name)}, birthday`,
+              subtitle: `${dobDate.getDate()} ${months[selectedInsightsMonth].slice(0,3)} · born ${emp.dob_display}`
             });
           }
         }
@@ -2486,8 +2028,8 @@
               emp,
               type: 'anniversary',
               day: joinDate.getDate(),
-              title: `${escapeHtml(emp.name)}'s Work Anniversary`,
-              subtitle: `${years} Year${years !== 1 ? 's' : ''} of service (${joinDate.getDate()} ${months[selectedInsightsMonth].slice(0,3)})`
+              title: `${escapeHtml(emp.name)}, work anniversary`,
+              subtitle: `${joinDate.getDate()} ${months[selectedInsightsMonth].slice(0,3)} · ${years} year${years !== 1 ? 's' : ''} of service`
             });
           }
         }
@@ -2495,41 +2037,28 @@
 
       // Sort chronological by day of month
       monthEvents.sort((a, b) => a.day - b.day);
-      document.getElementById('insights-month-count').textContent = `${monthEvents.length} Event${monthEvents.length !== 1 ? 's' : ''}`;
+      document.getElementById('insights-month-count').textContent = `${monthEvents.length} event${monthEvents.length !== 1 ? 's' : ''}`;
 
       const listContainer = document.getElementById('insights-celebrations-list');
       listContainer.innerHTML = '';
 
       if (monthEvents.length === 0) {
-        listContainer.innerHTML = `<div style="color: var(--muted); text-align: center; padding: 40px 10px; font-size: 0.82rem;">No birthdays or anniversaries in ${months[selectedInsightsMonth]}</div>`;
+        listContainer.innerHTML = `<div class="empty-note">No birthdays or anniversaries in ${months[selectedInsightsMonth]}</div>`;
       } else {
         monthEvents.forEach(evt => {
           const card = document.createElement('div');
-          card.style.display = 'flex';
-          card.style.justifyContent = 'space-between';
-          card.style.alignItems = 'center';
-          card.style.background = 'var(--surface-hover)';
-          card.style.border = '1px solid var(--border)';
-          card.style.padding = '12px 16px';
-          card.style.borderRadius = '6px';
+          card.className = 'celebration-row';
           
           const iconHTML = evt.type === 'birthday'
-            ? `<svg class="svg-icon svg-icon-inline" style="color: #93c5fd;" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg>`
-            : `<svg class="svg-icon svg-icon-inline" style="color: #fbbf24;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg>`;
+            ? `<svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20M7 8v3M12 8v3M17 8v3"/></svg>`
+            : `<svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>`;
 
           card.innerHTML = `
             <div>
-              <div style="font-weight: 700; font-size: 0.85rem; color: var(--text); display: inline-flex; align-items: center;">
-                ${iconHTML}${evt.title}
-              </div>
-              <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px; padding-left: 20px;">
-                ${evt.subtitle} | Dept: ${escapeHtml(evt.emp.department || '—')}
-              </div>
+              <div class="celebration-row-title">${iconHTML}${evt.title}</div>
+              <div class="celebration-row-meta">${evt.subtitle} · ${escapeHtml(evt.emp.department || '—')}</div>
             </div>
-             <div style="display: flex; gap: 8px;">
-              <button class="btn-control" style="font-size: 0.72rem; padding: 4px 8px;"
-                onclick="startEdit('${evt.emp.emp_id}')">Edit</button>
-            </div>`;
+            <button class="btn-table btn-edit" onclick="startEdit('${evt.emp.emp_id}')">Edit</button>`;
           listContainer.appendChild(card);
         });
       }
@@ -2588,17 +2117,17 @@
       
       const sortedDeptDetails = Object.values(deptDetails).sort((a, b) => b.total - a.total);
       if (sortedDeptDetails.length === 0) {
-        deptTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--muted); padding: 20px;">No department data available</td></tr>`;
+        deptTableBody.innerHTML = `<tr><td colspan="6" class="empty-note">No department data yet</td></tr>`;
       } else {
         sortedDeptDetails.forEach(dept => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td style="font-weight: 600;">${escapeHtml(dept.name)}</td>
+            <td style="font-weight: 500;">${escapeHtml(dept.name)}</td>
             <td>${dept.total}</td>
-            <td style="color: #10b981;">${dept.active}</td>
+            <td>${dept.active}</td>
             <td style="color: var(--muted);">${dept.inactive}</td>
-            <td style="color: #93c5fd;">🎂 ${dept.birthdays}</td>
-            <td style="color: #ff4d61;">🎉 ${dept.anniversaries}</td>
+            <td>${dept.birthdays}</td>
+            <td>${dept.anniversaries}</td>
           `;
           deptTableBody.appendChild(tr);
         });
@@ -2607,14 +2136,23 @@
 
     // ── THEME SWITCH ACTION OVERRIDE ──
     const themeToggleBtn = document.getElementById('theme-toggle');
+    const THEME_ICON_MOON = '<svg class="svg-icon svg-icon-lg icon-stroke" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>';
+    const THEME_ICON_SUN = '<svg class="svg-icon svg-icon-lg icon-stroke" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+    function syncThemeToggle() {
+      const isLight = document.body.classList.contains('light-theme');
+      const label = isLight ? 'Switch to dark theme' : 'Switch to light theme';
+      themeToggleBtn.innerHTML = isLight ? THEME_ICON_MOON : THEME_ICON_SUN;
+      themeToggleBtn.title = label;
+      themeToggleBtn.setAttribute('aria-label', label);
+    }
     if (localStorage.getItem('theme') === 'light') {
       document.body.classList.add('light-theme');
-      themeToggleBtn.innerText = '☀️ Light Mode';
     }
+    syncThemeToggle();
     themeToggleBtn.addEventListener('click', () => {
       document.body.classList.toggle('light-theme');
       const isLight = document.body.classList.contains('light-theme');
-      themeToggleBtn.innerText = isLight ? '☀️ Light Mode' : '🌙 Dark Mode';
+      syncThemeToggle();
       localStorage.setItem('theme', isLight ? 'light' : 'dark');
     });
 
@@ -2624,10 +2162,11 @@
       toastTitleEl.innerText = colonIdx !== -1 ? msg.slice(0, colonIdx) : (isError ? 'Error' : 'Info');
       toastBodyEl.innerText  = colonIdx !== -1 ? msg.slice(colonIdx + 2) : msg;
       if (isError) {
-        toastIconEl.innerHTML = `<svg class="svg-icon" style="color: #f87171" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/></svg>`;
+        toastIconEl.innerHTML = `<svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>`;
       } else {
-        toastIconEl.innerHTML = `<svg class="svg-icon" style="color: #4ade80" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/></svg>`;
+        toastIconEl.innerHTML = `<svg class="svg-icon icon-stroke" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>`;
       }
+      toastIconEl.classList.toggle('is-error', isError);
       toastEl.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toastEl.classList.remove('show'), 4500);
@@ -2744,11 +2283,11 @@
       if (list.length === 0) {
         notifList.innerHTML = `
           <div class="notif-empty">
-            <div class="notif-empty-icon" style="color: var(--muted); opacity: 0.5; margin-bottom: 8px; display: flex; justify-content: center;">
-              <svg class="svg-icon svg-icon-xl" viewBox="0 0 24 24"><path d="M20 18.61L4.93 3.54 3.51 4.96l2.9 2.9A8.006 8.006 0 0 0 6 11v5l-2 2v1h13.11l2.09 2.09 1.41-1.41-1.61-1.61zM6 16v-5c0-.49.09-.96.25-1.4l6.4 6.4H6zm6-11c2.21 0 4 1.79 4 4v5c0 .34-.04.67-.11.99l1.46 1.46c.41-.75.65-1.6.65-2.45v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68c-.78.18-1.52.48-2.18.88l1.46 1.46c.66-.33 1.42-.52 2.22-.52zm0 17c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2z" fill="currentColor"/></svg>
+            <div class="notif-empty-icon">
+              <svg class="svg-icon svg-icon-xl icon-stroke" viewBox="0 0 24 24"><path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/></svg>
             </div>
             <div class="notif-empty-text">
-              ${activeTab === 'unread' ? 'All caught up! No unread notifications.' : 'No notifications yet.'}
+              ${activeTab === 'unread' ? 'Nothing unread.' : 'No notifications yet.'}
             </div>
           </div>`;
         return;
@@ -2767,21 +2306,21 @@
         // Select the clean icon SVG
         let iconHTML = '';
         if (n.type === 'birthday') {
-          iconHTML = `<svg class="svg-icon svg-icon-lg" style="color: #93c5fd" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg>`;
+          iconHTML = `<svg class="svg-icon svg-icon-lg icon-stroke" viewBox="0 0 24 24"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20M7 8v3M12 8v3M17 8v3"/></svg>`;
         } else if (n.type === 'anniversary') {
-          iconHTML = `<svg class="svg-icon svg-icon-lg" style="color: #ff4d61" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg>`;
+          iconHTML = `<svg class="svg-icon svg-icon-lg icon-stroke" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>`;
         } else {
-          iconHTML = `<svg class="svg-icon svg-icon-lg" style="color: #fbbf24" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>`;
+          iconHTML = `<svg class="svg-icon svg-icon-lg icon-stroke" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`;
         }
 
         const card = document.createElement('div');
         card.className = 'notif-card' + (n.seen ? '' : ' unread');
         card.innerHTML = `
           <div class="notif-card-top">
-            <div class="notif-card-icon" style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;">${iconHTML}</div>
-            <div class="notif-card-body" style="padding-left: 4px;">
+            <div class="notif-card-icon">${iconHTML}</div>
+            <div class="notif-card-body">
               <div><span class="notif-type-pill ${pillClass}">${pillLabel}</span></div>
-              <div class="notif-card-title" style="margin-top: 4px;">${escapeHtml(cardTitle)}</div>
+              <div class="notif-card-title">${escapeHtml(cardTitle)}</div>
               ${cardBody ? `<div class="notif-card-msg">${escapeHtml(cardBody)}</div>` : ''}
             </div>
             ${!n.seen ? '<div class="notif-card-unread-dot"></div>' : ''}
@@ -2789,8 +2328,8 @@
           <div class="notif-card-footer">
             <span class="notif-card-time">${relTime(n.ts)}</span>
             <div class="notif-card-actions">
-              ${!n.seen ? `<button class="btn-seen" onclick="markSeen('${n.id}')">✓ Mark seen</button>` : ''}
-              <button class="btn-dismiss" onclick="dismissNotif('${n.id}')">✕ Remove</button>
+              ${!n.seen ? `<button class="btn-seen" onclick="markSeen('${n.id}')">Mark seen</button>` : ''}
+              <button class="btn-dismiss" onclick="dismissNotif('${n.id}')">Remove</button>
             </div>
           </div>`;
         notifList.appendChild(card);
@@ -2836,7 +2375,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       const unseen = loadNotifStore().filter(n => !n.seen);
       if (unseen.length > 0) {
-        showToast(`You have ${unseen.length} unread notification${unseen.length > 1 ? 's' : ''}. Click 🔔 to view.`);
+        showToast(`You have ${unseen.length} unread notification${unseen.length > 1 ? 's' : ''}. Open the bell to view them.`);
       }
       updateBadge();
     });
@@ -2971,7 +2510,7 @@
 
       if (todayEvents.length > 0) {
         banner.style.display = 'flex';
-        bannerText.textContent = `${todayEvents.length} celebration${todayEvents.length !== 1 ? 's' : ''} today 🎉 — click to view`;
+        bannerText.textContent = `${todayEvents.length} celebration${todayEvents.length !== 1 ? 's' : ''} today`;
       } else {
         banner.style.display = 'none';
       }
@@ -3102,7 +2641,7 @@
         const iconSpan = document.getElementById(`sort-icon-${col}`);
         if (iconSpan) {
           if (col === currentSortCol) {
-            iconSpan.innerHTML = currentSortDir === 'asc' ? ' &#9650;' : ' &#9660;';
+            iconSpan.innerHTML = `<svg class="svg-icon icon-stroke" style="width: 12px; height: 12px;" viewBox="0 0 24 24"><path d="${currentSortDir === 'asc' ? 'm18 15-6-6-6 6' : 'm6 9 6 6 6-6'}"/></svg>`;
             iconSpan.style.opacity = '1';
           } else {
             iconSpan.innerHTML = '';
@@ -3160,47 +2699,21 @@
       appendRows(initialBatch);
     }
 
-    function getDeptColor(deptName) {
-      if (!deptName) return { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8', border: 'rgba(148, 163, 184, 0.2)', lightBg: 'rgba(148, 163, 184, 0.08)', lightFg: '#475569', lightBorder: 'rgba(148, 163, 184, 0.15)' };
-      const name = deptName.trim().toLowerCase();
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const h = Math.abs(hash % 360);
-      return {
-        bg: `hsla(${h}, 50%, 45%, 0.15)`,
-        fg: `hsl(${h}, 75%, 75%)`,
-        border: `hsla(${h}, 50%, 45%, 0.25)`,
-        lightBg: `hsla(${h}, 45%, 94%, 0.85)`,
-        lightFg: `hsl(${h}, 65%, 35%)`,
-        lightBorder: `hsla(${h}, 45%, 88%, 0.8)`
-      };
-    }
-
     function appendRows(batch) {
       batch.forEach(emp => {
         const tr = document.createElement('tr');
-        let badgesHTML = '';
-        if (emp.isBirthday) {
-          badgesHTML += ` <span class="badge badge-birthday"><svg class="svg-icon svg-icon-inline" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M12 6a2 2 0 0 0 2-2c0-.38-.1-.74-.29-1.05L12 1.34l-1.71 1.61c-.19.31-.29.67-.29 1.05 0 1.11.89 2 2 2zm5 4H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2zm-5 2a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm4 7H8v-4h8v4z" fill="currentColor"/></svg>Birthday</span>`;
-        }
-        if (emp.isAnniversary) {
-          badgesHTML += ` <span class="badge badge-anniversary"><svg class="svg-icon svg-icon-inline" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/></svg>Anniversary</span>`;
-        }
-        const emailIcon = `<svg class="svg-icon svg-icon-inline" style="color:var(--muted);width:13px;height:13px;" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/></svg>`;
+        const birthdayBadge = emp.isBirthday ? `<span class="badge">Today</span>` : '';
+        const anniversaryBadge = emp.isAnniversary ? `<span class="badge">Today</span>` : '';
+        const emailIcon = `<svg class="svg-icon icon-stroke" style="color: var(--muted);" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>`;
         
         const dept = emp.department ? emp.department.trim() : '';
-        const colors = getDeptColor(dept);
-        const deptTagHTML = dept 
-          ? `<span class="dept-tag" style="--dept-bg: ${colors.bg}; --dept-fg: ${colors.fg}; --dept-border: ${colors.border}; --dept-light-bg: ${colors.lightBg}; --dept-light-fg: ${colors.lightFg}; --dept-light-border: ${colors.lightBorder};">${escapeHtml(dept)}</span>`
-          : '—';
+        const deptTagHTML = dept ? escapeHtml(dept) : '—';
 
         const cleanPhone = (emp.phone || '').replace(/^"|"$/g, '').trim();
 
         tr.innerHTML = `
           <td style="text-align: center; vertical-align: middle;">
-            <input type="checkbox" class="chk-employee" data-id="${escapeHtml(emp.emp_id)}" style="cursor: pointer; width: 14px; height: 14px;">
+            <input type="checkbox" class="chk-employee" data-id="${escapeHtml(emp.emp_id)}" aria-label="Select ${escapeHtml(emp.name)}" style="cursor: pointer; width: 14px; height: 14px;">
           </td>
           <td class="emp-id-cell nowrap">${escapeHtml(emp.emp_id)}</td>
           <td class="emp-name-cell">${escapeHtml(emp.name)}</td>
@@ -3210,13 +2723,13 @@
             ${emp.email ? `<a href="javascript:openEmailPreview('${escapeHtml(emp.emp_id)}')" class="email-link" title="Preview and customize email wish">${emailIcon}${escapeHtml(emp.email)}</a>` : '—'}
           </td>
           <td class="nowrap">${escapeHtml(cleanPhone || '—')}</td>
-          <td class="nowrap">${escapeHtml(emp.dob_display)}</td>
-          <td class="nowrap">${escapeHtml(emp.joining_date_display)}${badgesHTML}</td>
+          <td class="nowrap">${escapeHtml(emp.dob_display)}${birthdayBadge}</td>
+          <td class="nowrap">${escapeHtml(emp.joining_date_display)}${anniversaryBadge}</td>
           <td class="nowrap">${escapeHtml(emp.service_display || '—')}</td>
           <td class="nowrap">
             <span class="status-badge ${emp.status === 'Inactive' ? 'status-inactive' : 'status-active'}">${escapeHtml(emp.status || 'Active')}</span>
           </td>
-          <td>
+          <td class="actions-col">
             <div class="actions-cell">
               <button class="btn-table btn-edit"
                 onclick="startEdit('${emp.emp_id}')">Edit</button>
@@ -3319,7 +2832,7 @@
     statusInput.addEventListener('keydown',  (e) => { if (e.key !== 'Enter') return; e.preventDefault(); validateAndSubmit(); });
 
     // Add/Edit Employee Modal Logic
-    function openEmployeeModal(titleText = 'Add Employee', actionButtonText = 'Add Employee') {
+    function openEmployeeModal(titleText = 'Add employee', actionButtonText = 'Add employee') {
       formPanelTitle.innerText = titleText;
       submitBtn.innerText = actionButtonText;
       employeeModalOverlay.classList.add('open');
@@ -3333,7 +2846,7 @@
     }
 
     btnOpenAddModal.addEventListener('click', () => {
-      openEmployeeModal('Add Employee', 'Add Employee');
+      openEmployeeModal('Add employee', 'Add employee');
     });
     btnCloseEmployeeModal.addEventListener('click', closeEmployeeModal);
     employeeModalOverlay.addEventListener('click', closeEmployeeModal);
@@ -3343,7 +2856,7 @@
       const emp = globalEmployeesList.find(x => String(x.emp_id) === String(emp_id));
       if (!emp) return;
 
-      openEmployeeModal('Edit Employee', 'Save Changes');
+      openEmployeeModal('Edit employee', 'Save changes');
       editOrigEmpId.value      = emp.emp_id;
       idInput.value            = emp.emp_id;
       nameInput.value          = emp.name;
@@ -3357,8 +2870,8 @@
       idInput.focus();
     }
     function resetForm() {
-      formPanelTitle.innerText = 'Add Employee';
-      submitBtn.innerText      = 'Add Employee';
+      formPanelTitle.innerText = 'Add employee';
+      submitBtn.innerText      = 'Add employee';
       editOrigEmpId.value = idInput.value = nameInput.value = deptInput.value = jobTitleInput.value = emailInput.value = phoneInput.value = dobInput.value = joiningInput.value = '';
       statusInput.value        = 'Active';
     }
@@ -3603,13 +3116,13 @@
     // ── REFRESH BUTTON ──
     document.getElementById('btn-refresh').addEventListener('click', async () => {
       const btn = document.getElementById('btn-refresh');
-      btn.textContent = '↺ Refreshing...';
+      btn.textContent = 'Refreshing…';
       btn.disabled = true;
       await loadEmployees();
       if (tabBtnInsights && tabBtnInsights.classList.contains('active')) {
         loadInsightsScreen();
       }
-      btn.textContent = '↺ Refresh';
+      btn.textContent = 'Refresh';
       btn.disabled = false;
       showToast('Data refreshed successfully.');
     });
