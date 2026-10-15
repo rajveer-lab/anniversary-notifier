@@ -55,7 +55,7 @@ Enables HR to select multiple employees using checkboxes on the grid and perform
 
 ### 🎊 6. Milestones Analytics Banner
 
-A slim, glowing crimson-to-purple gradient banner displayed at the top of the directory view (e.g., *"4 celebrations today 🎉 — click to view"*). It dynamically calculates today's birthday and anniversary count and, when clicked, instantly navigates to the Celebrations & Insights tab.
+A slim notice at the top of the directory view (e.g., *"4 celebrations today"*), marked with a small brand-red dot. It dynamically calculates today's birthday and anniversary count and, when clicked, instantly navigates to the Celebrations & Insights tab.
 
 ### 📅 7. Annual Milestone Calendar
 
@@ -77,9 +77,13 @@ Calculates and displays overall company analytics:
 - **Average Tenure:** Dynamically computed average years of service across the organization.
 - **Age Distribution:** Visual summary of age groups across the workforce.
 
-### 🏷️ 10. Dynamic Department Pastel Tagging
+### 🏷️ 10. Department Management
 
-Automatically assigns unique desaturated pastel color tags (background, border, and text) that are deterministically derived from each department's name. Tags provide clear visual separation in the grid and adapt correctly in both Dark and Light themes.
+Departments are stored once in their own `departments` table and each employee references one by foreign key. In **Settings → Departments** HR can add, rename and delete departments, each shown with its live headcount. Renaming a department onto a name that already exists (say "HR" onto "Human Resources") merges the two, and a department that still has employees cannot be deleted — the database's `ON DELETE RESTRICT` rule blocks it. The add/edit form suggests existing departments, and the directory can be filtered by department.
+
+### 🕘 10a. Employee Change History
+
+Opening an employee for editing shows their history: when they were added, every status, department and ID change, and each birthday or anniversary greeting sent. Changes are written by database triggers on the `employees` table, so they are recorded no matter which screen or import made them.
 
 ### 🔒 11. Passcode-Protected PDF Reports
 
@@ -123,7 +127,7 @@ StaffPing runs a background reminder engine in the Electron main process that sc
 
 - **Configurable Reminder Time:** HR sets a daily trigger time (e.g., `09:00 AM`) in Settings. The engine will not fire notifications until the system clock reaches or exceeds this time.
 - **60-Second Polling Loop:** A `setInterval` timer runs every 60 seconds, invoking the reminder check function. On each tick, the engine compares the current time against the configured reminder time and scans only if the threshold has been reached.
-- **Per-Day Deduplication:** A file-based notification state (`notif-state.json` in the app's user data directory) tracks which employees have already been notified today. Each notification is keyed by type and employee ID (e.g., `bday-EMP001`, `anniv-EMP003`). On a new calendar day, the state file resets automatically.
+- **Once-a-Year Deduplication:** Every greeting is first recorded in the `notification_log` table, whose primary key is (employee, kind, year). A greeting is only sent when that insert succeeds, so the database itself guarantees at most one birthday and one anniversary greeting per employee per year, even across restarts and repeated scans.
 - **Template-Driven Content:** Notification titles and bodies are populated from the customizable templates (Feature #16), with all `{placeholder}` variables resolved per-employee.
 - **Inactive Employee Exclusion:** Only employees with an **Active** status receive notifications. Inactive profiles are silently skipped.
 - **Startup Trigger:** On application launch, a reminder check runs immediately after the window finishes loading, ensuring that if StaffPing is opened after the configured reminder time, any pending notifications are delivered right away.
@@ -131,7 +135,7 @@ StaffPing runs a background reminder engine in the Electron main process that sc
 
 ### ⚡ 18. Time-Constraint Bypass & Notification Reset
 
-A **Reset Notification History** button in the Settings drawer clears the `notif-state.json` file and the in-memory notification set, then instantly triggers a fresh reminder scan with the time-constraint check bypassed. This allows HR to immediately re-test or re-fire all of today's notifications without waiting for the scheduled time.
+A **Reset Notification History** button in the Settings drawer deletes today's rows from `notification_log` (earlier history is kept), then instantly triggers a fresh reminder scan with the time-constraint check bypassed. This allows HR to immediately re-test or re-fire today's notifications without waiting for the scheduled time.
 
 ### 🌓 19. Dual-Theme Style Toggle
 
@@ -139,21 +143,25 @@ Allows instant switching between a premium **Dark Slate** mode and a clean **Lig
 
 ### 🔐 20. Field-Level Database Encryption (AES-256-GCM)
 
-All sensitive employee fields (name, date of birth, joining date, email, department, job title, status, and phone) are encrypted at rest using AES-256-GCM with a locally generated 256-bit key. The encryption key is auto-created on first launch and stored in the app's user data directory. A startup migration routine automatically detects and encrypts any pre-existing plaintext records. Employee IDs remain in plaintext to serve as the primary lookup key.
+Personal employee fields (name, date of birth, joining date, email, job title and phone) are encrypted at rest using AES-256-GCM with a locally generated 256-bit key. The encryption key is auto-created on first launch and stored in the app's user data directory. Employee IDs, status and department stay in plain columns: they are not personal data, and keeping them readable lets SQLite enforce `CHECK` and foreign-key rules on them, index them and count them per department.
+
+### 🗄 21. Versioned Schema Migrations & Database Health
+
+The schema version is stored in `PRAGMA user_version`. When StaffPing opens a database from an older version — including a restored backup — it first writes a consistent copy (`employees.pre-v2.db`) with `VACUUM INTO`, then upgrades it inside a single transaction, preserving every row ID. **Settings → Data → Database status** shows the schema version, the results of SQLite's integrity and foreign-key checks, the journal mode and the row count of each table.
 
 ---
 
 ## 3. UI/UX & Design Guidelines
 
-The application design is optimized for high visual impact and comfortable long-term usage:
+The interface is deliberately quiet so the data stays in front: neutral surfaces do most of the work and colour is kept for meaning.
 
 | Token | Value |
 |---|---|
-| **Primary Accent (Dark)** | Vibrant Crimson/Rose `#e11d48` |
-| **Primary Accent (Light)** | Deep Rose `#be123c` |
-| **Dark Surface** | Slate `#090d16` (background), `#111827` (card panels) |
-| **Typography** | *Inter* from Google Fonts — weights `300` through `800` for strong visual hierarchy |
-| **Interactive States** | Subtle CSS transitions on hover (scale, background shifts); dropdown hover-bridges provide a seamless transition area between trigger and menu |
+| **Surfaces** | Warm neutrals — light `#f6f5f3` / `#ffffff`, dark `#131211` / `#1a1918` |
+| **Primary Buttons** | Near-black ink (`#1f1d1b`) in light mode, near-white in dark mode |
+| **Brand Red** | Muted brick `#a3413f` (light) / `#d98a84` (dark), used only for today's milestones, unread markers and focus rings |
+| **Typography** | The native Windows UI font (Segoe UI Variable), sentence-case labels, tabular figures in tables |
+| **Icons & States** | One set of outline icons; hover changes background only, with no movement or glow |
 
 ---
 
@@ -163,7 +171,6 @@ The following roadmap items represent potential feature additions to expand the 
 
 - **Automatic SMTP Email & Slack Integrations:** Send milestone greetings directly to employees via corporate email servers or Slack channels.
 - **Active Directory & LDAP Syncing:** Synchronize employee records directly with directory servers, removing the need for manual imports.
-- **Dynamic Department Management:** A Settings UI to visually add, delete, rename, or color-customize department tags.
 - **Advanced Graphical Insights:** Embed visual charts (demographic graphs, hiring-wave analytics, department distribution) directly into the Insights tab.
 - **Collaborative Database Sync:** Set database paths to shared network directories so multiple HR admins can work from the same file.
 - **Custom Milestones:** Add custom milestone triggers beyond birthdays and join dates (e.g., training dates, certifications, performance review alerts).
