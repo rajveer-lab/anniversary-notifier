@@ -859,6 +859,34 @@
     .toast-title { font-weight: 600; font-size: 0.86rem; color: var(--text); }
     .toast-body { font-size: 0.8rem; color: var(--muted); line-height: 1.45; }
 
+    /* ── DEPARTMENTS, DATABASE STATUS, HISTORY ── */
+    #settings-panel { width: 440px; }
+    .dept-add-row { display: flex; gap: 8px; }
+    .dept-add-row input { flex: 1; }
+    .dept-list { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; }
+    .dept-row { display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 12px; min-height: 48px; border-bottom: 1px solid var(--border); }
+    .dept-row:last-child { border-bottom: none; }
+    .dept-row-main { flex: 1; min-width: 0; }
+    .dept-row-name { font-size: 0.85rem; font-weight: 500; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dept-row-meta { font-size: 0.74rem; color: var(--muted); margin-top: 1px; font-variant-numeric: tabular-nums; }
+    .dept-row input[type="text"] { flex: 1; height: 32px; font-size: 0.84rem; }
+    .dept-row.is-unassigned .dept-row-name { color: var(--muted); font-weight: 400; font-style: italic; }
+    .db-health { display: flex; flex-direction: column; gap: 12px; }
+    .db-health-flags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .db-flag { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; background: var(--surface-hover); color: var(--text); }
+    .db-flag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--positive); }
+    .db-flag.bad::before { background: var(--danger); }
+    .db-stats { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 0.8rem; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; }
+    .db-stats dt { color: var(--muted); font-family: "Cascadia Mono", Consolas, monospace; font-size: 0.76rem; }
+    .db-stats dd { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+    .history-block { grid-column: 1 / -1; display: none; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .history-list { display: flex; flex-direction: column; max-height: 180px; overflow-y: auto; }
+    .history-item { display: grid; grid-template-columns: 136px 1fr; gap: 12px; padding: 7px 0; font-size: 0.8rem; border-bottom: 1px solid var(--border); }
+    .history-item:last-child { border-bottom: none; }
+    .history-when { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .history-what { color: var(--text); }
+    .history-empty { font-size: 0.8rem; color: var(--muted); padding: 4px 0; }
+
     /* ── SVG ICONS ── */
     .svg-icon {
       width: 14px;
@@ -1084,6 +1112,12 @@
             <label for="filter-end-date">End date</label>
             <input type="date" id="filter-end-date">
           </div>
+          <div class="filter-group" style="width: 170px;">
+            <label for="filter-dept">Department</label>
+            <select id="filter-dept" style="cursor: pointer;">
+              <option value="">All departments</option>
+            </select>
+          </div>
           <div class="filter-group status" style="width: 150px;">
             <label for="filter-status">Status</label>
             <select id="filter-status" style="cursor: pointer;">
@@ -1279,7 +1313,8 @@
 
     <div class="notif-tabs">
       <button class="notif-tab active" data-settings-tab="notifications">Notifications</button>
-      <button class="notif-tab" data-settings-tab="backup">Backup &amp; CSV</button>
+      <button class="notif-tab" data-settings-tab="departments">Departments</button>
+      <button class="notif-tab" data-settings-tab="backup">Data</button>
       <button class="notif-tab" data-settings-tab="appearance">Appearance</button>
       <button class="notif-tab" data-settings-tab="about">About</button>
     </div>
@@ -1328,15 +1363,28 @@
         <button class="btn-primary" id="btn-save-templates">Save templates</button>
       </div>
 
-      <!-- Backup & CSV Tab -->
+      <!-- Departments Tab -->
+      <div id="settings-tab-content-departments" class="settings-tab-content" style="display: none; flex-direction: column; gap: 12px;">
+        <div class="dept-add-row">
+          <input type="text" id="new-dept-name" placeholder="New department name" aria-label="New department name">
+          <button class="btn-control" id="btn-add-dept">Add</button>
+        </div>
+        <span class="variables-desc">Renaming a department to a name that already exists merges the two. A department can only be deleted once nobody is in it.</span>
+        <div class="dept-list" id="dept-list"></div>
+      </div>
+
+      <!-- Data Tab -->
       <div id="settings-tab-content-backup" class="settings-tab-content" style="display: none; flex-direction: column; gap: 12px;">
-        <div class="panel-title" style="margin-bottom: -4px;">Database</div>
+        <div class="panel-title" style="margin-bottom: -4px;">Backup and restore</div>
         <div class="backup-restore-group">
           <button class="btn-control" id="btn-backup-db-settings" title="Save an encrypted backup copy of SQLite database">Back up database</button>
           <button class="btn-control" id="btn-restore-db-settings" title="Restore SQLite database from file">Restore database</button>
         </div>
         <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
         <button class="btn-control btn-danger-control" id="btn-clear-data-settings">Clear all employee data</button>
+        <div style="border-top: 1px solid var(--border); margin: 6px 0;"></div>
+        <div class="panel-title" style="margin-bottom: -4px;">Database status</div>
+        <div class="db-health" id="db-health"></div>
       </div>
 
       <!-- Appearance Tab -->
@@ -1394,7 +1442,8 @@
       </div>
       <div class="form-group" style="margin-bottom: 0;">
         <label for="department">Department</label>
-        <input type="text" id="department" placeholder="e.g. Sales" tabindex="3">
+        <input type="text" id="department" list="department-options" autocomplete="off" placeholder="Pick or type a department" tabindex="3">
+        <datalist id="department-options"></datalist>
       </div>
       <div class="form-group" style="margin-bottom: 0;">
         <label for="job-title">Job title</label>
@@ -1422,6 +1471,10 @@
           <option value="Active">Active</option>
           <option value="Inactive">Inactive</option>
         </select>
+      </div>
+      <div class="history-block" id="employee-history">
+        <div class="panel-title">History</div>
+        <div class="history-list" id="employee-history-list"></div>
       </div>
     </div>
     <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border);">
@@ -1522,6 +1575,7 @@
     const btnBulkActive  = document.getElementById('btn-bulk-active');
     const btnBulkInactive = document.getElementById('btn-bulk-inactive');
     const filterStatusEl = document.getElementById('filter-status');
+    const filterDeptEl   = document.getElementById('filter-dept');
 
     // Sorting state variables
     let currentSortCol = 'emp_id';
@@ -2534,6 +2588,7 @@
       globalEmployeesList.sort((a, b) => naturalCompare(a.emp_id, b.emp_id));
       
       updateCelebrationsDashboard(globalEmployeesList);
+      await refreshDepartments();
       renderEmployees();
 
       if (isFirstLoad) {
@@ -2541,6 +2596,160 @@
         initialLoadComplete = true;
         hideSplashScreen();
       }
+    }
+
+    // ── DEPARTMENTS ──
+    // The department list comes from v_department_summary, so counts are computed by SQLite, not here.
+    let departmentList = { departments: [], unassigned: { total: 0, active: 0, inactive: 0 } };
+    let editingDeptId = null;
+    const deptOptionsEl = document.getElementById('department-options');
+    const deptListEl    = document.getElementById('dept-list');
+    const newDeptInput  = document.getElementById('new-dept-name');
+
+    async function refreshDepartments() {
+      const result = await window.electronAPI.getDepartments();
+      if (!result.success) return;
+      departmentList = result.data;
+      const names = departmentList.departments.map(d => d.name);
+      deptOptionsEl.innerHTML = names.map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+      const current = filterDeptEl.value;
+      filterDeptEl.innerHTML = '<option value="">All departments</option>'
+        + names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
+        + (departmentList.unassigned.total ? '<option value="__none__">No department</option>' : '');
+      filterDeptEl.value = [...filterDeptEl.options].some(o => o.value === current) ? current : '';
+      renderDepartmentSettings();
+    }
+
+    function renderDepartmentSettings() {
+      const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+      const rows = departmentList.departments.map(d => {
+        if (d.dept_id === editingDeptId) {
+          return `<div class="dept-row" data-id="${d.dept_id}">
+            <input type="text" class="dept-rename-input" value="${escapeHtml(d.name)}" aria-label="New name for ${escapeHtml(d.name)}">
+            <button class="btn-table btn-edit" data-action="save">Save</button>
+            <button class="btn-table btn-delete" data-action="cancel">Cancel</button>
+          </div>`;
+        }
+        const meta = plural(d.total, 'employee') + (d.inactive ? ` · ${d.inactive} inactive` : '');
+        return `<div class="dept-row" data-id="${d.dept_id}">
+          <div class="dept-row-main"><div class="dept-row-name">${escapeHtml(d.name)}</div><div class="dept-row-meta">${meta}</div></div>
+          <button class="btn-table btn-edit" data-action="rename">Rename</button>
+          <button class="btn-table btn-delete" data-action="delete">Delete</button>
+        </div>`;
+      });
+      if (departmentList.unassigned.total) {
+        rows.push(`<div class="dept-row is-unassigned"><div class="dept-row-main"><div class="dept-row-name">No department</div><div class="dept-row-meta">${plural(departmentList.unassigned.total, 'employee')}</div></div></div>`);
+      }
+      deptListEl.innerHTML = rows.join('') || '<div class="empty-note">No departments yet. They are also created automatically when you add or import employees.</div>';
+      const input = deptListEl.querySelector('.dept-rename-input');
+      if (input) { input.focus(); input.select(); }
+    }
+
+    async function saveDepartmentRename(deptId, newName) {
+      const result = await window.electronAPI.renameDepartment(deptId, newName);
+      if (!result.success) { showToast('Rename failed: ' + result.error, true); return; }
+      editingDeptId = null;
+      const r = result.data;
+      showToast(r.merged
+        ? `Merged: ${r.moved} employee${r.moved === 1 ? '' : 's'} moved into ${r.into}.`
+        : `Renamed: The department is now called ${r.into}.`);
+      await loadEmployees();
+    }
+
+    deptListEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const deptId = Number(btn.closest('.dept-row').dataset.id);
+      const dept = departmentList.departments.find(d => d.dept_id === deptId);
+      const action = btn.dataset.action;
+      if (action === 'rename') { editingDeptId = deptId; renderDepartmentSettings(); return; }
+      if (action === 'cancel') { editingDeptId = null; renderDepartmentSettings(); return; }
+      if (action === 'save') { saveDepartmentRename(deptId, btn.closest('.dept-row').querySelector('input').value); return; }
+      if (action === 'delete') {
+        if (!confirm(`Delete the department "${dept.name}"?`)) return;
+        const result = await window.electronAPI.deleteDepartment(deptId);
+        if (result.success) { showToast(`Deleted: ${dept.name} was removed.`); await refreshDepartments(); }
+        else showToast('Cannot delete: ' + result.error, true);
+      }
+    });
+    deptListEl.addEventListener('keydown', (e) => {
+      if (!e.target.matches('.dept-rename-input')) return;
+      if (e.key === 'Enter') saveDepartmentRename(Number(e.target.closest('.dept-row').dataset.id), e.target.value);
+      if (e.key === 'Escape') { editingDeptId = null; renderDepartmentSettings(); }
+    });
+
+    async function addDepartmentFromInput() {
+      const name = newDeptInput.value.trim();
+      if (!name) { newDeptInput.focus(); return; }
+      const result = await window.electronAPI.addDepartment(name);
+      if (!result.success) { showToast('Error: ' + result.error, true); return; }
+      newDeptInput.value = '';
+      showToast(`Added: ${name} is ready to use.`);
+      await refreshDepartments();
+    }
+    document.getElementById('btn-add-dept').addEventListener('click', addDepartmentFromInput);
+    newDeptInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addDepartmentFromInput(); });
+
+    // ── EMPLOYEE HISTORY (employee_audit + notification_log) ──
+    const historyBlock  = document.getElementById('employee-history');
+    const historyListEl = document.getElementById('employee-history-list');
+
+    function describeHistoryEntry(h) {
+      if (h.source === 'reminder') {
+        return h.kind === 'birthday' ? `Birthday greeting sent for ${h.year}` : `Work anniversary greeting sent for ${h.year}`;
+      }
+      if (h.action === 'INSERT') return `Added${h.new_dept ? ` to ${h.new_dept}` : ''} as ${h.new_status}`;
+      if (h.action === 'DELETE') return 'Removed from the directory';
+      const parts = [];
+      if (h.old_code) parts.push(`ID ${h.old_code} → ${h.emp_code}`);
+      if (h.old_status !== h.new_status) parts.push(`Status ${h.old_status} → ${h.new_status}`);
+      if ((h.old_dept || '') !== (h.new_dept || '')) parts.push(`Department ${h.old_dept || 'none'} → ${h.new_dept || 'none'}`);
+      return parts.join(' · ') || 'Updated';
+    }
+
+    function formatHistoryTime(at) {
+      const [day, time = ''] = String(at).split(' ');
+      const [y, m, d] = day.split('-').map(Number);
+      const date = new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      return time ? `${date}, ${time.slice(0, 5)}` : date;
+    }
+
+    async function loadEmployeeHistory(empId) {
+      historyBlock.style.display = 'flex';
+      historyListEl.innerHTML = '<div class="history-empty">Loading…</div>';
+      const result = await window.electronAPI.getEmployeeHistory(empId);
+      if (!result.success) {
+        historyListEl.innerHTML = `<div class="history-empty">Could not load history: ${escapeHtml(result.error)}</div>`;
+        return;
+      }
+      historyListEl.innerHTML = result.data.length
+        ? result.data.map(h => `<div class="history-item"><span class="history-when">${escapeHtml(formatHistoryTime(h.at))}</span><span class="history-what">${escapeHtml(describeHistoryEntry(h))}</span></div>`).join('')
+        : '<div class="history-empty">No changes recorded yet.</div>';
+    }
+
+    // ── DATABASE STATUS ──
+    async function renderDatabaseHealth() {
+      const el = document.getElementById('db-health');
+      const result = await window.electronAPI.getDatabaseInfo();
+      if (!result.success) {
+        el.innerHTML = `<span class="variables-desc">Could not read the database status: ${escapeHtml(result.error)}</span>`;
+        return;
+      }
+      const i = result.data;
+      const kinds = (type) => i.objects.filter(o => o.type === type).length;
+      const flag = (ok, text) => `<span class="db-flag${ok ? '' : ' bad'}">${escapeHtml(text)}</span>`;
+      const fkText = !i.foreignKeys ? 'Foreign keys off' : i.foreignKeyViolations ? `${i.foreignKeyViolations} foreign key problems` : 'Foreign keys enforced';
+      el.innerHTML = `
+        <div class="db-health-flags">
+          ${flag(true, `Schema version ${i.schemaVersion}`)}
+          ${flag(i.integrity === 'ok', i.integrity === 'ok' ? 'Integrity check passed' : `Integrity: ${i.integrity}`)}
+          ${flag(i.foreignKeys && !i.foreignKeyViolations, fkText)}
+          ${flag(i.journalMode === 'wal', `${String(i.journalMode).toUpperCase()} journal`)}
+        </div>
+        <dl class="db-stats">
+          ${Object.entries(i.rows).map(([table, n]) => `<dt>${table}</dt><dd>${n.toLocaleString()} rows</dd>`).join('')}
+        </dl>
+        <span class="variables-desc">${kinds('table')} tables, ${kinds('view')} views, ${kinds('trigger')} triggers and ${kinds('index')} indexes · ${Math.round(i.fileBytes / 1024)} KB on disk${i.preMigrationBackups.length ? ` · pre-upgrade copy kept as ${escapeHtml(i.preMigrationBackups[0])}` : ''}</span>`;
     }
 
     // ── RENDER EMPLOYEES ──
@@ -2611,7 +2820,13 @@
       };
 
       const statusFilter = filterStatusEl.value;
+      const deptFilter = filterDeptEl.value;
       const filtered = globalEmployeesList.filter(emp => {
+        if (deptFilter) {
+          const empDept = (emp.department || '').toLowerCase();
+          if (deptFilter === '__none__' ? empDept !== '' : empDept !== deptFilter.toLowerCase()) return false;
+        }
+
         // Status filter match
         if (statusFilter !== 'All') {
           const empStatus = emp.status || 'Active';
@@ -2868,12 +3083,15 @@
       joiningInput.value       = emp.joining_date || '';
       statusInput.value        = emp.status || 'Active';
       idInput.focus();
+      loadEmployeeHistory(emp.emp_id);
     }
     function resetForm() {
       formPanelTitle.innerText = 'Add employee';
       submitBtn.innerText      = 'Add employee';
       editOrigEmpId.value = idInput.value = nameInput.value = deptInput.value = jobTitleInput.value = emailInput.value = phoneInput.value = dobInput.value = joiningInput.value = '';
       statusInput.value        = 'Active';
+      historyBlock.style.display = 'none';
+      historyListEl.innerHTML = '';
     }
     async function deleteEmployee(emp_id) {
       if (!confirm(`Remove employee ${emp_id}?`)) return;
@@ -2925,6 +3143,7 @@
       filterStartDateEl.value = '';
       filterEndDateEl.value = '';
       filterStatusEl.value = 'All';
+      filterDeptEl.value = '';
       renderEmployees();
     });
 
@@ -2955,6 +3174,8 @@
         tab.classList.add('active');
         
         const targetTab = tab.dataset.settingsTab;
+        if (targetTab === 'departments') refreshDepartments();
+        if (targetTab === 'backup') renderDatabaseHealth();
         settingsTabContents.forEach(content => {
           if (content.id === `settings-tab-content-${targetTab}`) {
             content.style.display = 'flex';
@@ -3098,6 +3319,7 @@
     });
 
     filterStatusEl.addEventListener('change', renderEmployees);
+    filterDeptEl.addEventListener('change', renderEmployees);
 
     // Sorting Click Handlers
     document.querySelectorAll('.sortable-header').forEach(th => {
